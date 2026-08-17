@@ -1,0 +1,23 @@
+* { box-sizing: border-box; }
+
+:root {
+  --color-orange: #F49121;
+  --color-orange-light: #F5B04A;
+  --color-orange-dark: #D97B0F;
+  --color-charcoal: #333333;
+  --color-charcoal-dark: #1a1a1a;
+  --color-cream: #ffffff;
+  --color-text: #333333;
+  --color-text-secondary: #666666;
+  --color-divider: #e8e0d5;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans), 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: #ffffff;
+  color: var(--color-text);
+}
+
+a { color: inherit; }

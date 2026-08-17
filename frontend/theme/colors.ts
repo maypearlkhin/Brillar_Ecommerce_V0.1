@@ -1,0 +1,17 @@
+/** Shop On-inspired palette — orange accent, charcoal structure, cream sections */
+export const colors = {
+  orange: '#F49121',
+  orangeLight: '#F5B04A',
+  orangeDark: '#D97B0F',
+  charcoal: '#333333',
+  charcoalDark: '#1a1a1a',
+  cream: '#ffffff',
+  white: '#ffffff',
+  textPrimary: '#333333',
+  textSecondary: '#666666',
+  divider: '#e8e0d5',
+  orangeShadow: 'rgba(244, 145, 33, 0.18)',
+  orangeShadowSoft: 'rgba(244, 145, 33, 0.12)',
+  cardShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
+  cardShadowHover: '0 8px 24px rgba(0, 0, 0, 0.1)',
+};
