@@ -6,6 +6,10 @@ import { Product } from '../models/Product';
 import { Order } from '../models/Order';
 import { Category } from '../models/Category';
 import { slugify } from '../utils/slugify';
+import {
+  normalizeProductGender,
+  normalizeProductType,
+} from '../constants/productAttributes';
 import { linkCategoryNames, findOrCreateCategory, normalizeCategoryNamesInput } from './category.service';
 import { DEFAULT_PLATFORM_COMMISSION_RATE } from '../config/platform';
 import bcrypt from 'bcryptjs';
@@ -80,6 +84,7 @@ export class SupplierApplicationService {
     description?: string;
     categories?: string[];
     website?: string;
+    businessAddress?: string;
   }) {
     const existing = await SupplierApplication.findOne({
       userId,
@@ -358,6 +363,10 @@ export class SupplierService {
     description: string;
     categoryId?: string;
     categoryName?: string;
+    productType?: string;
+    gender?: string;
+    minAge?: number;
+    maxAge?: number;
     price: number;
     cost: number;
     stockQuantity: number;
@@ -375,12 +384,25 @@ export class SupplierService {
     const stockQuantity = Number(data.stockQuantity) || 0;
     const status = resolveProductStatus(stockQuantity, data.action, data.status);
 
+    const productType = data.productType
+      ? normalizeProductType(data.productType) ?? undefined
+      : undefined;
+    const gender = data.gender
+      ? normalizeProductGender(data.gender) ?? undefined
+      : undefined;
+    const minAge = data.minAge !== undefined && data.minAge !== null ? Number(data.minAge) : undefined;
+    const maxAge = data.maxAge !== undefined && data.maxAge !== null ? Number(data.maxAge) : undefined;
+
     const product = await Product.create({
       name: data.name,
       sku: data.sku,
       brand: data.brand,
       description: data.description,
       categoryId: resolvedCategoryId,
+      productType,
+      gender,
+      minAge: minAge !== undefined && !Number.isNaN(minAge) ? minAge : undefined,
+      maxAge: maxAge !== undefined && !Number.isNaN(maxAge) ? maxAge : undefined,
       price: data.price,
       cost: data.cost,
       stockQuantity,
@@ -413,6 +435,24 @@ export class SupplierService {
     if (data.sku !== undefined) product.sku = data.sku as string;
     if (data.brand !== undefined) product.brand = data.brand as string;
     if (data.description !== undefined) product.description = data.description as string;
+    if (data.productType !== undefined) {
+      product.productType = data.productType
+        ? normalizeProductType(data.productType as string) ?? undefined
+        : undefined;
+    }
+    if (data.gender !== undefined) {
+      product.gender = data.gender
+        ? normalizeProductGender(data.gender as string) ?? undefined
+        : undefined;
+    }
+    if (data.minAge !== undefined) {
+      const minAge = Number(data.minAge);
+      product.minAge = Number.isNaN(minAge) ? undefined : minAge;
+    }
+    if (data.maxAge !== undefined) {
+      const maxAge = Number(data.maxAge);
+      product.maxAge = Number.isNaN(maxAge) ? undefined : maxAge;
+    }
     if (data.price !== undefined) product.price = Number(data.price);
     if (data.cost !== undefined) product.cost = Number(data.cost);
     if (data.stockQuantity !== undefined) product.stockQuantity = Number(data.stockQuantity);
@@ -589,6 +629,7 @@ export class AdminSupplierService {
       existingProfile.contactEmail = app.email;
       existingProfile.contactPhone = app.phone;
       existingProfile.categoryIds = categoryIds;
+      existingProfile.businessAddress = app.businessAddress;
       existingProfile.verificationStatus = 'verified';
       await existingProfile.save();
     } else {
@@ -599,6 +640,7 @@ export class AdminSupplierService {
         description: app.description,
         contactEmail: app.email,
         contactPhone: app.phone,
+        businessAddress: app.businessAddress,
         categoryIds,
         verificationStatus: 'verified',
         status: 'active',
@@ -673,6 +715,7 @@ export class AdminSupplierService {
     password: string;
     description?: string;
     categories?: string[];
+    businessAddress?: string;
     status?: string;
   }) {
     const existing = await User.findOne({ email: data.email.toLowerCase() });
@@ -701,6 +744,7 @@ export class AdminSupplierService {
       description: data.description,
       contactEmail: data.email,
       contactPhone: data.phone,
+      businessAddress: data.businessAddress,
       categoryIds,
       verificationStatus: 'verified',
       status: (data.status as 'active' | 'suspended') || 'active',
@@ -713,6 +757,7 @@ export class AdminSupplierService {
       email: data.email,
       phone: data.phone,
       description: data.description,
+      businessAddress: data.businessAddress,
       categories: resolvedCategoryNames.length ? resolvedCategoryNames : categoryNames,
       status: 'approved',
       submittedAt: new Date(),

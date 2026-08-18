@@ -24,10 +24,31 @@ export interface SupplierRef {
   slug: string;
   description?: string;
   logoUrl?: string;
+  businessAddress?: string;
   status?: 'active' | 'suspended';
 }
 
 export type ProductStatus = 'draft' | 'active' | 'out_of_stock' | 'archived' | 'inactive';
+
+export type ProductGender = 'male' | 'female' | 'unisex' | 'boys' | 'girls';
+export type ProductTypeSlug =
+  | 'shirt'
+  | 'pants'
+  | 'dress'
+  | 'shoes'
+  | 'jacket'
+  | 'shorts'
+  | 'skirt'
+  | 'hoodie'
+  | 'hat'
+  | 'accessories'
+  | 'ring'
+  | 'necklace'
+  | 'bracelet'
+  | 'earrings'
+  | 'pendant'
+  | 'anklet'
+  | 'watch';
 
 export interface Product {
   _id: string;
@@ -36,6 +57,10 @@ export interface Product {
   sku: string;
   brand?: string;
   description: string;
+  productType?: ProductTypeSlug;
+  gender?: ProductGender;
+  minAge?: number;
+  maxAge?: number;
   price: number;
   cost?: number;
   stockQuantity: number;
@@ -191,6 +216,7 @@ export interface SupplierApplication {
   description?: string;
   categories?: string[];
   website?: string;
+  businessAddress?: string;
   status: 'pending' | 'approved' | 'rejected' | 'more_info_requested';
   adminNote?: string;
   submittedAt: string;

@@ -28,6 +28,7 @@ router.post(
         return true;
       }),
     body('phone').notEmpty(),
+    body('businessAddress').trim().notEmpty().withMessage('Shop location / business address is required'),
   ],
   validate,
   supplierController.submitApplication

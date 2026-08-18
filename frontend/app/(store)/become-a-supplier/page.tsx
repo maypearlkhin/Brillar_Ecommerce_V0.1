@@ -25,7 +25,7 @@ export default function BecomeSupplierPage() {
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({
     storeName: '', contactName: '', email: '', phone: '',
-    description: '', categories: '', website: '',
+    description: '', categories: '', website: '', businessAddress: '',
   });
 
   useEffect(() => {
@@ -40,6 +40,7 @@ export default function BecomeSupplierPage() {
               description: app.description || '',
               categories: app.categories?.join(', ') || '',
               website: app.website || '',
+              businessAddress: app.businessAddress || '',
             });
           } else if (user) {
             setForm((f) => ({ ...f, contactName: user.name, email: user.email, phone: user.phone || '' }));
@@ -56,6 +57,10 @@ export default function BecomeSupplierPage() {
     if (!isAuthenticated) return;
     if (!isAllowedCustomerSupplierEmail(form.email)) {
       setError(ALLOWED_EMAIL_DOMAINS_MESSAGE);
+      return;
+    }
+    if (!form.businessAddress.trim()) {
+      setError('Shop location / business address is required.');
       return;
     }
     try {
@@ -122,6 +127,11 @@ export default function BecomeSupplierPage() {
           <Typography variant="body2" color="text.secondary">
             Store: {application.storeName} · Submitted: {formatDate(application.submittedAt)}
           </Typography>
+          {application.businessAddress && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+              Shop location: {application.businessAddress}
+            </Typography>
+          )}
           {application.adminNote && (
             <Alert severity={application.status === 'rejected' ? 'error' : 'info'} sx={{ mt: 2 }}>
               {application.adminNote}
@@ -160,6 +170,19 @@ export default function BecomeSupplierPage() {
               <Grid size={{ xs: 12 }}>
                 <TextField fullWidth label="Business Description" multiline rows={3} value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Shop location / business address"
+                  placeholder="Street, city, state, country"
+                  multiline
+                  rows={2}
+                  value={form.businessAddress}
+                  onChange={(e) => setForm({ ...form, businessAddress: e.target.value })}
+                  helperText="Your shop address shown to customers on product pages."
+                />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <TextField fullWidth label="Website (optional)" value={form.website}

@@ -67,6 +67,17 @@ export default function SupplierProfilePage() {
             <TextField fullWidth label="Logo URL" value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
             <TextField fullWidth label="Contact email" value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
             <TextField fullWidth label="Phone" value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              label="Shop location / business address"
+              placeholder="Street, city, state, country"
+              value={form.businessAddress}
+              onChange={(e) => setForm({ ...form, businessAddress: e.target.value })}
+              helperText="Shown on your product pages so customers know where your shop is located."
+              sx={{ mb: 2, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+            />
             <Button variant="contained" onClick={handleSave} disabled={saving} sx={{ borderRadius: '10px', fontWeight: 600, px: 3 }}>
               {saving ? 'Saving...' : 'Save Profile'}
             </Button>

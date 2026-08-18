@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingState from '@/components/common/LoadingState';
 import { UserRole } from '@/types';
+import { getRoleHomePath } from '@/utils/authRedirect';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -21,7 +22,7 @@ export default function AuthGuard({ children, roles, redirectTo = '/login' }: Au
       if (!isAuthenticated) {
         router.replace(redirectTo);
       } else if (roles && user && !roles.includes(user.role)) {
-        router.replace('/');
+        router.replace(getRoleHomePath(user.role));
       }
     }
   }, [loading, isAuthenticated, user, roles, router, redirectTo]);

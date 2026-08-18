@@ -6,7 +6,7 @@ import {
   Typography, Box, Button, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, Alert,
 } from '@mui/material';
-import { StorefrontOutlined, EmailOutlined, PhoneOutlined, CategoryOutlined, LanguageOutlined } from '@mui/icons-material';
+import { StorefrontOutlined, EmailOutlined, PhoneOutlined, CategoryOutlined, LanguageOutlined, LocationOnOutlined } from '@mui/icons-material';
 import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
 import StatusChip from '@/components/common/StatusChip';
@@ -168,6 +168,12 @@ export default function ApplicationDetailPage() {
               <DetailField label="Applicant" value={app.contactName} />
               <DetailField label="Email" value={app.email} icon={<EmailOutlined fontSize="small" />} />
               <DetailField label="Phone" value={app.phone} icon={<PhoneOutlined fontSize="small" />} />
+              <DetailField
+                label="Shop location"
+                value={app.businessAddress || '—'}
+                icon={<LocationOnOutlined fontSize="small" />}
+                tall
+              />
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>

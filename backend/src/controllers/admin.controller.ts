@@ -73,18 +73,22 @@ export const getOrder = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getPublicFAQs = async (_req: Request, res: Response) => {
+export const getPublicFAQs = async (req: Request, res: Response) => {
   try {
-    const faqs = await FAQService.getPublicFAQs();
+    const page = req.query.page !== undefined ? Number(req.query.page) : undefined;
+    const limit = req.query.limit !== undefined ? Number(req.query.limit) : undefined;
+    const faqs = await FAQService.getPublicFAQs({ page, limit });
     return sendSuccess(res, faqs);
   } catch (err) {
     return sendError(res, (err as Error).message, 500);
   }
 };
 
-export const getAllFAQs = async (_req: AuthRequest, res: Response) => {
+export const getAllFAQs = async (req: AuthRequest, res: Response) => {
   try {
-    const faqs = await FAQService.getAllFAQs();
+    const page = req.query.page !== undefined ? Number(req.query.page) : undefined;
+    const limit = req.query.limit !== undefined ? Number(req.query.limit) : undefined;
+    const faqs = await FAQService.getAllFAQs({ page, limit });
     return sendSuccess(res, faqs);
   } catch (err) {
     return sendError(res, (err as Error).message, 500);

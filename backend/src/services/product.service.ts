@@ -1,11 +1,19 @@
 import { Product } from '../models/Product';
 import { Category } from '../models/Category';
 import { SupplierProfile } from '../models/SupplierProfile';
+import {
+  GENDER_FILTER_MATCHES,
+  normalizeProductGender,
+  normalizeProductType,
+} from '../constants/productAttributes';
 
 export interface ProductQuery {
   search?: string;
   category?: string;
   supplier?: string;
+  type?: string;
+  gender?: string;
+  age?: number;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
@@ -35,16 +43,39 @@ export class ProductService {
     const limit = query.limit || 12;
     const skip = (page - 1) * limit;
 
-    if (query.search) {
-      filter.$text = { $search: query.search };
+    if (query.search?.trim()) {
+      const term = query.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.$or = [
+        { name: { $regex: term, $options: 'i' } },
+        { description: { $regex: term, $options: 'i' } },
+        { sku: { $regex: term, $options: 'i' } },
+        { brand: { $regex: term, $options: 'i' } },
+      ];
     }
-    if (query.category) {
-      const cat = await Category.findOne({ slug: query.category, isActive: true });
+    if (query.category?.trim()) {
+      const catSlug = query.category.trim().toLowerCase();
+      const cat = await Category.findOne({ slug: catSlug, isActive: true });
       if (cat) filter.categoryId = cat._id;
     }
-    if (query.supplier) {
-      const supplier = await SupplierProfile.findOne({ slug: query.supplier, status: 'active' });
+    if (query.supplier?.trim()) {
+      const supplierSlug = query.supplier.trim().toLowerCase();
+      const supplier = await SupplierProfile.findOne({ slug: supplierSlug, status: 'active' });
       if (supplier) filter.supplierId = supplier._id;
+    }
+    if (query.type) {
+      const productType = normalizeProductType(query.type);
+      if (productType) filter.productType = productType;
+    }
+    if (query.gender) {
+      const gender = normalizeProductGender(query.gender);
+      if (gender) {
+        filter.gender = { $in: GENDER_FILTER_MATCHES[gender] };
+      }
+    }
+    if (query.age !== undefined && Number.isFinite(query.age)) {
+      const age = Math.max(0, Math.floor(query.age));
+      filter.minAge = { $lte: age };
+      filter.maxAge = { $gte: age };
     }
     if (query.minPrice !== undefined || query.maxPrice !== undefined) {
       const priceFilter: { $gte?: number; $lte?: number } = {};
@@ -91,7 +122,7 @@ export class ProductService {
   static async getProductById(id: string) {
     const product = await Product.findById(id)
       .populate('categoryId', 'name slug')
-      .populate('supplierId', 'storeName slug description logoUrl status');
+      .populate('supplierId', 'storeName slug description logoUrl businessAddress status');
 
     if (!product || HIDDEN_PRODUCT_STATUSES.includes(product.status as string)) {
       throw new Error('Product not found');

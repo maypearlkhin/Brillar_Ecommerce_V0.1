@@ -80,6 +80,7 @@ export default function AdminApplicationsPage() {
               <TableCell>Store</TableCell>
               <TableCell>Applicant</TableCell>
               <TableCell>Email</TableCell>
+              <TableCell>Location</TableCell>
               <TableCell>Submitted</TableCell>
               <TableCell>Status</TableCell>
               <TableCell />
@@ -91,6 +92,12 @@ export default function AdminApplicationsPage() {
                 <TableCell sx={{ fontWeight: 500 }}>{app.storeName}</TableCell>
                 <TableCell>{app.contactName}</TableCell>
                 <TableCell color="text.secondary">{app.email}</TableCell>
+                <TableCell
+                  color="text.secondary"
+                  sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {app.businessAddress || '—'}
+                </TableCell>
                 <TableCell>{formatDate(app.submittedAt)}</TableCell>
                 <TableCell><StatusChip status={app.status} /></TableCell>
                 <TableCell>

@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { productService } from '@/services/product.service';
-import { Product, Category, SupplierRef, Pagination as PaginationType } from '@/types';
+import { Product, Category, Pagination as PaginationType } from '@/types';
 import ProductCard from '@/components/storefront/ProductCard';
 import ProductListCard from '@/components/storefront/products/ProductListCard';
 import ProductsFilterSidebar from '@/components/storefront/products/ProductsFilterSidebar';
@@ -27,14 +27,15 @@ function ProductsContent() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [suppliers, setSuppliers] = useState<SupplierRef[]>([]);
   const [pagination, setPagination] = useState<PaginationType | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || '';
-  const supplier = searchParams.get('supplier') || '';
+  const gender = searchParams.get('gender') || '';
+  const type = searchParams.get('type') || '';
+  const age = searchParams.get('age') || '';
   const sort = searchParams.get('sort') || 'newest';
   const page = Number(searchParams.get('page')) || 1;
   const inStock = searchParams.get('inStock') === 'true';
@@ -56,14 +57,11 @@ function ProductsContent() {
   };
 
   useEffect(() => {
-    productService.getCategories().then(setCategories);
-    productService.getSuppliers().then(setSuppliers);
-  }, []);
-
-  useEffect(() => {
     setLoading(true);
     productService.getProducts({
-      search, category, supplier, sort,
+      search, category, gender, type,
+      ...(age ? { age: Number(age) } : {}),
+      sort,
       page, inStock,
       ...(minPrice ? { minPrice: Number(minPrice) } : {}),
       ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
@@ -71,7 +69,11 @@ function ProductsContent() {
       setProducts(data.products);
       setPagination(data.pagination);
     }).finally(() => setLoading(false));
-  }, [search, category, supplier, sort, page, inStock, minPrice, maxPrice]);
+  }, [search, category, gender, type, age, sort, page, inStock, minPrice, maxPrice]);
+
+  useEffect(() => {
+    productService.getCategories().then(setCategories);
+  }, []);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -101,15 +103,12 @@ function ProductsContent() {
           <Grid size={{ xs: 12, md: 3 }}>
             <ProductsFilterSidebar
               categories={categories}
-              suppliers={suppliers}
               categoryCounts={categoryCounts}
               selectedCategory={category}
-              selectedSupplier={supplier}
               inStock={inStock}
               minPrice={minPrice}
               maxPrice={maxPrice}
               onCategoryChange={(slug) => updateParams({ category: slug })}
-              onSupplierChange={(slug) => updateParams({ supplier: slug })}
               onInStockChange={(checked) => updateParams({ inStock: checked ? 'true' : '' })}
               onPriceChange={(min, max) => updateParams({ minPrice: min, maxPrice: max })}
               onClearAll={clearAllFilters}
@@ -180,12 +179,6 @@ function ProductsContent() {
                 </Select>
               </FormControl>
             </Paper>
-
-            {search && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Search: &quot;{search}&quot;
-              </Typography>
-            )}
 
             {loading ? (
               <LoadingState />

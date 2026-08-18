@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, Button, Box,
+  MenuItem,
 } from '@mui/material';
 import { supplierService } from '@/services/supplier.service';
 import { Product } from '@/types';
@@ -10,6 +11,12 @@ import { colors } from '@/theme/colors';
 import ProductImageUpload from '@/components/supplier/ProductImageUpload';
 import CategoryAutocomplete from '@/components/common/CategoryAutocomplete';
 import { numberInputSlotProps } from '@/utils/numberInput';
+import {
+  PRODUCT_GENDERS,
+  PRODUCT_GENDER_LABELS,
+  PRODUCT_TYPES,
+  PRODUCT_TYPE_LABELS,
+} from '@/constants/productAttributes';
 
 export interface ProductFormState {
   name: string;
@@ -18,6 +25,10 @@ export interface ProductFormState {
   description: string;
   categoryId: string;
   categoryName: string;
+  productType: string;
+  gender: string;
+  minAge: string;
+  maxAge: string;
   price: string;
   cost: string;
   stockQuantity: string;
@@ -31,6 +42,10 @@ const emptyForm: ProductFormState = {
   description: '',
   categoryId: '',
   categoryName: '',
+  productType: '',
+  gender: '',
+  minAge: '',
+  maxAge: '',
   price: '',
   cost: '',
   stockQuantity: '',
@@ -72,6 +87,10 @@ export default function SupplierProductForm({ open, editing, onClose, onSaved }:
         description: editing.description,
         categoryId: editingCategory?._id || String(editing.categoryId),
         categoryName: '',
+        productType: editing.productType || '',
+        gender: editing.gender || '',
+        minAge: editing.minAge !== undefined ? String(editing.minAge) : '',
+        maxAge: editing.maxAge !== undefined ? String(editing.maxAge) : '',
         price: String(editing.price),
         cost: String(editing.cost || 0),
         stockQuantity: String(editing.stockQuantity),
@@ -93,6 +112,10 @@ export default function SupplierProductForm({ open, editing, onClose, onSaved }:
     description: form.description,
     categoryId: form.categoryId || undefined,
     categoryName: form.categoryName.trim() || undefined,
+    productType: form.productType || undefined,
+    gender: form.gender || undefined,
+    minAge: form.minAge.trim() ? Number(form.minAge) : undefined,
+    maxAge: form.maxAge.trim() ? Number(form.maxAge) : undefined,
     price: Number(form.price),
     cost: Number(form.cost),
     stockQuantity: Number(form.stockQuantity),
@@ -145,6 +168,56 @@ export default function SupplierProductForm({ open, editing, onClose, onSaved }:
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TextField fullWidth multiline rows={3} label="Description" required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              select
+              fullWidth
+              label="Product type (optional)"
+              value={form.productType}
+              onChange={(e) => setForm({ ...form, productType: e.target.value })}
+            >
+              <MenuItem value="">None</MenuItem>
+              {PRODUCT_TYPES.map((type) => (
+                <MenuItem key={type} value={type}>{PRODUCT_TYPE_LABELS[type]}</MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              select
+              fullWidth
+              label="Gender (optional)"
+              value={form.gender}
+              onChange={(e) => setForm({ ...form, gender: e.target.value })}
+            >
+              <MenuItem value="">None</MenuItem>
+              {PRODUCT_GENDERS.map((gender) => (
+                <MenuItem key={gender} value={gender}>{PRODUCT_GENDER_LABELS[gender]}</MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid size={{ xs: 12, sm: 2 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Min age"
+              value={form.minAge}
+              onChange={(e) => setForm({ ...form, minAge: e.target.value })}
+              slotProps={numberInputSlotProps}
+              helperText="e.g. 8 for kids"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 2 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Max age"
+              value={form.maxAge}
+              onChange={(e) => setForm({ ...form, maxAge: e.target.value })}
+              slotProps={numberInputSlotProps}
+              helperText="e.g. 12 for kids"
+            />
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
             <TextField fullWidth type="number" label="Selling price" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} slotProps={numberInputSlotProps} />

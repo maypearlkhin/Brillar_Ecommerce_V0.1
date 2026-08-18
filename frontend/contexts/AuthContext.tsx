@@ -3,13 +3,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@/types';
 import { authService } from '@/services/auth.service';
+import { getRoleHomePath } from '@/utils/authRedirect';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
   supplierStatus: string | null;
-  login: (email: string, password: string) => Promise<{ redirect: string }>;
+  login: (email: string, password: string) => Promise<{ redirect: string; role: User['role'] }>;
   register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -41,8 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getRedirectPath = (u: User, status?: string | null): string => {
-    if (u.role === 'admin') return '/admin';
-    if (u.role === 'supplier') return '/supplier';
+    if (u.role === 'admin' || u.role === 'supplier') return getRoleHomePath(u.role);
     if (status === 'pending' || status === 'more_info_requested' || status === 'rejected') {
       return '/become-a-supplier';
     }
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSupplierStatus(result.supplierStatus || null);
     localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
-    return { redirect: getRedirectPath(result.user, result.supplierStatus) };
+    return { redirect: getRedirectPath(result.user, result.supplierStatus), role: result.user.role };
   };
 
   const register = async (data: { name: string; email: string; password: string; phone?: string }) => {

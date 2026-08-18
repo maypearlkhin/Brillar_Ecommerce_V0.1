@@ -154,12 +154,51 @@ export class AdminOrderService {
 }
 
 export class FAQService {
-  static async getPublicFAQs() {
-    return FAQ.find({ isActive: true }).sort({ category: 1, createdAt: 1 });
+  private static normalizePagination(page?: number, limit?: number) {
+    const normalizedPage = Math.max(1, page ?? 1);
+    const normalizedLimit = Math.min(100, Math.max(1, limit ?? 20));
+    return { page: normalizedPage, limit: normalizedLimit };
   }
 
-  static async getAllFAQs() {
-    return FAQ.find().sort({ category: 1, createdAt: 1 });
+  static async getPublicFAQs(options?: { page?: number; limit?: number }) {
+    const filter = { isActive: true };
+    const sort = { category: 1, createdAt: 1 } as const;
+
+    if (options?.page === undefined && options?.limit === undefined) {
+      return FAQ.find(filter).sort(sort);
+    }
+
+    const { page, limit } = this.normalizePagination(options?.page, options?.limit);
+    const skip = (page - 1) * limit;
+    const [faqs, total] = await Promise.all([
+      FAQ.find(filter).sort(sort).skip(skip).limit(limit),
+      FAQ.countDocuments(filter),
+    ]);
+
+    return {
+      faqs,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+    };
+  }
+
+  static async getAllFAQs(options?: { page?: number; limit?: number }) {
+    const sort = { category: 1, createdAt: 1 } as const;
+
+    if (options?.page === undefined && options?.limit === undefined) {
+      return FAQ.find().sort(sort);
+    }
+
+    const { page, limit } = this.normalizePagination(options?.page, options?.limit);
+    const skip = (page - 1) * limit;
+    const [faqs, total] = await Promise.all([
+      FAQ.find().sort(sort).skip(skip).limit(limit),
+      FAQ.countDocuments(),
+    ]);
+
+    return {
+      faqs,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+    };
   }
 
   static async createFAQ(data: {

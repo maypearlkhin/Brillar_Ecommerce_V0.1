@@ -28,6 +28,7 @@ const EMPTY_FORM = {
   phone: '',
   password: '',
   description: '',
+  businessAddress: '',
   categories: [] as string[],
 };
 
@@ -129,6 +130,7 @@ export default function AdminSuppliersPage() {
         phone: form.phone.trim(),
         password: form.password,
         description: form.description.trim() || undefined,
+        businessAddress: form.businessAddress.trim() || undefined,
         categories,
       });
       setCreateOpen(false);
@@ -342,6 +344,19 @@ export default function AdminSuppliersPage() {
                 rows={3}
                 value={form.description}
                 onChange={(e) => updateField('description', e.target.value)}
+                sx={fieldSx}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label="Shop location / business address"
+                placeholder="Street, city, state, country"
+                multiline
+                rows={2}
+                value={form.businessAddress}
+                onChange={(e) => updateField('businessAddress', e.target.value)}
+                helperText="Shown on product pages after the supplier is created."
                 sx={fieldSx}
               />
             </Grid>

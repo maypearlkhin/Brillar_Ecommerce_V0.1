@@ -15,6 +15,7 @@ export interface ISupplierApplication extends Document {
   description?: string;
   categories?: string[];
   website?: string;
+  businessAddress?: string;
   status: SupplierApplicationStatus;
   adminNote?: string;
   submittedAt: Date;
@@ -32,6 +33,7 @@ const supplierApplicationSchema = new Schema<ISupplierApplication>(
     description: { type: String, trim: true },
     categories: [{ type: String, trim: true }],
     website: { type: String, trim: true },
+    businessAddress: { type: String, trim: true },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'more_info_requested'],

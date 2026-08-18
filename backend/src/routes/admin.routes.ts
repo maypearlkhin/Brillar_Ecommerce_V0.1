@@ -59,6 +59,7 @@ router.post(
       .withMessage('Password must be at least 6 characters'),
     body('categories').optional().isArray().withMessage('Categories must be an array'),
     body('categories.*').optional().isString().trim().notEmpty(),
+    body('businessAddress').optional().trim(),
   ],
   validate,
   supplierController.adminCreateSupplier

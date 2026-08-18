@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Box, Container, Paper, Typography, TextField, Button, Alert, Link as MuiLink } from '@mui/material';
 import Link from 'next/link';
@@ -10,17 +10,25 @@ import {
   ALLOWED_EMAIL_DOMAINS_MESSAGE,
   isAllowedCustomerSupplierEmail,
 } from '@/utils/email';
+import { getRoleHomePath } from '@/utils/authRedirect';
 import AuthPageLayout from '@/components/storefront/AuthPageLayout';
+import LoadingState from '@/components/common/LoadingState';
 
 function LoginForm() {
-  const { login } = useAuth();
+  const { login, user, loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && isAuthenticated && user) {
+      router.replace(getRoleHomePath(user.role));
+    }
+  }, [loading, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,16 +37,20 @@ function LoginForm() {
       return;
     }
     try {
-      setLoading(true);
+      setSubmitting(true);
       setError('');
       const result = await login(email, password);
-      router.push(redirect || result.redirect);
+      const target =
+        result.role === 'customer' && redirect ? redirect : result.redirect;
+      router.push(target);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (loading || (isAuthenticated && user)) return <LoadingState />;
 
   return (
     <AuthPageLayout>
@@ -52,8 +64,8 @@ function LoginForm() {
           <Box component="form" onSubmit={handleSubmit}>
             <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={{ mb: 2 }} />
             <TextField fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={{ mb: 3 }} />
-            <Button type="submit" variant="contained" fullWidth size="large" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button type="submit" variant="contained" fullWidth size="large" disabled={submitting}>
+              {submitting ? 'Signing in...' : 'Sign In'}
             </Button>
           </Box>
           <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>

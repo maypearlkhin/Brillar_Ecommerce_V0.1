@@ -155,7 +155,7 @@ export default function PortalLayout({
 
       <Box sx={{ px: 1.5, py: 1.5 }}>
         <ListItemButton
-          onClick={() => { logout(); router.push('/'); }}
+          onClick={() => { logout(); router.push('/login'); }}
           sx={{
             borderRadius: 2,
             color: 'rgba(255,255,255,0.65)',

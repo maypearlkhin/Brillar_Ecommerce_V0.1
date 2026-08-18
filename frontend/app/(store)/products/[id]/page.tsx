@@ -8,12 +8,13 @@ import {
 } from '@mui/material';
 import {
   AddShoppingCart, StorefrontOutlined, FavoriteBorder, Favorite,
-  ShareOutlined, Remove, Add, NavigateNext, Star,
+  ShareOutlined, Remove, Add, NavigateNext, Star, LocationOnOutlined,
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { productService } from '@/services/product.service';
 import { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
+import { formatProductAgeRange, formatProductGender, formatProductType } from '@/utils/productAttributes';
 import LoadingState from '@/components/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -100,6 +101,9 @@ export default function ProductDetailPage() {
   const category = typeof product.categoryId === 'object' ? product.categoryId : null;
   const inStock = product.stockQuantity > 0 && product.status === 'active';
   const imageUrl = product.imageUrls?.[0] || '/placeholder-product.svg';
+  const ageLabel = formatProductAgeRange(product.minAge, product.maxAge);
+  const genderLabel = formatProductGender(product.gender);
+  const typeLabel = formatProductType(product.productType);
 
   return (
     <Box sx={{ bgcolor: colors.cream, minHeight: '60vh' }}>
@@ -115,11 +119,14 @@ export default function ProductDetailPage() {
           </Typography>
         </Breadcrumbs>
 
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
+        <Grid container spacing={3} sx={{ alignItems: 'stretch' }}>
+          <Grid size={{ xs: 12, md: 6 }} sx={{ display: { md: 'flex' } }}>
             <Paper
               elevation={0}
               sx={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
                 border: `1px solid ${colors.divider}`,
                 borderRadius: '16px',
                 overflow: 'hidden',
@@ -129,11 +136,13 @@ export default function ProductDetailPage() {
             >
               <Box
                 sx={{
+                  flex: { md: 1 },
                   borderRadius: '12px',
                   overflow: 'hidden',
                   bgcolor: 'grey.50',
-                  aspectRatio: '1 / 1',
-                  maxHeight: 520,
+                  aspectRatio: { xs: '1 / 1', md: 'auto' },
+                  minHeight: { md: 280 },
+                  display: 'flex',
                 }}
               >
                 <Box
@@ -144,7 +153,7 @@ export default function ProductDetailPage() {
                 />
               </Box>
               {product.imageUrls.length > 1 && (
-                <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap', flexShrink: 0 }}>
                   {product.imageUrls.slice(0, 4).map((url, i) => (
                     <Box
                       key={i}
@@ -165,7 +174,10 @@ export default function ProductDetailPage() {
             </Paper>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid
+            size={{ xs: 12, md: 6 }}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+          >
             <Paper
               elevation={0}
               sx={{
@@ -213,12 +225,12 @@ export default function ProductDetailPage() {
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 2 }}>
-                <Box sx={{ display: 'flex', gap: 0.25 }}>
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} sx={{ fontSize: 18, color: colors.orange }} />
-                  ))}
-                </Box>
-                <Typography variant="body2" color="text.secondary">4.5 (New)</Typography>
+                  <Box sx={{ display: 'flex', gap: 0.25 }}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star key={i} sx={{ fontSize: 18, color: colors.orange }} />
+                    ))}
+                  </Box>
+                {/* <Typography variant="body2" color="text.secondary">4.5 (New)</Typography> */}
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, mb: 2.5 }}>
@@ -334,27 +346,50 @@ export default function ProductDetailPage() {
               <Typography variant="body2" color="text.secondary">
                 SKU: {product.sku}
               </Typography>
+              {(typeLabel || genderLabel || ageLabel) && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                  {typeLabel && <>Type: {typeLabel}</>}
+                  {typeLabel && (genderLabel || ageLabel) && ' · '}
+                  {genderLabel && <>Gender: {genderLabel}</>}
+                  {genderLabel && ageLabel && ' · '}
+                  {ageLabel && <>{ageLabel}</>}
+                </Typography>
+              )}
             </Paper>
 
             {supplier && (
               <Paper
                 elevation={0}
                 sx={{
-                  mt: 2,
                   p: 2,
                   border: `1px solid ${colors.divider}`,
                   borderRadius: '12px',
                   bgcolor: colors.white,
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: supplier.description ? 1 : 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: (supplier.description || supplier.businessAddress) ? 1 : 0 }}>
                   <StorefrontOutlined sx={{ color: colors.orange, fontSize: 20 }} />
-                  <Typography variant="subtitle2" fontWeight={700}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                     Sold by {supplier.storeName}
                   </Typography>
                 </Box>
                 {supplier.description && (
-                  <Typography variant="body2" color="text.secondary">{supplier.description}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: supplier.businessAddress ? 1 : 0 }}>
+                    {supplier.description}
+                  </Typography>
+                )}
+                {supplier.businessAddress && (
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                    <LocationOnOutlined sx={{ color: colors.orange, fontSize: 18, mt: 0.35, flexShrink: 0 }} />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.25 }}>
+                        Shop location
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                        {supplier.businessAddress}
+                      </Typography>
+                    </Box>
+                  </Box>
                 )}
               </Paper>
             )}

@@ -6,22 +6,19 @@ import {
   Slider, Divider, InputAdornment,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { Category, SupplierRef } from '@/types';
+import { Category } from '@/types';
 import { colors } from '@/theme/colors';
 
 const PRICE_SLIDER_MAX = 500;
 
 interface ProductsFilterSidebarProps {
   categories: Category[];
-  suppliers: SupplierRef[];
   categoryCounts: Record<string, number>;
   selectedCategory: string;
-  selectedSupplier: string;
   inStock: boolean;
   minPrice: string;
   maxPrice: string;
   onCategoryChange: (slug: string) => void;
-  onSupplierChange: (slug: string) => void;
   onInStockChange: (checked: boolean) => void;
   onPriceChange: (min: string, max: string) => void;
   onClearAll: () => void;
@@ -29,15 +26,12 @@ interface ProductsFilterSidebarProps {
 
 export default function ProductsFilterSidebar({
   categories,
-  suppliers,
   categoryCounts,
   selectedCategory,
-  selectedSupplier,
   inStock,
   minPrice,
   maxPrice,
   onCategoryChange,
-  onSupplierChange,
   onInStockChange,
   onPriceChange,
   onClearAll,
@@ -183,29 +177,6 @@ export default function ProductsFilterSidebar({
         }
         label={<Typography variant="body2">In stock only</Typography>}
       />
-
-      {suppliers.length > 0 && (
-        <>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Supplier</Typography>
-          <Box sx={{ maxHeight: 160, overflowY: 'auto' }}>
-            {suppliers.map((s) => (
-              <FormControlLabel
-                key={s._id}
-                control={
-                  <Checkbox
-                    size="small"
-                    checked={selectedSupplier === s.slug}
-                    onChange={() => onSupplierChange(selectedSupplier === s.slug ? '' : s.slug)}
-                    color="primary"
-                  />
-                }
-                label={<Typography variant="body2">{s.storeName}</Typography>}
-              />
-            ))}
-          </Box>
-        </>
-      )}
     </Paper>
   );
 }
