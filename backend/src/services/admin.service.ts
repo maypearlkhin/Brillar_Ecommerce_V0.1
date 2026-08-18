@@ -155,25 +155,35 @@ export class AdminOrderService {
 
 export class FAQService {
   static async getPublicFAQs() {
-    return FAQ.find({ isActive: true }).sort({ displayOrder: 1, category: 1 });
+    return FAQ.find({ isActive: true }).sort({ category: 1, createdAt: 1 });
   }
 
   static async getAllFAQs() {
-    return FAQ.find().sort({ displayOrder: 1 });
+    return FAQ.find().sort({ category: 1, createdAt: 1 });
   }
 
   static async createFAQ(data: {
     question: string;
     answer: string;
     category: string;
-    displayOrder?: number;
     isActive?: boolean;
   }) {
-    return FAQ.create(data);
+    return FAQ.create({
+      question: data.question,
+      answer: data.answer,
+      category: data.category,
+      isActive: data.isActive ?? true,
+    });
   }
 
   static async updateFAQ(id: string, data: Record<string, unknown>) {
-    const faq = await FAQ.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const update: Record<string, unknown> = {};
+    if (data.question !== undefined) update.question = data.question;
+    if (data.answer !== undefined) update.answer = data.answer;
+    if (data.category !== undefined) update.category = data.category;
+    if (data.isActive !== undefined) update.isActive = data.isActive;
+
+    const faq = await FAQ.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!faq) throw new Error('FAQ not found');
     return faq;
   }

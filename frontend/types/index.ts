@@ -145,12 +145,22 @@ export interface Order {
   createdAt: string;
 }
 
+export const FAQ_CATEGORIES = [
+  'Orders',
+  'Payments',
+  'Suppliers',
+  'Returns',
+  'Account',
+  'General',
+] as const;
+
+export type FAQCategory = (typeof FAQ_CATEGORIES)[number];
+
 export interface FAQ {
   _id: string;
   question: string;
   answer: string;
-  category: string;
-  displayOrder: number;
+  category: FAQCategory | string;
   isActive: boolean;
 }
 

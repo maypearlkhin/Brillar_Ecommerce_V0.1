@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableHead, TableRow, Button,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, IconButton,
-  Typography,
+  Typography, MenuItem,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import { PageHeader } from '@/components/common/MetricCard';
@@ -12,7 +12,9 @@ import LoadingState from '@/components/common/LoadingState';
 import AdminTable from '@/components/admin/AdminTable';
 import AdminPageCard from '@/components/admin/AdminPageCard';
 import { adminService } from '@/services/supplier.service';
-import { FAQ } from '@/types';
+import { FAQ, FAQ_CATEGORIES } from '@/types';
+
+const emptyForm = { question: '', answer: '', category: '' };
 
 export default function AdminFAQsPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -21,7 +23,7 @@ export default function AdminFAQsPage() {
   const [deleteTarget, setDeleteTarget] = useState<FAQ | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState<FAQ | null>(null);
-  const [form, setForm] = useState({ question: '', answer: '' });
+  const [form, setForm] = useState(emptyForm);
 
   const load = () => {
     adminService.getFAQs().then(setFaqs).finally(() => setLoading(false));
@@ -29,31 +31,23 @@ export default function AdminFAQsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleSave = async () => {
-    const nextDisplayOrder = faqs.length
-      ? Math.max(...faqs.map((faq) => faq.displayOrder)) + 1
-      : 0;
+  const canSave = Boolean(form.question.trim() && form.answer.trim() && form.category);
 
-    const payload = editing
-      ? {
-          question: form.question,
-          answer: form.answer,
-          category: editing.category,
-          displayOrder: editing.displayOrder,
-          isActive: editing.isActive,
-        }
-      : {
-          question: form.question,
-          answer: form.answer,
-          category: 'General',
-          displayOrder: nextDisplayOrder,
-          isActive: true,
-        };
+  const handleSave = async () => {
+    if (!canSave) return;
+
+    const payload = {
+      question: form.question.trim(),
+      answer: form.answer.trim(),
+      category: form.category,
+      isActive: editing?.isActive ?? true,
+    };
 
     if (editing) await adminService.updateFAQ(editing._id, payload);
     else await adminService.createFAQ(payload);
     setOpen(false);
     setEditing(null);
+    setForm(emptyForm);
     load();
   };
 
@@ -69,16 +63,26 @@ export default function AdminFAQsPage() {
     }
   };
 
-  const openEdit = (faq: FAQ) => {
-    setEditing(faq);
-    setForm({ question: faq.question, answer: faq.answer });
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm);
     setOpen(true);
   };
+
+  const openEdit = (faq: FAQ) => {
+    setEditing(faq);
+    setForm({ question: faq.question, answer: faq.answer, category: faq.category });
+    setOpen(true);
+  };
+
+  const categoryOptions = form.category && !(FAQ_CATEGORIES as readonly string[]).includes(form.category)
+    ? [...FAQ_CATEGORIES, form.category]
+    : FAQ_CATEGORIES;
 
   return (
     <>
       <PageHeader title="FAQ Management" action={
-        <Button variant="contained" startIcon={<Add />} onClick={() => { setEditing(null); setForm({ question: '', answer: '' }); setOpen(true); }}>
+        <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
           Add FAQ
         </Button>
       } />
@@ -89,7 +93,6 @@ export default function AdminFAQsPage() {
               <TableRow>
                 <TableCell>Question</TableCell>
                 <TableCell>Category</TableCell>
-                <TableCell>Order</TableCell>
                 <TableCell>Active</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -99,7 +102,6 @@ export default function AdminFAQsPage() {
                 <TableRow key={faq._id}>
                   <TableCell>{faq.question}</TableCell>
                   <TableCell>{faq.category}</TableCell>
-                  <TableCell>{faq.displayOrder}</TableCell>
                   <TableCell>{faq.isActive ? 'Yes' : 'No'}</TableCell>
                   <TableCell>
                     <IconButton size="small" onClick={() => openEdit(faq)}><Edit fontSize="small" /></IconButton>
@@ -116,13 +118,43 @@ export default function AdminFAQsPage() {
         <DialogTitle>{editing ? 'Edit FAQ' : 'Create FAQ'}</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 0.5 }}>
-            <Grid size={{ xs: 12 }}><TextField fullWidth label="Question" value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} /></Grid>
-            <Grid size={{ xs: 12 }}><TextField fullWidth multiline rows={3} label="Answer" value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} /></Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                select
+                fullWidth
+                label="Category"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+              >
+                <MenuItem value="" disabled>Select a category</MenuItem>
+                {categoryOptions.map((category) => (
+                  <MenuItem key={category} value={category}>{category}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label="Question"
+                value={form.question}
+                onChange={(e) => setForm({ ...form, question: e.target.value })}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Answer"
+                value={form.answer}
+                onChange={(e) => setForm({ ...form, answer: e.target.value })}
+              />
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave}>Save</Button>
+          <Button variant="contained" onClick={handleSave} disabled={!canSave}>Save</Button>
         </DialogActions>
       </Dialog>
 

@@ -391,21 +391,23 @@ async function seed() {
 
   // FAQs
   const faqDefs = [
-    { question: 'How does multi-supplier checkout work?', answer: 'When you purchase items from multiple sellers, we create a single order with separate fulfillment tracking for each supplier. You receive one confirmation, and each seller ships their items independently.', category: 'Orders', displayOrder: 1 },
-    { question: 'What payment methods are accepted?', answer: 'We accept Cash on Delivery and Demo Card Payment for this marketplace. All payments are simulated for development purposes.', category: 'Payments', displayOrder: 2 },
-    { question: 'How do I become a supplier?', answer: 'Click "Become a Supplier" in the navigation, create an account or log in, and submit your application. Our team reviews applications within 2-3 business days.', category: 'Suppliers', displayOrder: 3 },
-    { question: 'What is your return policy?', answer: 'Returns are accepted within 14 days of delivery for unused items in original packaging. Contact the supplier directly through your order details to initiate a return.', category: 'Returns', displayOrder: 4 },
-    { question: 'How can I track my order?', answer: 'Visit your Orders page to view order status and fulfillment updates from each supplier involved in your purchase.', category: 'Orders', displayOrder: 5 },
-    { question: 'Is my personal information secure?', answer: 'Yes. We use industry-standard encryption and never share your personal data with suppliers beyond what is necessary for order fulfillment.', category: 'Account', displayOrder: 6 },
+    { question: 'How does multi-supplier checkout work?', answer: 'When you purchase items from multiple sellers, we create a single order with separate fulfillment tracking for each supplier. You receive one confirmation, and each seller ships their items independently.', category: 'Orders' },
+    { question: 'What payment methods are accepted?', answer: 'We accept Cash on Delivery and Demo Card Payment for this marketplace. All payments are simulated for development purposes.', category: 'Payments' },
+    { question: 'How do I become a supplier?', answer: 'Click "Become a Supplier" in the navigation, create an account or log in, and submit your application. Our team reviews applications within 2-3 business days.', category: 'Suppliers' },
+    { question: 'What is your return policy?', answer: 'Returns are accepted within 14 days of delivery for unused items in original packaging. Contact the supplier directly through your order details to initiate a return.', category: 'Returns' },
+    { question: 'How can I track my order?', answer: 'Visit your Orders page to view order status and fulfillment updates from each supplier involved in your purchase.', category: 'Orders' },
+    { question: 'Is my personal information secure?', answer: 'Yes. We use industry-standard encryption and never share your personal data with suppliers beyond what is necessary for order fulfillment.', category: 'Account' },
   ];
 
   for (const faq of faqDefs) {
     await FAQ.findOneAndUpdate(
       { question: faq.question },
-      { ...faq, isActive: true },
+      { $set: { ...faq, isActive: true }, $unset: { displayOrder: 1 } },
       { upsert: true, new: true }
     );
   }
+
+  await FAQ.updateMany({}, { $unset: { displayOrder: 1 } });
 
   console.log('Seed completed successfully!');
   console.log('\nDemo Accounts:');

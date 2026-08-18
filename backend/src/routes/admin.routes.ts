@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import * as adminController from '../controllers/admin.controller';
 import * as supplierController from '../controllers/supplier.controller';
+import { FAQ_CATEGORIES } from '../models/FAQ';
 import { authenticate, authorizeRoles } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 
@@ -72,9 +73,21 @@ router.patch('/customers/:id/toggle-status', adminController.toggleCustomerStatu
 router.get('/orders', adminController.getOrders);
 router.get('/orders/:id', adminController.getOrder);
 
+const faqBodyValidators = [
+  body('question').trim().notEmpty().withMessage('Question is required'),
+  body('answer').trim().notEmpty().withMessage('Answer is required'),
+  body('category')
+    .trim()
+    .notEmpty()
+    .withMessage('Category is required')
+    .isIn([...FAQ_CATEGORIES])
+    .withMessage(`Category must be one of: ${FAQ_CATEGORIES.join(', ')}`),
+  body('isActive').optional(),
+];
+
 router.get('/faqs', adminController.getAllFAQs);
-router.post('/faqs', adminController.createFAQ);
-router.put('/faqs/:id', adminController.updateFAQ);
+router.post('/faqs', faqBodyValidators, validate, adminController.createFAQ);
+router.put('/faqs/:id', faqBodyValidators, validate, adminController.updateFAQ);
 router.delete('/faqs/:id', adminController.deleteFAQ);
 
 router.get('/configuration', adminController.getConfiguration);

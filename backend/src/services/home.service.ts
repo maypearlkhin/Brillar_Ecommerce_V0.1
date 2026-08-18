@@ -18,7 +18,7 @@ export class HomeService {
       Category.countDocuments({ isActive: true }),
       ProductService.getFeatured(8),
       Category.find({ isActive: true }).sort({ displayOrder: 1 }),
-      FAQ.find({ isActive: true }).sort({ displayOrder: 1 }).limit(3),
+      FAQ.find({ isActive: true }).sort({ category: 1, createdAt: 1 }).limit(3),
     ]);
 
     const categoryPreviews = await Promise.all(
