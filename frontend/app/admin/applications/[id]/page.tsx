@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  Typography, Box, Button, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, Alert,
+  Typography, Box, Button, TextField, Alert,
 } from '@mui/material';
+import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
+import { adminCancelButtonSx, adminDangerButtonSx, adminFieldSx } from '@/components/admin/adminDialogStyles';
 import { StorefrontOutlined, EmailOutlined, PhoneOutlined, CategoryOutlined, LanguageOutlined, LocationOnOutlined } from '@mui/icons-material';
 import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
@@ -73,7 +74,7 @@ export default function ApplicationDetailPage() {
   const router = useRouter();
   const [app, setApp] = useState<SupplierApplication | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dialog, setDialog] = useState<'reject' | 'info' | null>(null);
+  const [dialog, setDialog] = useState<'reject' | null>(null);
   const [adminNote, setAdminNote] = useState('');
 
   const load = () => {
@@ -89,8 +90,7 @@ export default function ApplicationDetailPage() {
 
   const handleAction = async () => {
     if (!dialog || !adminNote) return;
-    if (dialog === 'reject') await adminService.rejectApplication(id, adminNote);
-    else await adminService.requestMoreInfo(id, adminNote);
+    await adminService.rejectApplication(id, adminNote);
     router.push('/admin/applications');
   };
 
@@ -201,13 +201,6 @@ export default function ApplicationDetailPage() {
             <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
               <Button
                 variant="outlined"
-                onClick={() => setDialog('info')}
-                sx={{ borderRadius: '10px', px: 2.5, fontWeight: 600, borderWidth: 2, '&:hover': { borderWidth: 2 } }}
-              >
-                Request More Info
-              </Button>
-              <Button
-                variant="outlined"
                 color="error"
                 onClick={() => setDialog('reject')}
                 sx={{ borderRadius: '10px', px: 2.5, fontWeight: 600, borderWidth: 2, '&:hover': { borderWidth: 2 } }}
@@ -233,11 +226,9 @@ export default function ApplicationDetailPage() {
         </Box>
       </AdminPageCard>
 
-      <Dialog open={!!dialog} onClose={() => setDialog(null)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {dialog === 'reject' ? 'Reject Application' : 'Request More Information'}
-        </DialogTitle>
-        <DialogContent>
+      <AdminDialog open={!!dialog} onClose={() => setDialog(null)} maxWidth="sm" fullWidth>
+        <AdminDialogTitle>Reject Application</AdminDialogTitle>
+        <AdminDialogContent>
           <TextField
             fullWidth
             multiline
@@ -245,22 +236,23 @@ export default function ApplicationDetailPage() {
             label="Admin Note"
             value={adminNote}
             onChange={(e) => setAdminNote(e.target.value)}
-            sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+            sx={{ mt: 0.5, ...adminFieldSx }}
             required
           />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDialog(null)} sx={{ borderRadius: '10px' }}>Cancel</Button>
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={() => setDialog(null)} sx={adminCancelButtonSx}>Cancel</Button>
           <Button
             variant="contained"
+            color="error"
             onClick={handleAction}
             disabled={!adminNote}
-            sx={{ borderRadius: '10px', px: 2.5 }}
+            sx={adminDangerButtonSx}
           >
             Confirm
           </Button>
-        </DialogActions>
-      </Dialog>
+        </AdminDialogActions>
+      </AdminDialog>
     </>
   );
 }

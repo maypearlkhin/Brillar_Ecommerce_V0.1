@@ -4,8 +4,9 @@ import { ProductService } from '../services/product.service';
 import { SupplierProfile } from '../models/SupplierProfile';
 import { sendSuccess, sendError } from '../utils/apiResponse';
 import { getParam } from '../utils/params';
+import { AuthRequest } from '../middleware/auth';
 
-export const getProducts = async (req: Request, res: Response) => {
+export const getProducts = async (req: AuthRequest, res: Response) => {
   try {
     const result = await ProductService.getProducts({
       search: req.query.search as string,
@@ -20,25 +21,25 @@ export const getProducts = async (req: Request, res: Response) => {
       sort: req.query.sort as string,
       page: req.query.page ? Number(req.query.page) : 1,
       limit: req.query.limit ? Number(req.query.limit) : 12,
-    });
+    }, req.user?._id?.toString());
     return sendSuccess(res, result);
   } catch (err) {
     return sendError(res, (err as Error).message, 500);
   }
 };
 
-export const getProduct = async (req: Request, res: Response) => {
+export const getProduct = async (req: AuthRequest, res: Response) => {
   try {
-    const product = await ProductService.getProductById(getParam(req.params.id));
+    const product = await ProductService.getProductById(getParam(req.params.id), req.user?._id?.toString());
     return sendSuccess(res, product);
   } catch (err) {
     return sendError(res, (err as Error).message, 404);
   }
 };
 
-export const getFeatured = async (_req: Request, res: Response) => {
+export const getFeatured = async (req: AuthRequest, res: Response) => {
   try {
-    const products = await ProductService.getFeatured();
+    const products = await ProductService.getFeatured(8, req.user?._id?.toString());
     return sendSuccess(res, products);
   } catch (err) {
     return sendError(res, (err as Error).message, 500);
@@ -57,6 +58,22 @@ export const getCategories = async (_req: Request, res: Response) => {
     return sendSuccess(res, withCounts);
   } catch (err) {
     return sendError(res, (err as Error).message, 500);
+  }
+};
+
+export const toggleProductLike = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return sendError(res, 'Authentication required', 401);
+    }
+
+    const result = await ProductService.toggleProductLike(
+      req.user._id.toString(),
+      getParam(req.params.id),
+    );
+    return sendSuccess(res, result);
+  } catch (err) {
+    return sendError(res, (err as Error).message, 404);
   }
 };
 

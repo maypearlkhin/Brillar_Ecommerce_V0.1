@@ -7,7 +7,9 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import theme from '@/theme';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
+import { ProductLikeProvider } from '@/contexts/ProductLikeContext';
 import RoleWidget from '@/components/common/RoleWidget';
+import ScrollToTop from '@/components/common/ScrollToTop';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -15,7 +17,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AuthProvider>
-          <CartProvider>{children}</CartProvider>
+          <ProductLikeProvider>
+            <CartProvider>
+              <ScrollToTop />
+              {children}
+            </CartProvider>
+          </ProductLikeProvider>
           <RoleWidget />
         </AuthProvider>
       </ThemeProvider>

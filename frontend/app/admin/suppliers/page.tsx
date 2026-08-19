@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   TableBody, TableCell, TableHead, TableRow, Button, Tabs, Tab, Box,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, Alert, Typography,
+  TextField, Grid, Alert, Typography,
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { PageHeader } from '@/components/common/MetricCard';
@@ -12,6 +12,8 @@ import StatusChip from '@/components/common/StatusChip';
 import AdminTable from '@/components/admin/AdminTable';
 import AdminPageCard from '@/components/admin/AdminPageCard';
 import AdminCardHeader from '@/components/admin/AdminCardHeader';
+import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
+import { adminCancelButtonSx, adminFieldSx, adminSaveButtonSx } from '@/components/admin/adminDialogStyles';
 import CategoryAutocomplete, { CategoryAutocompleteHandle } from '@/components/common/CategoryAutocomplete';
 import { adminService } from '@/services/supplier.service';
 import { getErrorMessage } from '@/services/api';
@@ -35,7 +37,7 @@ const EMPTY_FORM = {
 type SupplierForm = typeof EMPTY_FORM;
 type SupplierFormErrors = Partial<Record<keyof SupplierForm, string>>;
 
-const fieldSx = { '& .MuiOutlinedInput-root': { borderRadius: '10px' } };
+const fieldSx = adminFieldSx;
 
 const actionButtonSx = {
   borderRadius: '10px',
@@ -242,15 +244,14 @@ export default function AdminSuppliersPage() {
         )}
       </AdminPageCard>
 
-      <Dialog
+      <AdminDialog
         open={createOpen}
         onClose={closeCreateDialog}
         maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: '12px' } } }}
       >
-        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Add Supplier</DialogTitle>
-        <DialogContent>
+        <AdminDialogTitle>Add Supplier</AdminDialogTitle>
+        <AdminDialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.5 }}>
             Create a supplier account directly. Required fields match the customer supplier application form.
           </Typography>
@@ -361,27 +362,22 @@ export default function AdminSuppliersPage() {
               />
             </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
-          <Button onClick={closeCreateDialog} disabled={creating} sx={{ borderRadius: '10px' }}>
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={closeCreateDialog} disabled={creating} sx={adminCancelButtonSx}>
             Cancel
           </Button>
           <Button
             variant="contained"
+            color="secondary"
             onClick={handleCreate}
             disabled={creating}
-            sx={{
-              borderRadius: '10px',
-              px: 2.5,
-              fontWeight: 600,
-              boxShadow: colors.cardShadow,
-              '&:hover': { boxShadow: colors.cardShadowHover },
-            }}
+            sx={adminSaveButtonSx}
           >
             {creating ? 'Creating...' : 'Create Supplier'}
           </Button>
-        </DialogActions>
-      </Dialog>
+        </AdminDialogActions>
+      </AdminDialog>
     </>
   );
 }

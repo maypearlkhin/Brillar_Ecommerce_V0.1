@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Box, Container, Typography, Button, Grid, Paper, alpha,
 } from '@mui/material';
@@ -13,19 +13,34 @@ import SectionHeading from '@/components/storefront/home/SectionHeading';
 import HomeHero from '@/components/storefront/home/HomeHero';
 import DealProductCard from '@/components/storefront/home/DealProductCard';
 import FaqPreviewCard from '@/components/storefront/home/FaqPreviewCard';
+import { useProductLikeContext } from '@/contexts/ProductLikeContext';
+import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { colors } from '@/theme/colors';
 
 export default function HomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { seedProducts } = useProductLikeContext();
+
+  const loadHomeData = useCallback(async () => {
+    try {
+      const nextData = await homeService.getHomeData();
+      setData(nextData);
+      setError(false);
+      seedProducts(nextData.featured);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [seedProducts]);
 
   useEffect(() => {
-    homeService.getHomeData()
-      .then(setData)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, []);
+    void loadHomeData();
+  }, [loadHomeData]);
+
+  useRefreshOnFocus(loadHomeData);
 
   if (loading) return <LoadingState message="Loading marketplace..." />;
 

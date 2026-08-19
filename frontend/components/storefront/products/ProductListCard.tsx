@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, Button, Paper, Snackbar, alpha } from '@mui/material';
-import { Star, ShoppingCartOutlined } from '@mui/icons-material';
+import { Box, Typography, Button, Paper, Snackbar, alpha, IconButton } from '@mui/material';
+import { ShoppingCartOutlined, Favorite, FavoriteBorder } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useProductLike } from '@/hooks/useProductLike';
 import { getErrorMessage } from '@/services/api';
 import { colors } from '@/theme/colors';
 
@@ -19,6 +20,11 @@ export default function ProductListCard({ product }: ProductListCardProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+  const { liked, likeCount, toggleLike, canLike } = useProductLike(product._id, product.likeCount ?? 0, {
+    isAuthenticated,
+    initialLiked: product.likedByCurrentUser ?? false,
+    onAuthRequired: () => router.push(`/login?redirect=/products/${product._id}`),
+  });
   const [adding, setAdding] = useState(false);
   const [snack, setSnack] = useState('');
 
@@ -95,21 +101,43 @@ export default function ProductListCard({ product }: ProductListCardProps) {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0, py: 0.5 }}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 700,
-              lineHeight: 1.35,
-              mb: 0.5,
-              color: colors.charcoal,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {product.name}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 0.5 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                lineHeight: 1.35,
+                flex: 1,
+                color: colors.charcoal,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {product.name}
+            </Typography>
+            <Box
+              sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <IconButton
+                size="small"
+                onClick={toggleLike}
+                disabled={!canLike}
+                aria-label={liked ? 'Unlike product' : 'Like product'}
+                sx={{
+                  border: `1px solid ${colors.divider}`,
+                  ...(!canLike && { opacity: 0.55, cursor: 'not-allowed' }),
+                }}
+              >
+                {liked ? <Favorite fontSize="small" color="error" /> : <FavoriteBorder fontSize="small" />}
+              </IconButton>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, minWidth: 16, textAlign: 'center' }}>
+                {likeCount}
+              </Typography>
+            </Box>
+          </Box>
 
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
             {category?.name || 'Category'}
@@ -119,12 +147,6 @@ export default function ProductListCard({ product }: ProductListCardProps) {
               Sold by: <Box component="span" sx={{ fontWeight: 600, color: colors.charcoal }}>{supplier.storeName}</Box>
             </Typography>
           )}
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-            <Star sx={{ fontSize: 16, color: colors.orange }} />
-            <Typography variant="caption" fontWeight={600}>4.5</Typography>
-            <Typography variant="caption" color="text.secondary">(New)</Typography>
-          </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: colors.orange, fontSize: '1.1rem' }}>

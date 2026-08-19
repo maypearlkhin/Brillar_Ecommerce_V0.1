@@ -28,6 +28,7 @@ export interface IProduct extends Document {
   stockQuantity: number;
   lowStockThreshold: number;
   imageUrls: string[];
+  likeCount: number;
   status: ProductStatus | LegacyProductStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +52,7 @@ const productSchema = new Schema<IProduct>(
     stockQuantity: { type: Number, required: true, min: 0, default: 0 },
     lowStockThreshold: { type: Number, required: true, min: 0, default: 5 },
     imageUrls: [{ type: String }],
+    likeCount: { type: Number, required: true, min: 0, default: 0 },
     status: {
       type: String,
       enum: ['draft', 'active', 'out_of_stock', 'archived', 'inactive'],

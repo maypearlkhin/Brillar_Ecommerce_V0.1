@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import {
   Table, TableBody, TableCell, TableHead, TableRow, Button,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, IconButton,
+  TextField, Grid, IconButton,
   Typography, MenuItem,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
@@ -11,6 +11,8 @@ import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
 import AdminTable from '@/components/admin/AdminTable';
 import AdminPageCard from '@/components/admin/AdminPageCard';
+import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
+import { adminCancelButtonSx, adminDangerButtonSx, adminFieldSx, adminPrimaryActionButtonSx, adminSaveButtonSx } from '@/components/admin/adminDialogStyles';
 import { adminService } from '@/services/supplier.service';
 import { FAQ, FAQ_CATEGORIES } from '@/types';
 
@@ -82,7 +84,7 @@ export default function AdminFAQsPage() {
   return (
     <>
       <PageHeader title="FAQ Management" action={
-        <Button variant="contained" startIcon={<Add />} onClick={openCreate}>
+        <Button variant="contained" color="secondary" startIcon={<Add />} onClick={openCreate} sx={adminPrimaryActionButtonSx}>
           Add FAQ
         </Button>
       } />
@@ -114,10 +116,10 @@ export default function AdminFAQsPage() {
         </AdminPageCard>
       )}
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{editing ? 'Edit FAQ' : 'Create FAQ'}</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+      <AdminDialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+        <AdminDialogTitle>{editing ? 'Edit FAQ' : 'Create FAQ'}</AdminDialogTitle>
+        <AdminDialogContent>
+          <Grid container spacing={2}>
             <Grid size={{ xs: 12 }}>
               <TextField
                 select
@@ -125,6 +127,7 @@ export default function AdminFAQsPage() {
                 label="Category"
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
+                sx={adminFieldSx}
               >
                 <MenuItem value="" disabled>Select a category</MenuItem>
                 {categoryOptions.map((category) => (
@@ -138,6 +141,7 @@ export default function AdminFAQsPage() {
                 label="Question"
                 value={form.question}
                 onChange={(e) => setForm({ ...form, question: e.target.value })}
+                sx={adminFieldSx}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
@@ -148,19 +152,20 @@ export default function AdminFAQsPage() {
                 label="Answer"
                 value={form.answer}
                 onChange={(e) => setForm({ ...form, answer: e.target.value })}
+                sx={adminFieldSx}
               />
             </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={!canSave}>Save</Button>
-        </DialogActions>
-      </Dialog>
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={() => setOpen(false)} sx={adminCancelButtonSx}>Cancel</Button>
+          <Button variant="contained" color="secondary" onClick={handleSave} disabled={!canSave} sx={adminSaveButtonSx}>Save</Button>
+        </AdminDialogActions>
+      </AdminDialog>
 
-      <Dialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Delete FAQ</DialogTitle>
-        <DialogContent>
+      <AdminDialog open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)} maxWidth="xs" fullWidth>
+        <AdminDialogTitle>Delete FAQ</AdminDialogTitle>
+        <AdminDialogContent>
           <Typography>
             Are you sure you want to delete this FAQ? This action cannot be undone.
           </Typography>
@@ -169,14 +174,14 @@ export default function AdminFAQsPage() {
               &ldquo;{deleteTarget.question}&rdquo;
             </Typography>
           )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</Button>
-          <Button variant="contained" color="error" onClick={handleDelete} disabled={deleting}>
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={() => setDeleteTarget(null)} disabled={deleting} sx={adminCancelButtonSx}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDelete} disabled={deleting} sx={adminDangerButtonSx}>
             {deleting ? 'Deleting...' : 'Delete'}
           </Button>
-        </DialogActions>
-      </Dialog>
+        </AdminDialogActions>
+      </AdminDialog>
     </>
   );
 }

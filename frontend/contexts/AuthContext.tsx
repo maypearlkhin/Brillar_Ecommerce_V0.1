@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { User } from '@/types';
 import { authService } from '@/services/auth.service';
 import { getRoleHomePath } from '@/utils/authRedirect';
@@ -103,4 +104,22 @@ export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
+}
+
+/** Clears auth state, waits for React/widget teardown, then navigates. */
+export function useLogout() {
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  return useCallback(
+    (path = '/') => {
+      logout();
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          router.replace(path);
+        }, 50);
+      });
+    },
+    [logout, router],
+  );
 }

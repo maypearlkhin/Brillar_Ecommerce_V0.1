@@ -9,14 +9,14 @@ const categoryImageOverrides: Record<string, string> = {
 };
 
 export class HomeService {
-  static async getHomeData() {
+  static async getHomeData(userId?: string) {
     const activeSupplierIds = await getActiveSupplierIds();
 
     const [productCount, supplierCount, categoryCount, featured, categories, faqs] = await Promise.all([
       Product.countDocuments({ status: 'active', supplierId: { $in: activeSupplierIds } }),
       SupplierProfile.countDocuments({ status: 'active' }),
       Category.countDocuments({ isActive: true }),
-      ProductService.getFeatured(8),
+      ProductService.getFeatured(8, userId),
       Category.find({ isActive: true }).sort({ displayOrder: 1 }),
       FAQ.find({ isActive: true }).sort({ category: 1, createdAt: 1 }).limit(3),
     ]);

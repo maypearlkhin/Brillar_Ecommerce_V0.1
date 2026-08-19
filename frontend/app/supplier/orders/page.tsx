@@ -2,16 +2,29 @@
 
 import { useEffect, useState, Fragment } from 'react';
 import {
-  Table, TableBody, TableCell, TableHead, TableRow, Select, MenuItem, Typography, Box, Collapse,
+  Table, TableBody, TableCell, TableHead, TableRow, Select, MenuItem, Typography, Box, Collapse, Button, Snackbar, Alert,
 } from '@mui/material';
 import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
 import StatusChip from '@/components/common/StatusChip';
 import AdminPageCard from '@/components/admin/AdminPageCard';
+import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
 import { supplierService } from '@/services/supplier.service';
+import { productService } from '@/services/product.service';
+import { getErrorMessage } from '@/services/api';
 import { Order, OrderItem } from '@/types';
 import { formatPrice, formatDate } from '@/utils/format';
 import { colors } from '@/theme/colors';
+
+const PLACEHOLDER_IMAGE = '/placeholder-product.svg';
+
+type SupplierOrder = Order & {
+  id?: string;
+  customer?: { name?: string; email?: string };
+  items?: OrderItem[];
+  fulfillmentStatus?: string;
+  subtotal?: number;
+};
 
 const fulfillmentOptions = [
   { value: 'pending', label: 'Pending' },
@@ -27,19 +40,69 @@ function fulfillmentLabel(status: string) {
 }
 
 export default function SupplierOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<SupplierOrder[]>([]);
+  const [productImages, setProductImages] = useState<Record<string, string>>({});
+  const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
+  const [previewImage, setPreviewImage] = useState(PLACEHOLDER_IMAGE);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState('');
 
   const load = () => {
-    supplierService.getOrders().then((d) => setOrders(d.orders)).finally(() => setLoading(false));
+    setLoading(true);
+    supplierService.getOrders().then((d) => setOrders(d.orders as SupplierOrder[])).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    if (!orders.length) return;
+
+    let cancelled = false;
+
+    const loadImages = async () => {
+      const productIds = [
+        ...new Set(orders.flatMap((order) => (order.items || []).map((item) => item.productId))),
+      ];
+
+      const products = await Promise.all(
+        productIds.map((productId) => productService.getProduct(productId).catch(() => null)),
+      );
+
+      if (cancelled) return;
+
+      const images: Record<string, string> = {};
+      products.forEach((product) => {
+        if (product) images[product._id] = product.imageUrls?.[0] || PLACEHOLDER_IMAGE;
+      });
+      setProductImages(images);
+    };
+
+    loadImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orders]);
+
+  useEffect(() => {
+    if (!selectedItem) return;
+    setPreviewImage(productImages[selectedItem.productId] || PLACEHOLDER_IMAGE);
+  }, [selectedItem, productImages]);
+
+  const getCustomerName = (order: SupplierOrder) => {
+    const customer = order.customer
+      ?? (typeof order.customerId === 'object' ? order.customerId : undefined);
+    return customer?.name ?? '—';
+  };
+
   const handleStatusChange = async (orderId: string, status: string) => {
-    await supplierService.updateFulfillment(orderId, status);
-    load();
+    try {
+      await supplierService.updateFulfillment(String(orderId), status);
+      load();
+    } catch (err) {
+      setStatusError(getErrorMessage(err));
+    }
   };
 
   return (
@@ -62,22 +125,20 @@ export default function SupplierOrdersPage() {
             </TableHead>
             <TableBody>
               {orders.map((order) => {
-                const id = (order as Order & { id?: string }).id || order._id;
-                const items = (order as Order & { items?: OrderItem[] }).items || [];
-                const customer = order.customerId as { name?: string; email?: string };
-                const status = (order as Order & { fulfillmentStatus?: string }).fulfillmentStatus || 'pending';
-                const subtotal = (order as Order & { subtotal?: number }).subtotal || 0;
+                const id = order.id || order._id;
+                const items = order.items || [];
+                const status = order.fulfillmentStatus || 'pending';
+                const subtotal = order.subtotal || 0;
 
                 return (
                   <Fragment key={id}>
                     <TableRow
-                      key={id}
                       hover
                       onClick={() => setExpandedId(expandedId === id ? null : id)}
                       sx={{ cursor: 'pointer' }}
                     >
                       <TableCell sx={{ fontWeight: 600 }}>{order.orderNumber}</TableCell>
-                      <TableCell>{customer?.name}</TableCell>
+                      <TableCell>{getCustomerName(order)}</TableCell>
                       <TableCell>{items.length}</TableCell>
                       <TableCell>{formatPrice(subtotal)}</TableCell>
                       <TableCell>{formatDate(order.createdAt)}</TableCell>
@@ -110,7 +171,27 @@ export default function SupplierOrdersPage() {
                                   borderBottom: `1px solid ${colors.divider}`,
                                 }}
                               >
-                                <Typography variant="body2">
+                                <Typography
+                                  component="button"
+                                  type="button"
+                                  variant="body2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedItem(item);
+                                  }}
+                                  sx={{
+                                    p: 0,
+                                    border: 'none',
+                                    bgcolor: 'transparent',
+                                    font: 'inherit',
+                                    color: 'primary.main',
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    textUnderlineOffset: '2px',
+                                    '&:hover': { color: 'primary.dark' },
+                                  }}
+                                >
                                   {item.nameSnapshot} × {item.quantity}
                                 </Typography>
                                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -132,6 +213,46 @@ export default function SupplierOrdersPage() {
           </Table>
         </AdminPageCard>
       )}
+
+      <AdminDialog open={!!selectedItem} onClose={() => setSelectedItem(null)} maxWidth="xs" fullWidth>
+        <AdminDialogTitle>{selectedItem?.nameSnapshot}</AdminDialogTitle>
+        <AdminDialogContent>
+          <Box
+            component="img"
+            src={previewImage}
+            alt={selectedItem?.nameSnapshot ?? 'Product image'}
+            onError={() => setPreviewImage(PLACEHOLDER_IMAGE)}
+            sx={{
+              width: '100%',
+              maxHeight: 320,
+              objectFit: 'contain',
+              borderRadius: 1,
+              bgcolor: 'grey.50',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          />
+          {selectedItem && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Quantity: {selectedItem.quantity} · SKU: {selectedItem.skuSnapshot}
+            </Typography>
+          )}
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={() => setSelectedItem(null)}>Close</Button>
+        </AdminDialogActions>
+      </AdminDialog>
+
+      <Snackbar
+        open={!!statusError}
+        autoHideDuration={5000}
+        onClose={() => setStatusError('')}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setStatusError('')} sx={{ width: '100%' }}>
+          {statusError}
+        </Alert>
+      </Snackbar>
     </>
   );
 }

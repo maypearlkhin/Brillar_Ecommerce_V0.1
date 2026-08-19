@@ -66,6 +66,8 @@ export interface Product {
   stockQuantity: number;
   lowStockThreshold?: number;
   imageUrls: string[];
+  likeCount?: number;
+  likedByCurrentUser?: boolean;
   status: ProductStatus;
   categoryId: Category;
   supplierId: SupplierRef;
@@ -167,6 +169,7 @@ export interface Order {
   subtotal: number;
   total: number;
   status: string;
+  displayStatus?: string;
   createdAt: string;
 }
 

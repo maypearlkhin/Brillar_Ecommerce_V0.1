@@ -3,6 +3,7 @@ export { SupplierApplication } from './SupplierApplication';
 export { SupplierProfile } from './SupplierProfile';
 export { Category } from './Category';
 export { Product } from './Product';
+export { ProductLike } from './ProductLike';
 export { Cart } from './Cart';
 export { Order } from './Order';
 export { FAQ } from './FAQ';

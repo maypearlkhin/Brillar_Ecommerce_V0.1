@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense, useMemo } from 'react';
+import { useEffect, useState, Suspense, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Box, Container, Grid, Typography, MenuItem, Select, FormControl,
@@ -18,6 +18,8 @@ import ProductListCard from '@/components/storefront/products/ProductListCard';
 import ProductsFilterSidebar from '@/components/storefront/products/ProductsFilterSidebar';
 import LoadingState from '@/components/common/LoadingState';
 import EmptyState from '@/components/common/EmptyState';
+import { useProductLikeContext } from '@/contexts/ProductLikeContext';
+import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { colors } from '@/theme/colors';
 
 type ViewMode = 'list' | 'grid';
@@ -41,6 +43,33 @@ function ProductsContent() {
   const inStock = searchParams.get('inStock') === 'true';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
+  const requestIdRef = useRef(0);
+  const { seedProducts } = useProductLikeContext();
+
+  const loadProducts = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+    setLoading(true);
+
+    try {
+      const data = await productService.getProducts({
+        search, category, gender, type,
+        ...(age ? { age: Number(age) } : {}),
+        sort,
+        page, inStock,
+        ...(minPrice ? { minPrice: Number(minPrice) } : {}),
+        ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
+      });
+
+      if (requestId !== requestIdRef.current) return;
+
+      setProducts(data.products);
+      setPagination(data.pagination);
+      seedProducts(data.products);
+    } finally {
+      if (requestId !== requestIdRef.current) return;
+      setLoading(false);
+    }
+  }, [search, category, gender, type, age, sort, page, inStock, minPrice, maxPrice, seedProducts]);
 
   const updateParams = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -57,19 +86,10 @@ function ProductsContent() {
   };
 
   useEffect(() => {
-    setLoading(true);
-    productService.getProducts({
-      search, category, gender, type,
-      ...(age ? { age: Number(age) } : {}),
-      sort,
-      page, inStock,
-      ...(minPrice ? { minPrice: Number(minPrice) } : {}),
-      ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
-    }).then((data) => {
-      setProducts(data.products);
-      setPagination(data.pagination);
-    }).finally(() => setLoading(false));
-  }, [search, category, gender, type, age, sort, page, inStock, minPrice, maxPrice]);
+    void loadProducts();
+  }, [loadProducts]);
+
+  useRefreshOnFocus(loadProducts);
 
   useEffect(() => {
     productService.getCategories().then(setCategories);

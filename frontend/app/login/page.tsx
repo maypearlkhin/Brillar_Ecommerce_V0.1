@@ -50,37 +50,47 @@ function LoginForm() {
     }
   };
 
-  if (loading || (isAuthenticated && user)) return <LoadingState />;
+  const authPending = loading || (isAuthenticated && user);
 
   return (
     <AuthPageLayout>
-      <Container maxWidth="xs">
-        <Paper sx={{ p: 4 }}>
-          <Typography variant="h5" gutterBottom color="primary.main">Sign In</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Welcome back to Brillar Market
-          </Typography>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={{ mb: 2 }} />
-            <TextField fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={{ mb: 3 }} />
-            <Button type="submit" variant="contained" fullWidth size="large" disabled={submitting}>
-              {submitting ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </Box>
-          <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
-            Don&apos;t have an account?{' '}
-            <MuiLink component={Link} href="/register">Register</MuiLink>
-          </Typography>
-        </Paper>
-      </Container>
+      {authPending ? (
+        <LoadingState />
+      ) : (
+        <Container maxWidth="xs">
+          <Paper sx={{ p: 4 }}>
+            <Typography variant="h5" gutterBottom color="primary.main">Sign In</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Welcome back to Brillar Market
+            </Typography>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <Box component="form" onSubmit={handleSubmit}>
+              <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={{ mb: 2 }} />
+              <TextField fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={{ mb: 3 }} />
+              <Button type="submit" variant="contained" fullWidth size="large" disabled={submitting}>
+                {submitting ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </Box>
+            <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
+              Don&apos;t have an account?{' '}
+              <MuiLink component={Link} href="/register">Register</MuiLink>
+            </Typography>
+          </Paper>
+        </Container>
+      )}
     </AuthPageLayout>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <AuthPageLayout>
+          <LoadingState />
+        </AuthPageLayout>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

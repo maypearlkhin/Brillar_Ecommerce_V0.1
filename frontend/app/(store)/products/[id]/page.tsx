@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Box, Container, Grid, Typography, Button, Paper, Alert, Snackbar,
@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import {
   AddShoppingCart, StorefrontOutlined, FavoriteBorder, Favorite,
-  ShareOutlined, Remove, Add, NavigateNext, Star, LocationOnOutlined,
+  ShareOutlined, Remove, Add, NavigateNext, LocationOnOutlined,
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { productService } from '@/services/product.service';
@@ -18,6 +18,9 @@ import { formatProductAgeRange, formatProductGender, formatProductType } from '@
 import LoadingState from '@/components/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useProductLike } from '@/hooks/useProductLike';
+import { useProductLikeContext } from '@/contexts/ProductLikeContext';
+import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { getErrorMessage } from '@/services/api';
 import { colors } from '@/theme/colors';
 
@@ -35,11 +38,31 @@ export default function ProductDetailPage() {
   const [adding, setAdding] = useState(false);
   const [buying, setBuying] = useState(false);
   const [snack, setSnack] = useState('');
-  const [wishlisted, setWishlisted] = useState(false);
+  const { seedProducts } = useProductLikeContext();
+  const { liked, likeCount, toggleLike, canLike } = useProductLike(id, product?.likeCount ?? 0, {
+    isAuthenticated,
+    initialLiked: product?.likedByCurrentUser ?? false,
+    onAuthRequired: () => router.push(`/login?redirect=/products/${id}`),
+  });
+
+  const loadProduct = useCallback(async () => {
+    try {
+      const nextProduct = await productService.getProduct(id);
+      setProduct(nextProduct);
+      seedProducts([nextProduct]);
+    } catch {
+      setProduct(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, seedProducts]);
 
   useEffect(() => {
-    productService.getProduct(id).then(setProduct).catch(() => setProduct(null)).finally(() => setLoading(false));
-  }, [id]);
+    setLoading(true);
+    void loadProduct();
+  }, [loadProduct]);
+
+  useRefreshOnFocus(loadProduct);
 
   useEffect(() => {
     if (product) {
@@ -211,26 +234,24 @@ export default function ProductDetailPage() {
                 <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
                   {product.name}
                 </Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => setWishlisted((w) => !w)}
-                  sx={{
-                    border: `1px solid ${colors.divider}`,
-                    borderRadius: '50%',
-                    flexShrink: 0,
-                  }}
-                >
-                  {wishlisted ? <Favorite fontSize="small" color="error" /> : <FavoriteBorder fontSize="small" />}
-                </IconButton>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 2 }}>
-                  <Box sx={{ display: 'flex', gap: 0.25 }}>
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} sx={{ fontSize: 18, color: colors.orange }} />
-                    ))}
-                  </Box>
-                {/* <Typography variant="body2" color="text.secondary">4.5 (New)</Typography> */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                  <IconButton
+                    size="small"
+                    onClick={toggleLike}
+                    disabled={!canLike}
+                    aria-label={liked ? 'Unlike product' : 'Like product'}
+                    sx={{
+                      border: `1px solid ${colors.divider}`,
+                      borderRadius: '50%',
+                      ...(!canLike && { opacity: 0.55, cursor: 'not-allowed' }),
+                    }}
+                  >
+                    {liked ? <Favorite fontSize="small" color="error" /> : <FavoriteBorder fontSize="small" />}
+                  </IconButton>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, minWidth: 16, textAlign: 'center' }}>
+                    {likeCount}
+                  </Typography>
+                </Box>
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, mb: 2.5 }}>
@@ -293,17 +314,19 @@ export default function ProductDetailPage() {
                   </Box>
 
                   <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5, mb: 2.5 }}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      size="large"
-                      fullWidth
-                      disabled={buying || adding}
-                      onClick={() => handleAddToCart(true)}
-                      sx={{ py: 1.35, borderRadius: '10px', fontWeight: 700 }}
-                    >
-                      {buying ? 'Processing...' : 'Buy Now'}
-                    </Button>
+                    {isAuthenticated && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        fullWidth
+                        disabled={buying || adding}
+                        onClick={() => handleAddToCart(true)}
+                        sx={{ py: 1.35, borderRadius: '10px', fontWeight: 700 }}
+                      >
+                        {buying ? 'Processing...' : 'Buy Now'}
+                      </Button>
+                    )}
                     <Button
                       variant="contained"
                       color="secondary"

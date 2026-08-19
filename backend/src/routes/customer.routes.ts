@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import * as orderController from '../controllers/order.controller';
+import * as productController from '../controllers/product.controller';
 import { authenticate, authorizeRoles } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 
@@ -8,6 +9,8 @@ const router = Router();
 
 router.use(authenticate);
 router.use(authorizeRoles('customer', 'admin', 'supplier'));
+
+router.post('/products/:id/like', productController.toggleProductLike);
 
 router.get('/cart', orderController.getCart);
 router.post('/cart', orderController.addToCart);

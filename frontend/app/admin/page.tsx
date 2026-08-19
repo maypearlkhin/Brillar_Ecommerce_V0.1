@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Grid, Typography, TableBody, TableCell, TableHead, TableRow, Box } from '@mui/material';
 import { ReceiptLongOutlined, AssignmentOutlined } from '@mui/icons-material';
 import { PageHeader } from '@/components/common/MetricCard';
@@ -18,6 +19,7 @@ import { colors } from '@/theme/colors';
 const METRIC_ACCENTS = [colors.orange, '#5c9e6e', colors.orangeDark, colors.charcoal, colors.orangeLight, colors.textSecondary, '#c45c5c'];
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -90,9 +92,8 @@ export default function AdminDashboardPage() {
                     <TableRow
                       key={order._id as string}
                       hover
-                      component={Link}
-                      href={`/admin/orders/${order._id}`}
-                      sx={{ cursor: 'pointer', textDecoration: 'none' }}
+                      onClick={() => router.push(`/admin/orders/${order._id}`)}
+                      sx={{ cursor: 'pointer' }}
                     >
                       <TableCell sx={{ fontWeight: 600 }}>{order.orderNumber as string}</TableCell>
                       <TableCell>{(order.customerId as Record<string, string>)?.name}</TableCell>

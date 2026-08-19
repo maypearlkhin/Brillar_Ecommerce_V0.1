@@ -6,9 +6,9 @@ import {
 } from '@mui/material';
 import { Menu as MenuIcon, LogoutOutlined, StorefrontOutlined, HomeOutlined } from '@mui/icons-material';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useLogout } from '@/contexts/AuthContext';
 import { getActiveNavItem } from '@/utils/nav';
 import { colors } from '@/theme/colors';
 
@@ -27,6 +27,8 @@ interface PortalLayoutProps {
   portalName?: string;
   portalSubtitle?: string;
   roleLabel?: string;
+  /** Hides the top header bar (admin uses sidebar branding instead) */
+  hideHeader?: boolean;
   /** When set, shows a header button to return to the customer storefront */
   storefrontLink?: { href: string; label?: string };
 }
@@ -38,11 +40,12 @@ export default function PortalLayout({
   portalName,
   portalSubtitle = 'Operations Console',
   roleLabel,
+  hideHeader = false,
   storefrontLink,
 }: PortalLayoutProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const logoutAndNavigate = useLogout();
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeItem = getActiveNavItem(navItems, pathname);
   const displayPortalName = portalName || title;
@@ -55,7 +58,7 @@ export default function PortalLayout({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <StorefrontOutlined sx={{ color: 'primary.main', fontSize: 22 }} />
           <Typography variant="h6" sx={{ color: 'common.white', fontWeight: 700, letterSpacing: '-0.02em' }}>
-            Brillar
+            Brillar Market
           </Typography>
         </Box>
 
@@ -155,7 +158,7 @@ export default function PortalLayout({
 
       <Box sx={{ px: 1.5, py: 1.5 }}>
         <ListItemButton
-          onClick={() => { logout(); router.push('/login'); }}
+          onClick={() => logoutAndNavigate('/login')}
           sx={{
             borderRadius: 2,
             color: 'rgba(255,255,255,0.65)',
@@ -182,8 +185,9 @@ export default function PortalLayout({
         position="fixed"
         elevation={0}
         sx={{
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          ml: { md: `${DRAWER_WIDTH}px` },
+          width: { md: hideHeader ? '100%' : `calc(100% - ${DRAWER_WIDTH}px)` },
+          ml: { md: hideHeader ? 0 : `${DRAWER_WIDTH}px` },
+          display: hideHeader ? { xs: 'block', md: 'none' } : 'block',
           bgcolor: 'background.paper',
           color: 'text.primary',
           borderBottom: '1px solid',
@@ -195,22 +199,24 @@ export default function PortalLayout({
             <IconButton
               edge="start"
               onClick={() => setMobileOpen(!mobileOpen)}
-              sx={{ display: { md: 'none' } }}
+              sx={{ display: hideHeader ? 'inline-flex' : { xs: 'inline-flex', md: 'none' } }}
             >
               <MenuIcon />
             </IconButton>
-            <Box>
-              <Typography variant="body1" fontWeight={700}>
-                {displayPortalName}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {activeItem?.label ? `${activeItem.label} · ${portalSubtitle}` : portalSubtitle}
-              </Typography>
-            </Box>
+            {!hideHeader && (
+              <Box>
+                <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                  {displayPortalName}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {activeItem?.label ? `${activeItem.label} · ${portalSubtitle}` : portalSubtitle}
+                </Typography>
+              </Box>
+            )}
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            {storefrontLink && (
+          {!hideHeader && storefrontLink && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <Tooltip title={storefrontLink.label || 'Browse store as customer'}>
                 <IconButton
                   component={Link}
@@ -231,14 +237,8 @@ export default function PortalLayout({
                   <HomeOutlined fontSize="small" />
                 </IconButton>
               </Tooltip>
-            )}
-            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-              {user?.name}
-            </Typography>
-            <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontSize: '0.8rem' }}>
-              {user?.name?.charAt(0) || '?'}
-            </Avatar>
-          </Box>
+            </Box>
+          )}
         </Toolbar>
       </AppBar>
 
@@ -276,7 +276,7 @@ export default function PortalLayout({
         sx={{
           flexGrow: 1,
           p: { xs: 2, md: 3.5 },
-          mt: 8,
+          mt: hideHeader ? { xs: 7, md: 0 } : 8,
           bgcolor: colors.cream,
           minHeight: '100vh',
           maxWidth: '100%',

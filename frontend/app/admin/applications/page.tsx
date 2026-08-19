@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   TableBody, TableCell, TableHead, TableRow, Button, Box,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, Tabs, Tab,
+  TextField, Typography, Tabs, Tab,
 } from '@mui/material';
 import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
@@ -12,6 +12,8 @@ import StatusChip from '@/components/common/StatusChip';
 import AdminTable from '@/components/admin/AdminTable';
 import AdminPageCard from '@/components/admin/AdminPageCard';
 import AdminCardHeader from '@/components/admin/AdminCardHeader';
+import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
+import { adminCancelButtonSx, adminDangerButtonSx, adminFieldSx, adminSaveButtonSx } from '@/components/admin/adminDialogStyles';
 import { adminService } from '@/services/supplier.service';
 import { SupplierApplication } from '@/types';
 import { formatDate } from '@/utils/format';
@@ -117,19 +119,33 @@ export default function AdminApplicationsPage() {
         )}
       </AdminPageCard>
 
-      <Dialog open={!!dialog} onClose={() => setDialog(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>{dialog === 'reject' ? 'Reject Application' : 'Request More Information'}</DialogTitle>
-        <DialogContent>
-          <TextField fullWidth multiline rows={3} label="Admin Note" value={adminNote}
-            onChange={(e) => setAdminNote(e.target.value)} sx={{ mt: 1 }} required />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialog(null)}>Cancel</Button>
-          <Button variant="contained" color={dialog === 'reject' ? 'error' : 'primary'} onClick={handleAction} disabled={!adminNote}>
+      <AdminDialog open={!!dialog} onClose={() => setDialog(null)} maxWidth="sm" fullWidth>
+        <AdminDialogTitle>{dialog === 'reject' ? 'Reject Application' : 'Request More Information'}</AdminDialogTitle>
+        <AdminDialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label="Admin Note"
+            value={adminNote}
+            onChange={(e) => setAdminNote(e.target.value)}
+            sx={{ mt: 0.5, ...adminFieldSx }}
+            required
+          />
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={() => setDialog(null)} sx={adminCancelButtonSx}>Cancel</Button>
+          <Button
+            variant="contained"
+            color={dialog === 'reject' ? 'error' : 'secondary'}
+            onClick={handleAction}
+            disabled={!adminNote}
+            sx={dialog === 'reject' ? adminDangerButtonSx : adminSaveButtonSx}
+          >
             Confirm
           </Button>
-        </DialogActions>
-      </Dialog>
+        </AdminDialogActions>
+      </AdminDialog>
     </>
   );
 }

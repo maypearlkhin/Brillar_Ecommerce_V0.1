@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Box, Typography, IconButton, Snackbar, Paper, alpha } from '@mui/material';
-import { Star, ShoppingCartOutlined } from '@mui/icons-material';
+import { ShoppingCartOutlined, Favorite, FavoriteBorder } from '@mui/icons-material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useProductLike } from '@/hooks/useProductLike';
 import { getErrorMessage } from '@/services/api';
 import { colors } from '@/theme/colors';
 
@@ -20,6 +21,11 @@ export default function DealProductCard({ product }: DealProductCardProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+  const { liked, likeCount, toggleLike, canLike } = useProductLike(product._id, product.likeCount ?? 0, {
+    isAuthenticated,
+    initialLiked: product.likedByCurrentUser ?? false,
+    onAuthRequired: () => router.push(`/login?redirect=/products/${product._id}`),
+  });
   const [adding, setAdding] = useState(false);
   const [snack, setSnack] = useState('');
 
@@ -123,33 +129,48 @@ export default function DealProductCard({ product }: DealProductCardProps) {
         </Box>
 
         <Box sx={{ p: 1.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.75 }}>
-            <Star sx={{ fontSize: 16, color: 'primary.main' }} />
-            <Typography variant="caption" fontWeight={600}>4.5</Typography>
-            <Typography variant="caption" color="text.secondary">(New)</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.75, mb: 0.75 }}>
+            <Typography
+              component={Link}
+              href={`/products/${product._id}`}
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                flex: 1,
+                textDecoration: 'none',
+                color: 'inherit',
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                lineHeight: 1.4,
+                '&:hover': { color: 'primary.main' },
+              }}
+            >
+              {product.name}
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+              <IconButton
+                size="small"
+                onClick={toggleLike}
+                disabled={!canLike}
+                aria-label={liked ? 'Unlike product' : 'Like product'}
+                sx={{
+                  border: `1px solid ${colors.divider}`,
+                  width: 32,
+                  height: 32,
+                  ...(!canLike && { opacity: 0.55, cursor: 'not-allowed' }),
+                }}
+              >
+                {liked ? <Favorite sx={{ fontSize: 18, color: 'error.main' }} /> : <FavoriteBorder sx={{ fontSize: 18 }} />}
+              </IconButton>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, minWidth: 16, textAlign: 'center' }}>
+                {likeCount}
+              </Typography>
+            </Box>
           </Box>
 
-          <Typography
-            component={Link}
-            href={`/products/${product._id}`}
-            variant="body2"
-            sx={{
-              fontWeight: 500,
-              mb: 0.75,
-              textDecoration: 'none',
-              color: 'inherit',
-              overflow: 'hidden',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              lineHeight: 1.4,
-              '&:hover': { color: 'primary.main' },
-            }}
-          >
-            {product.name}
-          </Typography>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 'auto' }}>
             <Typography variant="body1" fontWeight={700}>
               {formatPrice(product.price)}
             </Typography>

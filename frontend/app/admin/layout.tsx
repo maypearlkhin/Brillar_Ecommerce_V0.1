@@ -12,6 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         portalName="Brillar Market Admin"
         portalSubtitle="Operations Console"
         roleLabel="Administrator"
+        hideHeader
         navItems={adminNavItems}
       >
         {children}

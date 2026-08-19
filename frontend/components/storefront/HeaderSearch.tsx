@@ -200,7 +200,7 @@ export default function HeaderSearch() {
                     </ListItemIcon>
                     <ListItemText
                       primary={PRODUCT_GENDER_LABELS[gender]}
-                      primaryTypographyProps={{ fontWeight: 600, fontSize: '0.875rem' }}
+                      slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.875rem' } } }}
                     />
                   </ListItemButton>
                 ))}
@@ -238,7 +238,7 @@ export default function HeaderSearch() {
                     </ListItemIcon>
                     <ListItemText
                       primary={PRODUCT_TYPE_LABELS[type]}
-                      primaryTypographyProps={{ fontWeight: 600, fontSize: '0.875rem' }}
+                      slotProps={{ primary: { sx: { fontWeight: 600, fontSize: '0.875rem' } } }}
                     />
                   </ListItemButton>
                 ))}
@@ -281,8 +281,10 @@ export default function HeaderSearch() {
                           ? `${category.productCount} product${category.productCount === 1 ? '' : 's'}`
                           : undefined
                       }
-                      primaryTypographyProps={{ fontWeight: 600, fontSize: '0.875rem' }}
-                      secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                      slotProps={{
+                        primary: { sx: { fontWeight: 600, fontSize: '0.875rem' } },
+                        secondary: { sx: { fontSize: '0.75rem' } },
+                      }}
                     />
                   </ListItemButton>
                 ))}

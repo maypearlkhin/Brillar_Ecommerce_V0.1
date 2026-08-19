@@ -5,15 +5,13 @@ import {
   Alert,
   Box,
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Tab,
   Tabs,
   TextField,
   Typography,
 } from '@mui/material';
+import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
+import { adminCancelButtonSx, adminDangerButtonSx, adminFieldSx } from '@/components/admin/adminDialogStyles';
 import {
   AdminPanelSettingsOutlined,
   BoltOutlined,
@@ -232,7 +230,7 @@ export default function AdminConfigurationPage() {
                   label={copy.urlLabel}
                   value={activeConfig.url}
                   slotProps={{ input: { readOnly: true } }}
-                  sx={{ mb: 1.5 }}
+                  sx={{ mb: 1.5, ...adminFieldSx }}
                 />
                 <TextField
                   fullWidth
@@ -240,7 +238,7 @@ export default function AdminConfigurationPage() {
                   label={copy.tokenLabel}
                   value={activeConfig.token}
                   slotProps={{ input: { readOnly: true } }}
-                  sx={{ mb: 1.5 }}
+                  sx={{ mb: 1.5, ...adminFieldSx }}
                 />
                 <Button
                   variant="outlined"
@@ -268,7 +266,7 @@ export default function AdminConfigurationPage() {
                     }
                     setForm({ ...form, url: e.target.value });
                   }}
-                  sx={{ mb: 1.5 }}
+                  sx={{ mb: 1.5, ...adminFieldSx }}
                 />
                 <TextField
                   fullWidth
@@ -284,7 +282,7 @@ export default function AdminConfigurationPage() {
                     }
                     setForm({ ...form, token: e.target.value });
                   }}
-                  sx={{ mb: 2 }}
+                  sx={{ mb: 2, ...adminFieldSx }}
                 />
                 <Button
                   variant="contained"
@@ -300,23 +298,23 @@ export default function AdminConfigurationPage() {
         </Box>
       </AdminPageCard>
 
-      <Dialog open={!!removeTarget} onClose={() => !removing && setRemoveTarget(null)} maxWidth="xs" fullWidth>
-        <DialogTitle>Remove Configuration</DialogTitle>
-        <DialogContent>
+      <AdminDialog open={!!removeTarget} onClose={() => !removing && setRemoveTarget(null)} maxWidth="xs" fullWidth>
+        <AdminDialogTitle>Remove Configuration</AdminDialogTitle>
+        <AdminDialogContent>
           <Typography>
             Are you sure you want to remove this {removeTarget ? TAB_CONFIG[removeTarget].label.toLowerCase() : ''} configuration?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
             You will need to add a new one before it can be used again.
           </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setRemoveTarget(null)} disabled={removing}>Cancel</Button>
-          <Button variant="contained" color="error" onClick={handleRemove} disabled={removing}>
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={() => setRemoveTarget(null)} disabled={removing} sx={adminCancelButtonSx}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleRemove} disabled={removing} sx={adminDangerButtonSx}>
             {removing ? 'Removing...' : 'Remove'}
           </Button>
-        </DialogActions>
-      </Dialog>
+        </AdminDialogActions>
+      </AdminDialog>
     </>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box, Typography, Paper, TextField, Checkbox, FormControlLabel, Button,
   Slider, Divider, InputAdornment,
@@ -8,8 +8,20 @@ import {
 import { Search as SearchIcon } from '@mui/icons-material';
 import { Category } from '@/types';
 import { colors } from '@/theme/colors';
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 
 const PRICE_SLIDER_MAX = 500;
+const PRICE_FILTER_DEBOUNCE_MS = 400;
+
+const preventNumberInputWheelChange = (event: React.WheelEvent<HTMLInputElement>) => {
+  event.currentTarget.blur();
+};
+
+const priceInputSlotProps = {
+  htmlInput: {
+    onWheel: preventNumberInputWheelChange,
+  },
+};
 
 interface ProductsFilterSidebarProps {
   categories: Category[];
@@ -39,11 +51,34 @@ export default function ProductsFilterSidebar({
   const [categorySearch, setCategorySearch] = useState('');
   const [sliderMin, setSliderMin] = useState(Number(minPrice) || 0);
   const [sliderMax, setSliderMax] = useState(Number(maxPrice) || PRICE_SLIDER_MAX);
+  const sliderMinRef = useRef(sliderMin);
+  const sliderMaxRef = useRef(sliderMax);
+
+  useEffect(() => {
+    sliderMinRef.current = sliderMin;
+  }, [sliderMin]);
+
+  useEffect(() => {
+    sliderMaxRef.current = sliderMax;
+  }, [sliderMax]);
+
+  const applyPrice = useCallback(() => {
+    const min = sliderMinRef.current;
+    const max = sliderMaxRef.current;
+    onPriceChange(
+      min > 0 ? String(min) : '',
+      max < PRICE_SLIDER_MAX ? String(max) : '',
+    );
+  }, [onPriceChange]);
+
+  const { debounced: debouncedApplyPrice, cancel: cancelDebouncedApplyPrice, flush: flushApplyPrice } =
+    useDebouncedCallback(applyPrice, PRICE_FILTER_DEBOUNCE_MS);
 
   useEffect(() => {
     setSliderMin(Number(minPrice) || 0);
     setSliderMax(Number(maxPrice) || PRICE_SLIDER_MAX);
-  }, [minPrice, maxPrice]);
+    cancelDebouncedApplyPrice();
+  }, [minPrice, maxPrice, cancelDebouncedApplyPrice]);
 
   const filteredCategories = useMemo(() => {
     const q = categorySearch.trim().toLowerCase();
@@ -55,13 +90,7 @@ export default function ProductsFilterSidebar({
     const [min, max] = value as number[];
     setSliderMin(min);
     setSliderMax(max);
-  };
-
-  const applyPrice = () => {
-    onPriceChange(
-      sliderMin > 0 ? String(sliderMin) : '',
-      sliderMax < PRICE_SLIDER_MAX ? String(sliderMax) : '',
-    );
+    debouncedApplyPrice();
   };
 
   return (
@@ -91,12 +120,14 @@ export default function ProductsFilterSidebar({
         placeholder="Search categories..."
         value={categorySearch}
         onChange={(e) => setCategorySearch(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" color="action" />
-            </InputAdornment>
-          ),
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          },
         }}
         sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
       />
@@ -139,7 +170,7 @@ export default function ProductsFilterSidebar({
         min={0}
         max={PRICE_SLIDER_MAX}
         onChange={handleSliderChange}
-        onChangeCommitted={applyPrice}
+        onChangeCommitted={flushApplyPrice}
         color="primary"
         size="small"
         sx={{ mb: 2, px: 0.5 }}
@@ -150,8 +181,12 @@ export default function ProductsFilterSidebar({
           size="small"
           type="number"
           value={sliderMin}
-          onChange={(e) => setSliderMin(Number(e.target.value) || 0)}
-          onBlur={applyPrice}
+          slotProps={priceInputSlotProps}
+          onChange={(e) => {
+            setSliderMin(Number(e.target.value) || 0);
+            debouncedApplyPrice();
+          }}
+          onBlur={flushApplyPrice}
           sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
         />
         <TextField
@@ -159,8 +194,12 @@ export default function ProductsFilterSidebar({
           size="small"
           type="number"
           value={sliderMax}
-          onChange={(e) => setSliderMax(Number(e.target.value) || PRICE_SLIDER_MAX)}
-          onBlur={applyPrice}
+          slotProps={priceInputSlotProps}
+          onChange={(e) => {
+            setSliderMax(Number(e.target.value) || PRICE_SLIDER_MAX);
+            debouncedApplyPrice();
+          }}
+          onBlur={flushApplyPrice}
           sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
         />
       </Box>

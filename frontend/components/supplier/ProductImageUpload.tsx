@@ -69,23 +69,23 @@ export default function ProductImageUpload({ value, onChange, disabled }: Produc
           if (!disabled && !uploading) handleFiles(e.dataTransfer.files);
         }}
         sx={{
-          border: `2px dashed ${colors.divider}`,
+          border: '2px dashed #CBD5E1',
           borderRadius: '12px',
           p: 3,
           textAlign: 'center',
           cursor: disabled || uploading ? 'default' : 'pointer',
-          bgcolor: 'grey.50',
+          bgcolor: '#F8FAFC',
           transition: 'border-color 0.2s ease, background-color 0.2s ease',
           '&:hover': disabled || uploading ? undefined : {
-            borderColor: colors.orange,
-            bgcolor: 'rgba(244, 145, 33, 0.04)',
+            borderColor: colors.charcoal,
+            bgcolor: '#F1F5F9',
           },
         }}
       >
         {uploading ? (
-          <CircularProgress size={28} sx={{ color: colors.orange }} />
+          <CircularProgress size={28} sx={{ color: colors.charcoal }} />
         ) : (
-          <CloudUploadOutlined sx={{ fontSize: 36, color: colors.orange, mb: 1 }} />
+          <CloudUploadOutlined sx={{ fontSize: 36, color: colors.charcoal, mb: 1 }} />
         )}
         <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
           Upload product images
@@ -124,8 +124,8 @@ export default function ProductImageUpload({ value, onChange, disabled }: Produc
                 height: 96,
                 borderRadius: '10px',
                 overflow: 'hidden',
-                border: `1px solid ${index === 0 ? colors.orange : colors.divider}`,
-                boxShadow: index === 0 ? `0 0 0 1px ${colors.orange}` : undefined,
+                border: `1px solid ${index === 0 ? colors.charcoal : colors.divider}`,
+                boxShadow: index === 0 ? `0 0 0 1px ${colors.charcoal}` : undefined,
               }}
             >
               <Box
@@ -140,7 +140,7 @@ export default function ProductImageUpload({ value, onChange, disabled }: Produc
                     position: 'absolute',
                     top: 6,
                     left: 6,
-                    bgcolor: colors.orange,
+                    bgcolor: colors.charcoal,
                     color: colors.white,
                     px: 0.75,
                     py: 0.25,

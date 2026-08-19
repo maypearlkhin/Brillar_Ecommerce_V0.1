@@ -1,8 +1,9 @@
-import { Order, IDeliveryAddress, FulfillmentStatus } from '../models/Order';
+import { Order, IDeliveryAddress, FulfillmentStatus, IOrder } from '../models/Order';
 import { Cart } from '../models/Cart';
 import { Product } from '../models/Product';
 import { CartService } from './cart.service';
 import { generateOrderNumber } from '../utils/orderNumber';
+import { syncOrderStatusFromFulfillment, deriveCustomerOrderStatus } from '../utils/orderStatus';
 
 export class CheckoutService {
   static async placeOrder(
@@ -89,8 +90,11 @@ export class CheckoutService {
       paymentStatus: 'paid',
       subtotal,
       total: subtotal,
-      status: 'processing',
+      status: 'pending',
     });
+
+    syncOrderStatusFromFulfillment(order);
+    await order.save();
 
     await CartService.clearCart(customerId);
 
@@ -102,6 +106,14 @@ export class CheckoutService {
 }
 
 export class OrderService {
+  static formatCustomerOrder(order: IOrder) {
+    const plain = order.toObject();
+    return {
+      ...plain,
+      displayStatus: deriveCustomerOrderStatus(order),
+    };
+  }
+
   static async getCustomerOrders(customerId: string, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
     const [orders, total] = await Promise.all([
@@ -112,14 +124,17 @@ export class OrderService {
         .limit(limit),
       Order.countDocuments({ customerId }),
     ]);
-    return { orders, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+    return {
+      orders: orders.map((order) => this.formatCustomerOrder(order)),
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    };
   }
 
   static async getCustomerOrder(customerId: string, orderId: string) {
     const order = await Order.findOne({ _id: orderId, customerId })
       .populate('supplierOrders.supplierId', 'storeName slug');
     if (!order) throw new Error('Order not found');
-    return order;
+    return this.formatCustomerOrder(order);
   }
 
   static async buyAgain(customerId: string, orderId: string) {

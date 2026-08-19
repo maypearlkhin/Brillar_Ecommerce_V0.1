@@ -12,6 +12,9 @@ export const colors = {
   divider: '#e8e0d5',
   orangeShadow: 'rgba(244, 145, 33, 0.18)',
   orangeShadowSoft: 'rgba(244, 145, 33, 0.12)',
+  orangePale: '#FFF6ED',
+  orangePaleBorder: '#F9E2C6',
+  orangePaleDeep: '#FFEFDC',
   cardShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
   cardShadowHover: '0 8px 24px rgba(0, 0, 0, 0.1)',
 };

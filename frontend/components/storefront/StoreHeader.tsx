@@ -17,21 +17,26 @@ import {
   PersonAddOutlined,
 } from '@mui/icons-material';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, useLogout } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import HeaderSearch from '@/components/storefront/HeaderSearch';
 import { colors } from '@/theme/colors';
 
 export default function StoreHeader({ hideSearch = false }: { hideSearch?: boolean }) {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const logoutAndNavigate = useLogout();
   const { itemCount } = useCart();
-  const router = useRouter();
 
   const handleLogout = () => {
-    logout();
-    router.push('/');
+    logoutAndNavigate('/');
   };
+
+  const authActionsSx = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1.25,
+    flexShrink: 0,
+  } as const;
 
   return (
     <AppBar
@@ -80,7 +85,15 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
 
         {!hideSearch && <HeaderSearch />}
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexShrink: 0, ml: hideSearch ? 'auto' : 0 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.25,
+            flexShrink: 0,
+            ml: hideSearch ? 'auto' : 0,
+          }}
+        >
           <Tooltip title="Products">
             <IconButton component={Link} href="/products" size="small" sx={{ display: { xs: 'none', md: 'inline-flex' } }}>
               <CategoryOutlined fontSize="small" />
@@ -92,73 +105,73 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
             </IconButton>
           </Tooltip>
 
-          {isAuthenticated ? (
-            <>
-              <Tooltip title="Orders">
-                <IconButton component={Link} href="/orders" size="small">
-                  <ReceiptLongOutlined fontSize="small" />
+          <Box sx={authActionsSx}>
+          <Box sx={{ display: isAuthenticated ? 'flex' : 'none', alignItems: 'center', gap: 1.25 }}>
+            <Tooltip title="Orders">
+              <IconButton component={Link} href="/orders" size="small">
+                <ReceiptLongOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Cart">
+              <IconButton component={Link} href="/cart" size="small">
+                <Badge badgeContent={itemCount} color="primary">
+                  <ShoppingCartOutlined fontSize="small" />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+            {user?.role === 'admin' && (
+              <Tooltip title="Admin Portal">
+                <IconButton component={Link} href="/admin" size="small" sx={{ display: { xs: 'none', lg: 'inline-flex' } }}>
+                  <AdminPanelSettingsOutlined fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Cart">
-                <IconButton component={Link} href="/cart" size="small">
-                  <Badge badgeContent={itemCount} color="primary">
-                    <ShoppingCartOutlined fontSize="small" />
-                  </Badge>
+            )}
+            {user?.role === 'supplier' && (
+              <Tooltip title="Supplier Portal">
+                <IconButton component={Link} href="/supplier" size="small" sx={{ display: { xs: 'none', lg: 'inline-flex' } }}>
+                  <StoreOutlined fontSize="small" />
                 </IconButton>
               </Tooltip>
-              {user?.role === 'admin' && (
-                <Tooltip title="Admin Portal">
-                  <IconButton component={Link} href="/admin" size="small" sx={{ display: { xs: 'none', lg: 'inline-flex' } }}>
-                    <AdminPanelSettingsOutlined fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-              {user?.role === 'supplier' && (
-                <Tooltip title="Supplier Portal">
-                  <IconButton component={Link} href="/supplier" size="small" sx={{ display: { xs: 'none', lg: 'inline-flex' } }}>
-                    <StoreOutlined fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-              <Tooltip title="Profile">
-                <IconButton component={Link} href="/account" size="small">
-                  <PersonOutlined fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Button
-                onClick={handleLogout}
-                variant="contained"
-                color="secondary"
-                size="small"
-                sx={{
-                  ml: 0.5,
-                  px: 2.5,
-                  py: 0.85,
-                  minWidth: 'auto',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  borderRadius: '24px',
-                  boxShadow: colors.cardShadow,
-                  '&:hover': { boxShadow: colors.cardShadowHover },
-                }}
-              >
-                Logout
-              </Button>
-            </>
-          ) : (
-            <>
-              <Tooltip title="Sign In">
-                <IconButton component={Link} href="/login" size="small">
-                  <LoginOutlined fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Register">
-                <IconButton component={Link} href="/register" size="small" color="primary">
-                  <PersonAddOutlined fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
+            )}
+            <Tooltip title="Profile">
+              <IconButton component={Link} href="/account" size="small">
+                <PersonOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Button
+              onClick={handleLogout}
+              variant="contained"
+              color="secondary"
+              size="small"
+              sx={{
+                ml: 0.5,
+                px: 2.5,
+                py: 0.85,
+                minWidth: 'auto',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                borderRadius: '24px',
+                boxShadow: colors.cardShadow,
+                '&:hover': { boxShadow: colors.cardShadowHover },
+              }}
+            >
+              Logout
+            </Button>
+          </Box>
+
+          <Box sx={{ display: isAuthenticated ? 'none' : 'flex', alignItems: 'center', gap: 1.25 }}>
+            <Tooltip title="Sign In">
+              <IconButton component={Link} href="/login" size="small">
+                <LoginOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Register">
+              <IconButton component={Link} href="/register" size="small" color="primary">
+                <PersonAddOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
         </Box>
       </Toolbar>
     </AppBar>

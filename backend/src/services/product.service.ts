@@ -1,4 +1,6 @@
+import { Types } from 'mongoose';
 import { Product } from '../models/Product';
+import { ProductLike } from '../models/ProductLike';
 import { Category } from '../models/Category';
 import { SupplierProfile } from '../models/SupplierProfile';
 import {
@@ -33,7 +35,54 @@ export async function getActiveSupplierIds() {
 }
 
 export class ProductService {
-  static async getProducts(query: ProductQuery) {
+  private static async assertPublicProduct(id: string) {
+    const product = await Product.findById(id);
+
+    if (!product || HIDDEN_PRODUCT_STATUSES.includes(product.status as string)) {
+      throw new Error('Product not found');
+    }
+
+    const supplier = await SupplierProfile.findById(product.supplierId);
+    if (!supplier || supplier.status !== 'active') {
+      throw new Error('Product not found');
+    }
+
+    return product;
+  }
+
+  static async attachLikeStatus<T extends { _id: { toString(): string } }>(
+    products: T[],
+    userId?: string,
+  ) {
+    if (products.length === 0) return [];
+
+    const productIds = products.map((product) => product._id);
+    const likeCounts = await ProductLike.aggregate<{ _id: Types.ObjectId; count: number }>([
+      { $match: { productId: { $in: productIds } } },
+      { $group: { _id: '$productId', count: { $sum: 1 } } },
+    ]);
+    const countMap = new Map(likeCounts.map((entry) => [entry._id.toString(), entry.count]));
+
+    let likedIds = new Set<string>();
+    if (userId) {
+      const userObjectId = new Types.ObjectId(userId);
+      const likes = await ProductLike.find({
+        userId: userObjectId,
+        productId: { $in: productIds },
+      }).select('productId');
+      likedIds = new Set(likes.map((like) => like.productId.toString()));
+    }
+
+    return products.map((product) => ({
+      ...(typeof (product as { toObject?: () => Record<string, unknown> }).toObject === 'function'
+        ? (product as { toObject: () => Record<string, unknown> }).toObject()
+        : product),
+      likeCount: countMap.get(product._id.toString()) ?? 0,
+      ...(userId ? { likedByCurrentUser: likedIds.has(product._id.toString()) } : {}),
+    }));
+  }
+
+  static async getProducts(query: ProductQuery, userId?: string) {
     const activeSupplierIds = await getActiveSupplierIds();
     const filter: Record<string, unknown> = {
       status: { $in: PUBLIC_PRODUCT_STATUSES },
@@ -114,12 +163,12 @@ export class ProductService {
     ]);
 
     return {
-      products,
+      products: await ProductService.attachLikeStatus(products, userId),
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     };
   }
 
-  static async getProductById(id: string) {
+  static async getProductById(id: string, userId?: string) {
     const product = await Product.findById(id)
       .populate('categoryId', 'name slug')
       .populate('supplierId', 'storeName slug description logoUrl businessAddress status');
@@ -133,12 +182,13 @@ export class ProductService {
       throw new Error('Product not found');
     }
 
-    return product;
+    const [enriched] = await ProductService.attachLikeStatus([product], userId);
+    return enriched;
   }
 
-  static async getFeatured(limit = 8) {
+  static async getFeatured(limit = 8, userId?: string) {
     const activeSupplierIds = await getActiveSupplierIds();
-    return Product.find({
+    const products = await Product.find({
       status: 'active',
       stockQuantity: { $gt: 0 },
       supplierId: { $in: activeSupplierIds },
@@ -147,6 +197,45 @@ export class ProductService {
       .populate('supplierId', 'storeName slug')
       .sort({ createdAt: -1 })
       .limit(limit);
+
+    return ProductService.attachLikeStatus(products, userId);
+  }
+
+  static async syncProductLikeCount(productId: Types.ObjectId) {
+    const likeCount = await ProductLike.countDocuments({ productId });
+    await Product.findByIdAndUpdate(productId, { likeCount });
+    return likeCount;
+  }
+
+  static async toggleProductLike(userId: string, productId: string) {
+    await ProductService.assertPublicProduct(productId);
+
+    const userObjectId = new Types.ObjectId(userId);
+    const productObjectId = new Types.ObjectId(productId);
+
+    const existing = await ProductLike.findOne({
+      userId: userObjectId,
+      productId: productObjectId,
+    });
+
+    if (existing) {
+      await existing.deleteOne();
+      const likeCount = await ProductService.syncProductLikeCount(productObjectId);
+      return { liked: false, likeCount };
+    }
+
+    try {
+      await ProductLike.create({ userId: userObjectId, productId: productObjectId });
+    } catch (error) {
+      const duplicate = (error as { code?: number }).code === 11000;
+      if (!duplicate) throw error;
+
+      const likeCount = await ProductService.syncProductLikeCount(productObjectId);
+      return { liked: true, likeCount };
+    }
+
+    const likeCount = await ProductService.syncProductLikeCount(productObjectId);
+    return { liked: true, likeCount };
   }
 
   static async countPublicActive(categoryId?: string) {

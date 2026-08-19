@@ -11,7 +11,7 @@ import StatusChip from '@/components/common/StatusChip';
 import AdminPageCard from '@/components/admin/AdminPageCard';
 import { supplierService, InventorySummary } from '@/services/supplier.service';
 import { Product } from '@/types';
-import { colors } from '@/theme/colors';
+import { adminFieldSx, adminSaveButtonSx } from '@/components/admin/adminDialogStyles';
 import { numberInputSlotProps } from '@/utils/numberInput';
 
 const updateStockColumnSx = { width: 176, pr: 2.5, whiteSpace: 'nowrap' };
@@ -50,7 +50,7 @@ export default function SupplierInventoryPage() {
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 4 }}><MetricCard label="Total SKUs" value={summary?.totalSkus || 0} /></Grid>
-        <Grid size={{ xs: 4 }}><MetricCard label="Low Stock" value={summary?.lowStock || 0} accent={colors.orange} /></Grid>
+        <Grid size={{ xs: 4 }}><MetricCard label="Low Stock" value={summary?.lowStock || 0} accent="#64748B" /></Grid>
         <Grid size={{ xs: 4 }}><MetricCard label="Out of Stock" value={summary?.outOfStock || 0} /></Grid>
       </Grid>
 
@@ -92,21 +92,20 @@ export default function SupplierInventoryPage() {
                         type="number"
                         value={stockEdits[p._id] ?? ''}
                         onChange={(e) => setStockEdits({ ...stockEdits, [p._id]: e.target.value })}
-                        sx={{ width: 80, '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                        sx={{ width: 80, ...adminFieldSx }}
                         slotProps={numberInputSlotProps}
                       />
                       <Button
                         size="small"
                         variant="contained"
+                        color="secondary"
                         onClick={() => handleSaveStock(p._id)}
                         sx={{
-                          borderRadius: '8px',
+                          ...adminSaveButtonSx,
                           minWidth: 64,
-                          fontWeight: 600,
                           fontSize: '0.75rem',
                           px: 1.5,
-                          boxShadow: 'none',
-                          '&:hover': { boxShadow: 'none' },
+                          py: 0.65,
                         }}
                       >
                         Save

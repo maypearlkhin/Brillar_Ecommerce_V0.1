@@ -4,6 +4,7 @@ import { colors } from '@/theme/colors';
 
 interface StatusChipProps {
   status: string;
+  label?: string;
   size?: ChipProps['size'];
 }
 
@@ -45,13 +46,13 @@ const badgeStyles: Record<string, { bg: string; color: string; border: string }>
   },
 };
 
-export default function StatusChip({ status, size = 'small' }: StatusChipProps) {
+export default function StatusChip({ status, label, size = 'small' }: StatusChipProps) {
   const colorKey = statusColor(status);
   const style = badgeStyles[colorKey] || badgeStyles.default;
 
   return (
     <Chip
-      label={capitalize(status)}
+      label={label ?? capitalize(status)}
       size={size}
       sx={{
         borderRadius: '20px',

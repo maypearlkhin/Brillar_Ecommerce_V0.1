@@ -13,6 +13,7 @@ import SupplierProductForm from '@/components/supplier/SupplierProductForm';
 import { supplierService } from '@/services/supplier.service';
 import { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
+import { adminFieldSx, adminPrimaryActionButtonSx } from '@/components/admin/adminDialogStyles';
 
 const STATUS_FILTERS = [
   { value: '', label: 'All statuses' },
@@ -53,9 +54,10 @@ export default function SupplierProductsPage() {
         action={
           <Button
             variant="contained"
+            color="secondary"
             startIcon={<Add />}
             onClick={() => { setEditing(null); setOpen(true); }}
-            sx={{ borderRadius: '10px', fontWeight: 600 }}
+            sx={adminPrimaryActionButtonSx}
           >
             Add Product
           </Button>
@@ -68,7 +70,7 @@ export default function SupplierProductsPage() {
           placeholder="Search by name or SKU"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{ minWidth: 220, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+          sx={{ minWidth: 220, ...adminFieldSx }}
         />
         <TextField
           size="small"
@@ -76,7 +78,7 @@ export default function SupplierProductsPage() {
           label="Status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          sx={{ minWidth: 160, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+          sx={{ minWidth: 160, ...adminFieldSx }}
         >
           {STATUS_FILTERS.map((s) => <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>)}
         </TextField>

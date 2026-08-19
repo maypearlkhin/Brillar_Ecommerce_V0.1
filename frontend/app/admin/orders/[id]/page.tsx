@@ -2,22 +2,64 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Paper, Typography, Box, Grid, Divider } from '@mui/material';
+import { Paper, Typography, Box, Grid, Divider, Button } from '@mui/material';
 import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
 import StatusChip from '@/components/common/StatusChip';
+import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
 import { adminService } from '@/services/supplier.service';
-import { Order } from '@/types';
+import { productService } from '@/services/product.service';
+import { Order, OrderItem } from '@/types';
 import { formatPrice, formatDateTime } from '@/utils/format';
+
+const PLACEHOLDER_IMAGE = '/placeholder-product.svg';
 
 export default function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<Order | null>(null);
+  const [productImages, setProductImages] = useState<Record<string, string>>({});
+  const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
+  const [previewImage, setPreviewImage] = useState(PLACEHOLDER_IMAGE);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     adminService.getOrder(id).then(setOrder).finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!order) return;
+
+    let cancelled = false;
+
+    const loadImages = async () => {
+      const productIds = [
+        ...new Set(order.supplierOrders.flatMap((supplierOrder) => supplierOrder.items.map((item) => item.productId))),
+      ];
+
+      const products = await Promise.all(
+        productIds.map((productId) => productService.getProduct(productId).catch(() => null)),
+      );
+
+      if (cancelled) return;
+
+      const images: Record<string, string> = {};
+      products.forEach((product) => {
+        if (product) images[product._id] = product.imageUrls?.[0] || PLACEHOLDER_IMAGE;
+      });
+      setProductImages(images);
+    };
+
+    loadImages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [order]);
+
+  useEffect(() => {
+    if (!selectedItem) return;
+    setPreviewImage(productImages[selectedItem.productId] || PLACEHOLDER_IMAGE);
+  }, [selectedItem, productImages]);
 
   if (loading) return <LoadingState />;
   if (!order) return <Typography>Order not found</Typography>;
@@ -32,12 +74,31 @@ export default function AdminOrderDetailPage() {
             return (
               <Paper key={idx} sx={{ p: 2, mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography>{supplier?.storeName}</Typography>
+                  <Typography sx={{ fontWeight: 700 }}>{supplier?.storeName ?? 'Supplier'}</Typography>
                   <StatusChip status={so.fulfillmentStatus} />
                 </Box>
                 {so.items.map((item, i) => (
                   <Box key={i} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
-                    <Typography variant="body2">{item.nameSnapshot} × {item.quantity}</Typography>
+                    <Typography
+                      component="button"
+                      type="button"
+                      variant="body2"
+                      onClick={() => setSelectedItem(item)}
+                      sx={{
+                        p: 0,
+                        border: 'none',
+                        bgcolor: 'transparent',
+                        font: 'inherit',
+                        color: 'primary.main',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        textUnderlineOffset: '2px',
+                        '&:hover': { color: 'primary.dark' },
+                      }}
+                    >
+                      {item.nameSnapshot} × {item.quantity}
+                    </Typography>
                     <Typography variant="body2">{formatPrice(item.lineTotal)}</Typography>
                   </Box>
                 ))}
@@ -69,6 +130,35 @@ export default function AdminOrderDetailPage() {
           </Paper>
         </Grid>
       </Grid>
+
+      <AdminDialog open={!!selectedItem} onClose={() => setSelectedItem(null)} maxWidth="xs" fullWidth>
+        <AdminDialogTitle>{selectedItem?.nameSnapshot}</AdminDialogTitle>
+        <AdminDialogContent>
+          <Box
+            component="img"
+            src={previewImage}
+            alt={selectedItem?.nameSnapshot ?? 'Product image'}
+            onError={() => setPreviewImage(PLACEHOLDER_IMAGE)}
+            sx={{
+              width: '100%',
+              maxHeight: 320,
+              objectFit: 'contain',
+              borderRadius: 1,
+              bgcolor: 'grey.50',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+          />
+          {selectedItem && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Quantity: {selectedItem.quantity} · SKU: {selectedItem.skuSnapshot}
+            </Typography>
+          )}
+        </AdminDialogContent>
+        <AdminDialogActions>
+          <Button onClick={() => setSelectedItem(null)}>Close</Button>
+        </AdminDialogActions>
+      </AdminDialog>
     </>
   );
 }

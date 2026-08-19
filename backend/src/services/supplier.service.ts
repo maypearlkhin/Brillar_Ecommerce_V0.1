@@ -3,7 +3,7 @@ import { SupplierApplication } from '../models/SupplierApplication';
 import { SupplierProfile } from '../models/SupplierProfile';
 import { User } from '../models/User';
 import { Product } from '../models/Product';
-import { Order } from '../models/Order';
+import { Order, FulfillmentStatus } from '../models/Order';
 import { Category } from '../models/Category';
 import { slugify } from '../utils/slugify';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../constants/productAttributes';
 import { linkCategoryNames, findOrCreateCategory, normalizeCategoryNamesInput } from './category.service';
 import { DEFAULT_PLATFORM_COMMISSION_RATE } from '../config/platform';
+import { syncOrderStatusFromFulfillment, VALID_FULFILLMENT_STATUSES } from '../utils/orderStatus';
 import bcrypt from 'bcryptjs';
 
 type PublishAction = 'draft' | 'publish';
@@ -537,30 +538,28 @@ export class SupplierService {
     orderId: string,
     fulfillmentStatus: string
   ) {
-    const validTransitions: Record<string, string[]> = {
-      pending: ['confirmed', 'cancelled'],
-      confirmed: ['processing', 'cancelled'],
-      processing: ['shipped', 'cancelled'],
-      shipped: ['delivered'],
-      delivered: [],
-      cancelled: [],
-    };
-
-    const order = await Order.findById(orderId);
-    if (!order) throw new Error('Order not found');
-
-    const supplierOrder = order.supplierOrders.find(
-      (so) => so.supplierId.toString() === supplierProfileId
-    );
-    if (!supplierOrder) throw new Error('Order not found for this supplier');
-
-    const allowed = validTransitions[supplierOrder.fulfillmentStatus] || [];
-    if (!allowed.includes(fulfillmentStatus)) {
-      throw new Error(`Cannot transition from ${supplierOrder.fulfillmentStatus} to ${fulfillmentStatus}`);
+    if (!VALID_FULFILLMENT_STATUSES.includes(fulfillmentStatus as FulfillmentStatus)) {
+      throw new Error('Invalid fulfillment status');
     }
 
-    supplierOrder.fulfillmentStatus = fulfillmentStatus as typeof supplierOrder.fulfillmentStatus;
+    const supplierObjectId = new Types.ObjectId(supplierProfileId);
+
+    const order = await Order.findOneAndUpdate(
+      {
+        _id: orderId,
+        'supplierOrders.supplierId': supplierObjectId,
+      },
+      {
+        $set: { 'supplierOrders.$.fulfillmentStatus': fulfillmentStatus },
+      },
+      { new: true }
+    );
+
+    if (!order) throw new Error('Order not found for this supplier');
+
+    syncOrderStatusFromFulfillment(order);
     await order.save();
+
     return order;
   }
 

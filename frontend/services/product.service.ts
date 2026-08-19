@@ -17,4 +17,8 @@ export const productService = {
 
   getSuppliers: () =>
     api.get<ApiResponse<SupplierRef[]>>('/suppliers').then((r) => r.data.data),
+
+  updateLike: (id: string) =>
+    api.post<ApiResponse<{ liked: boolean; likeCount: number }>>(`/products/${id}/like`)
+      .then((r) => r.data.data),
 };

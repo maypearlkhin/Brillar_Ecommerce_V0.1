@@ -13,7 +13,9 @@ export const metadata: Metadata = {
   title: 'Brillar Market — Multi-Supplier Marketplace',
   description: 'Shop from trusted suppliers on Brillar Market',
   icons: {
-    icon: '/favicon.png',
+    icon: [{ url: '/favicon.png', type: 'image/png' }],
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   },
 };
 
