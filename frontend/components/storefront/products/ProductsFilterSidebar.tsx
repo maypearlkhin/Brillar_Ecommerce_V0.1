@@ -107,13 +107,13 @@ export default function ProductsFilterSidebar({
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="subtitle1" fontWeight={700}>Filters</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Filters</Typography>
         <Button size="small" color="primary" onClick={onClearAll} sx={{ fontWeight: 600, minWidth: 'auto' }}>
           Clear All
         </Button>
       </Box>
 
-      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>Category</Typography>
+      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600 }}>Category</Typography>
       <TextField
         fullWidth
         size="small"
@@ -164,7 +164,7 @@ export default function ProductsFilterSidebar({
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>Price Range</Typography>
+      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Price Range</Typography>
       <Slider
         value={[sliderMin, sliderMax]}
         min={0}

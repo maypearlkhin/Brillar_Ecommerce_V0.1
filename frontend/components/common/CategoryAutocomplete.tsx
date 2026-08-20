@@ -161,16 +161,18 @@ const CategoryAutocomplete = forwardRef<CategoryAutocompleteHandle, CategoryAuto
       },
     }));
 
+    const singleCategoryId = props.multiple ? '' : props.categoryId;
+    const singleCategoryName = props.multiple ? '' : props.categoryName;
+
     useEffect(() => {
       if (props.multiple) return;
-      const { categoryId, categoryName } = props;
-      if (categoryId) {
-        const match = categories.find((c) => c._id === categoryId);
+      if (singleCategoryId) {
+        const match = categories.find((c) => c._id === singleCategoryId);
         setCategoryInput(match?.name || '');
         return;
       }
-      setCategoryInput(categoryName);
-    }, [props.multiple, props.categoryId, props.categoryName, categories]);
+      setCategoryInput(singleCategoryName);
+    }, [props.multiple, singleCategoryId, singleCategoryName, categories]);
 
     if (props.multiple) {
       const selectedNames = props.value;
@@ -296,6 +298,9 @@ const CategoryAutocomplete = forwardRef<CategoryAutocompleteHandle, CategoryAuto
         }
         getOptionLabel={getOptionLabel}
         isOptionEqualToValue={(option, value) => {
+          if (typeof option === 'string' || typeof value === 'string') {
+            return option === value;
+          }
           if (option.inputValue && value.inputValue) {
             return option.inputValue.toLowerCase() === value.inputValue.toLowerCase();
           }

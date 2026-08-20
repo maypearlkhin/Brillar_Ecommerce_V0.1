@@ -171,7 +171,7 @@ export default function DealProductCard({ product }: DealProductCardProps) {
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 'auto' }}>
-            <Typography variant="body1" fontWeight={700}>
+            <Typography variant="body1" sx={{ fontWeight: 700 }}>
               {formatPrice(product.price)}
             </Typography>
           </Box>

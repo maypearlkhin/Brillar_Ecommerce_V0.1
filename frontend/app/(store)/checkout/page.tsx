@@ -204,7 +204,7 @@ function CheckoutContent() {
     <Box sx={{ bgcolor: colors.cream, minHeight: '100vh', py: { xs: 3, md: 5 } }}>
       <Container maxWidth="lg">
         <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
+          <Typography variant="h4" sx={{ mb: 1, fontWeight: 700 }}>
             Complete your order
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 560, mx: 'auto' }}>
@@ -319,7 +319,7 @@ function CheckoutContent() {
                   >
                     {itemCount} item{itemCount !== 1 ? 's' : ''}
                   </Box>
-                  <Typography variant="h4" fontWeight={800} sx={{ mb: 2 }}>
+                  <Typography variant="h4" sx={{ mb: 2, fontWeight: 800 }}>
                     {formatPrice(subtotal)}
                   </Typography>
 
@@ -331,7 +331,7 @@ function CheckoutContent() {
                           <Typography variant="body2">
                             {product?.name} × {item.quantity}
                           </Typography>
-                          <Typography variant="body2" fontWeight={600}>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
                             {formatPrice(item.unitPrice * item.quantity)}
                           </Typography>
                         </Box>
@@ -360,7 +360,7 @@ function CheckoutContent() {
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography variant="body2" color="text.secondary">Amount</Typography>
-                        <Typography variant="body2" fontWeight={700}>{formatPrice(subtotal)}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{formatPrice(subtotal)}</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography variant="body2" color="text.secondary">Deliver to</Typography>
@@ -531,7 +531,7 @@ function CheckoutContent() {
                     </Button>
                   </Stack>
 
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2, color: 'text.secondary' }}>
+                  <Stack direction="row" spacing={1} sx={{ mt: 2, color: 'text.secondary', alignItems: 'center' }}>
                     <LockOutlined sx={{ fontSize: 16 }} />
                     <Typography variant="caption">
                       Protected by encryption. Your payment is processed securely — card data is safeguarded from checkout through authorization.

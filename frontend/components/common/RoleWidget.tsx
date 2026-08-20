@@ -75,7 +75,7 @@ export default function RoleWidget() {
 
   useEffect(() => {
     let cancelled = false;
-    let teardownTimer: ReturnType<typeof setTimeout> | null = null;
+    let teardownTimer: number | null = null;
 
     const scheduleTeardown = () => {
       if (teardownTimer) clearTimeout(teardownTimer);

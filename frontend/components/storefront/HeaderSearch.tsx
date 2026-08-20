@@ -23,6 +23,7 @@ import {
   matchGenders,
   matchProductTypes,
   parseProductSearchQuery,
+  SearchCategory,
 } from '@/utils/productSearch';
 
 const SEARCH_HEIGHT = 40;
@@ -90,7 +91,7 @@ export default function HeaderSearch() {
     navigateWithParsed(search.trim());
   };
 
-  const handleCategorySelect = (category: Category) => {
+  const handleCategorySelect = (category: SearchCategory) => {
     setSearch('');
     setOpen(false);
     router.push(`/products?category=${encodeURIComponent(category.slug)}`);
@@ -264,9 +265,12 @@ export default function HeaderSearch() {
                 Categories
               </Typography>
               <List dense disablePadding>
-                {matchingCategories.map((category) => (
+                {matchingCategories.map((category) => {
+                  const fullCategory = categories.find((c) => c.slug === category.slug);
+
+                  return (
                   <ListItemButton
-                    key={category._id}
+                    key={category.slug}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleCategorySelect(category)}
                     sx={{ py: 0.75 }}
@@ -277,8 +281,8 @@ export default function HeaderSearch() {
                     <ListItemText
                       primary={category.name}
                       secondary={
-                        typeof category.productCount === 'number'
-                          ? `${category.productCount} product${category.productCount === 1 ? '' : 's'}`
+                        typeof fullCategory?.productCount === 'number'
+                          ? `${fullCategory.productCount} product${fullCategory.productCount === 1 ? '' : 's'}`
                           : undefined
                       }
                       slotProps={{
@@ -287,7 +291,8 @@ export default function HeaderSearch() {
                       }}
                     />
                   </ListItemButton>
-                ))}
+                  );
+                })}
               </List>
             </>
           )}

@@ -9,15 +9,23 @@ import {
   DialogTitleProps,
   DialogContentProps,
   DialogActionsProps,
+  SxProps,
+  Theme,
 } from '@mui/material';
 import {
   adminDialogActionsSx,
   adminDialogContentSx,
+  adminDialogPaperSx,
   adminDialogSlotProps,
   adminDialogTitleSx,
 } from './adminDialogStyles';
 
 export function AdminDialog({ slotProps, ...props }: DialogProps) {
+  const paperSlotSx = (slotProps?.paper as { sx?: SxProps<Theme> } | undefined)?.sx;
+  const paperSx = (
+    paperSlotSx ? [adminDialogPaperSx, paperSlotSx] : adminDialogPaperSx
+  ) as SxProps<Theme>;
+
   return (
     <Dialog
       slotProps={{
@@ -25,7 +33,7 @@ export function AdminDialog({ slotProps, ...props }: DialogProps) {
         paper: {
           ...adminDialogSlotProps.paper,
           ...slotProps?.paper,
-          sx: [adminDialogSlotProps.paper.sx, (slotProps?.paper as { sx?: object })?.sx],
+          sx: paperSx,
         },
       }}
       {...props}
