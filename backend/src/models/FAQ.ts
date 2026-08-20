@@ -11,6 +11,10 @@ export const FAQ_CATEGORIES = [
 
 export type FAQCategory = (typeof FAQ_CATEGORIES)[number];
 
+export function isFAQCategory(value: string): value is FAQCategory {
+  return (FAQ_CATEGORIES as readonly string[]).includes(value);
+}
+
 export interface IFAQ extends Document {
   question: string;
   answer: string;

@@ -138,17 +138,66 @@ class AdminOrderService {
 }
 exports.AdminOrderService = AdminOrderService;
 class FAQService {
-    static async getPublicFAQs() {
-        return FAQ_1.FAQ.find({ isActive: true }).sort({ displayOrder: 1, category: 1 });
+    static normalizePagination(page, limit) {
+        const normalizedPage = Math.max(1, page ?? 1);
+        const normalizedLimit = Math.min(100, Math.max(1, limit ?? 20));
+        return { page: normalizedPage, limit: normalizedLimit };
     }
-    static async getAllFAQs() {
-        return FAQ_1.FAQ.find().sort({ displayOrder: 1 });
+    static async getPublicFAQs(options) {
+        const filter = { isActive: true };
+        const sort = { category: 1, createdAt: 1 };
+        if (options?.page === undefined && options?.limit === undefined) {
+            return FAQ_1.FAQ.find(filter).sort(sort);
+        }
+        const { page, limit } = this.normalizePagination(options?.page, options?.limit);
+        const skip = (page - 1) * limit;
+        const [faqs, total] = await Promise.all([
+            FAQ_1.FAQ.find(filter).sort(sort).skip(skip).limit(limit),
+            FAQ_1.FAQ.countDocuments(filter),
+        ]);
+        return {
+            faqs,
+            pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+        };
+    }
+    static async getAllFAQs(options) {
+        const sort = { category: 1, createdAt: 1 };
+        if (options?.page === undefined && options?.limit === undefined) {
+            return FAQ_1.FAQ.find().sort(sort);
+        }
+        const { page, limit } = this.normalizePagination(options?.page, options?.limit);
+        const skip = (page - 1) * limit;
+        const [faqs, total] = await Promise.all([
+            FAQ_1.FAQ.find().sort(sort).skip(skip).limit(limit),
+            FAQ_1.FAQ.countDocuments(),
+        ]);
+        return {
+            faqs,
+            pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+        };
     }
     static async createFAQ(data) {
-        return FAQ_1.FAQ.create(data);
+        if (!(0, FAQ_1.isFAQCategory)(data.category)) {
+            throw new Error('Invalid FAQ category');
+        }
+        return FAQ_1.FAQ.create({
+            question: data.question,
+            answer: data.answer,
+            category: data.category,
+            isActive: data.isActive ?? true,
+        });
     }
     static async updateFAQ(id, data) {
-        const faq = await FAQ_1.FAQ.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+        const update = {};
+        if (data.question !== undefined)
+            update.question = data.question;
+        if (data.answer !== undefined)
+            update.answer = data.answer;
+        if (data.category !== undefined)
+            update.category = data.category;
+        if (data.isActive !== undefined)
+            update.isActive = data.isActive;
+        const faq = await FAQ_1.FAQ.findByIdAndUpdate(id, update, { new: true, runValidators: true });
         if (!faq)
             throw new Error('FAQ not found');
         return faq;

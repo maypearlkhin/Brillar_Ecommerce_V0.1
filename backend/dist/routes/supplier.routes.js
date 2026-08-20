@@ -55,6 +55,7 @@ router.post('/application', auth_1.authenticate, [
         return true;
     }),
     (0, express_validator_1.body)('phone').notEmpty(),
+    (0, express_validator_1.body)('businessAddress').trim().notEmpty().withMessage('Shop location / business address is required'),
 ], validate_1.validate, supplierController.submitApplication);
 router.get('/application', auth_1.authenticate, supplierController.getMyApplication);
 // Supplier portal routes

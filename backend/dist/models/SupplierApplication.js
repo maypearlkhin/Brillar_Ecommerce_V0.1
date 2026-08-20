@@ -44,6 +44,7 @@ const supplierApplicationSchema = new mongoose_1.Schema({
     description: { type: String, trim: true },
     categories: [{ type: String, trim: true }],
     website: { type: String, trim: true },
+    businessAddress: { type: String, trim: true },
     status: {
         type: String,
         enum: ['pending', 'approved', 'rejected', 'more_info_requested'],

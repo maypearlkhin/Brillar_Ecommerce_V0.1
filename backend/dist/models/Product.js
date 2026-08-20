@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Product = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const productAttributes_1 = require("../constants/productAttributes");
 const productSchema = new mongoose_1.Schema({
     supplierId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'SupplierProfile', required: true },
     categoryId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Category', required: true },
@@ -43,11 +44,16 @@ const productSchema = new mongoose_1.Schema({
     sku: { type: String, required: true },
     brand: { type: String, trim: true },
     description: { type: String, required: true },
+    productType: { type: String, enum: productAttributes_1.PRODUCT_TYPES },
+    gender: { type: String, enum: productAttributes_1.PRODUCT_GENDERS },
+    minAge: { type: Number, min: 0 },
+    maxAge: { type: Number, min: 0 },
     price: { type: Number, required: true, min: 0 },
     cost: { type: Number, required: true, min: 0 },
     stockQuantity: { type: Number, required: true, min: 0, default: 0 },
     lowStockThreshold: { type: Number, required: true, min: 0, default: 5 },
     imageUrls: [{ type: String }],
+    likeCount: { type: Number, required: true, min: 0, default: 0 },
     status: {
         type: String,
         enum: ['draft', 'active', 'out_of_stock', 'archived', 'inactive'],
@@ -57,6 +63,9 @@ const productSchema = new mongoose_1.Schema({
 productSchema.index({ supplierId: 1 });
 productSchema.index({ categoryId: 1 });
 productSchema.index({ status: 1 });
+productSchema.index({ productType: 1 });
+productSchema.index({ gender: 1 });
+productSchema.index({ minAge: 1, maxAge: 1 });
 productSchema.index({ name: 'text', description: 'text' });
 productSchema.index({ supplierId: 1, slug: 1 }, { unique: true });
 exports.Product = mongoose_1.default.model('Product', productSchema);

@@ -1,4 +1,5 @@
 import mongoose, { Document, Types } from 'mongoose';
+import { ProductGender, ProductTypeSlug } from '../constants/productAttributes';
 export type ProductStatus = 'draft' | 'active' | 'out_of_stock' | 'archived';
 /** Legacy status kept for existing records until migrated. */
 export type LegacyProductStatus = 'inactive';
@@ -10,11 +11,16 @@ export interface IProduct extends Document {
     sku: string;
     brand?: string;
     description: string;
+    productType?: ProductTypeSlug;
+    gender?: ProductGender;
+    minAge?: number;
+    maxAge?: number;
     price: number;
     cost: number;
     stockQuantity: number;
     lowStockThreshold: number;
     imageUrls: string[];
+    likeCount: number;
     status: ProductStatus | LegacyProductStatus;
     createdAt: Date;
     updatedAt: Date;

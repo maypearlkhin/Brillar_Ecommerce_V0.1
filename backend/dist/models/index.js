@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IntegrationConfig = exports.FAQ = exports.Order = exports.Cart = exports.Product = exports.Category = exports.SupplierProfile = exports.SupplierApplication = exports.User = void 0;
+exports.IntegrationConfig = exports.FAQ = exports.Order = exports.Cart = exports.ProductLike = exports.Product = exports.Category = exports.SupplierProfile = exports.SupplierApplication = exports.User = void 0;
 var User_1 = require("./User");
 Object.defineProperty(exports, "User", { enumerable: true, get: function () { return User_1.User; } });
 var SupplierApplication_1 = require("./SupplierApplication");
@@ -11,6 +11,8 @@ var Category_1 = require("./Category");
 Object.defineProperty(exports, "Category", { enumerable: true, get: function () { return Category_1.Category; } });
 var Product_1 = require("./Product");
 Object.defineProperty(exports, "Product", { enumerable: true, get: function () { return Product_1.Product; } });
+var ProductLike_1 = require("./ProductLike");
+Object.defineProperty(exports, "ProductLike", { enumerable: true, get: function () { return ProductLike_1.ProductLike; } });
 var Cart_1 = require("./Cart");
 Object.defineProperty(exports, "Cart", { enumerable: true, get: function () { return Cart_1.Cart; } });
 var Order_1 = require("./Order");

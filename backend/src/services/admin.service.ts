@@ -4,7 +4,7 @@ import { SupplierProfile } from '../models/SupplierProfile';
 import { SupplierApplication } from '../models/SupplierApplication';
 import { Product } from '../models/Product';
 import { Order } from '../models/Order';
-import { FAQ } from '../models/FAQ';
+import { FAQ, isFAQCategory } from '../models/FAQ';
 import { IntegrationConfig, IntegrationConfigType } from '../models/IntegrationConfig';
 import { DEFAULT_PLATFORM_COMMISSION_RATE } from '../config/platform';
 import { isWidgetConfigType, validateWidgetScript, validateWidgetToken } from '../utils/widgetConfig';
@@ -207,6 +207,10 @@ export class FAQService {
     category: string;
     isActive?: boolean;
   }) {
+    if (!isFAQCategory(data.category)) {
+      throw new Error('Invalid FAQ category');
+    }
+
     return FAQ.create({
       question: data.question,
       answer: data.answer,

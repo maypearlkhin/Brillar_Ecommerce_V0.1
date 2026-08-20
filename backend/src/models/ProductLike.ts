@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import mongoose, { Schema, Types } from 'mongoose';
 
-export interface IProductLike extends Document {
+export interface IProductLike {
   userId: Types.ObjectId;
   productId: Types.ObjectId;
   createdAt: Date;

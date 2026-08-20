@@ -33,25 +33,13 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FAQ = exports.FAQ_CATEGORIES = void 0;
-exports.isFAQCategory = isFAQCategory;
+exports.ProductLike = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-exports.FAQ_CATEGORIES = [
-    'Orders',
-    'Payments',
-    'Suppliers',
-    'Returns',
-    'Account',
-    'General',
-];
-function isFAQCategory(value) {
-    return exports.FAQ_CATEGORIES.includes(value);
-}
-const faqSchema = new mongoose_1.Schema({
-    question: { type: String, required: true, trim: true },
-    answer: { type: String, required: true },
-    category: { type: String, required: true, trim: true, enum: exports.FAQ_CATEGORIES },
-    isActive: { type: Boolean, default: true },
-}, { timestamps: true });
-exports.FAQ = mongoose_1.default.model('FAQ', faqSchema);
-//# sourceMappingURL=FAQ.js.map
+const productLikeSchema = new mongoose_1.Schema({
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    productId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Product', required: true },
+}, { timestamps: { createdAt: true, updatedAt: false } });
+productLikeSchema.index({ userId: 1, productId: 1 }, { unique: true });
+productLikeSchema.index({ productId: 1 });
+exports.ProductLike = mongoose_1.default.model('ProductLike', productLikeSchema);
+//# sourceMappingURL=ProductLike.js.map

@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { FulfillmentStatus } from '../models/Order';
 type PublishAction = 'draft' | 'publish';
 export declare class SupplierApplicationService {
     static submit(userId: string, data: {
@@ -9,6 +10,7 @@ export declare class SupplierApplicationService {
         description?: string;
         categories?: string[];
         website?: string;
+        businessAddress?: string;
     }): Promise<import("mongoose").Document<unknown, {}, import("../models/SupplierApplication").ISupplierApplication, {}, import("mongoose").DefaultSchemaOptions> & import("../models/SupplierApplication").ISupplierApplication & Required<{
         _id: Types.ObjectId;
     }> & {
@@ -112,7 +114,7 @@ export declare class SupplierService {
             orderNumber: string;
             customer: Types.ObjectId;
             subtotal: number | undefined;
-            fulfillmentStatus: import("../models/Order").FulfillmentStatus | undefined;
+            fulfillmentStatus: FulfillmentStatus | undefined;
             createdAt: Date;
         }[];
         lowStockProducts: (import("mongoose").Document<unknown, {}, import("../models/Product").IProduct, {}, import("mongoose").DefaultSchemaOptions> & import("../models/Product").IProduct & Required<{
@@ -170,6 +172,10 @@ export declare class SupplierService {
         description: string;
         categoryId?: string;
         categoryName?: string;
+        productType?: string;
+        gender?: string;
+        minAge?: number;
+        maxAge?: number;
         price: number;
         cost: number;
         stockQuantity: number;
@@ -212,7 +218,7 @@ export declare class SupplierService {
             customer: Types.ObjectId;
             items: import("../models/Order").IOrderItem[] | undefined;
             subtotal: number | undefined;
-            fulfillmentStatus: import("../models/Order").FulfillmentStatus | undefined;
+            fulfillmentStatus: FulfillmentStatus | undefined;
             supplierOrderId: Types.ObjectId | undefined;
             deliveryAddress: import("../models/Order").IDeliveryAddress;
             paymentMethod: string;
@@ -327,6 +333,7 @@ export declare class AdminSupplierService {
         password: string;
         description?: string;
         categories?: string[];
+        businessAddress?: string;
         status?: string;
     }): Promise<{
         user: {

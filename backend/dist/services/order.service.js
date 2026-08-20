@@ -6,6 +6,7 @@ const Cart_1 = require("../models/Cart");
 const Product_1 = require("../models/Product");
 const cart_service_1 = require("./cart.service");
 const orderNumber_1 = require("../utils/orderNumber");
+const orderStatus_1 = require("../utils/orderStatus");
 class CheckoutService {
     static async placeOrder(customerId, deliveryAddress, paymentMethod) {
         const cart = await Cart_1.Cart.findOne({ customerId });
@@ -63,8 +64,10 @@ class CheckoutService {
             paymentStatus: 'paid',
             subtotal,
             total: subtotal,
-            status: 'processing',
+            status: 'pending',
         });
+        (0, orderStatus_1.syncOrderStatusFromFulfillment)(order);
+        await order.save();
         await cart_service_1.CartService.clearCart(customerId);
         return order.populate([
             { path: 'customerId', select: 'name email' },
@@ -74,6 +77,13 @@ class CheckoutService {
 }
 exports.CheckoutService = CheckoutService;
 class OrderService {
+    static formatCustomerOrder(order) {
+        const plain = order.toObject();
+        return {
+            ...plain,
+            displayStatus: (0, orderStatus_1.deriveCustomerOrderStatus)(order),
+        };
+    }
     static async getCustomerOrders(customerId, page = 1, limit = 10) {
         const skip = (page - 1) * limit;
         const [orders, total] = await Promise.all([
@@ -84,14 +94,17 @@ class OrderService {
                 .limit(limit),
             Order_1.Order.countDocuments({ customerId }),
         ]);
-        return { orders, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
+        return {
+            orders: orders.map((order) => this.formatCustomerOrder(order)),
+            pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+        };
     }
     static async getCustomerOrder(customerId, orderId) {
         const order = await Order_1.Order.findOne({ _id: orderId, customerId })
             .populate('supplierOrders.supplierId', 'storeName slug');
         if (!order)
             throw new Error('Order not found');
-        return order;
+        return this.formatCustomerOrder(order);
     }
     static async buyAgain(customerId, orderId) {
         const order = await Order_1.Order.findOne({ _id: orderId, customerId });

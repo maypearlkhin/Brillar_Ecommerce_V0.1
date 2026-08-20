@@ -9,6 +9,7 @@ export interface ISupplierApplication extends Document {
     description?: string;
     categories?: string[];
     website?: string;
+    businessAddress?: string;
     status: SupplierApplicationStatus;
     adminNote?: string;
     submittedAt: Date;

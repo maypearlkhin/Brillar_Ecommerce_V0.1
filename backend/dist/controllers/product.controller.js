@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSuppliers = exports.getCategories = exports.getFeatured = exports.getProduct = exports.getProducts = void 0;
+exports.getSuppliers = exports.toggleProductLike = exports.getCategories = exports.getFeatured = exports.getProduct = exports.getProducts = void 0;
 const Category_1 = require("../models/Category");
 const product_service_1 = require("../services/product.service");
 const SupplierProfile_1 = require("../models/SupplierProfile");
@@ -15,10 +15,13 @@ const getProducts = async (req, res) => {
             minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
             maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
             inStock: req.query.inStock === 'true',
+            type: req.query.type,
+            gender: req.query.gender,
+            age: req.query.age ? Number(req.query.age) : undefined,
             sort: req.query.sort,
             page: req.query.page ? Number(req.query.page) : 1,
             limit: req.query.limit ? Number(req.query.limit) : 12,
-        });
+        }, req.user?._id?.toString());
         return (0, apiResponse_1.sendSuccess)(res, result);
     }
     catch (err) {
@@ -28,7 +31,7 @@ const getProducts = async (req, res) => {
 exports.getProducts = getProducts;
 const getProduct = async (req, res) => {
     try {
-        const product = await product_service_1.ProductService.getProductById((0, params_1.getParam)(req.params.id));
+        const product = await product_service_1.ProductService.getProductById((0, params_1.getParam)(req.params.id), req.user?._id?.toString());
         return (0, apiResponse_1.sendSuccess)(res, product);
     }
     catch (err) {
@@ -36,9 +39,9 @@ const getProduct = async (req, res) => {
     }
 };
 exports.getProduct = getProduct;
-const getFeatured = async (_req, res) => {
+const getFeatured = async (req, res) => {
     try {
-        const products = await product_service_1.ProductService.getFeatured();
+        const products = await product_service_1.ProductService.getFeatured(8, req.user?._id?.toString());
         return (0, apiResponse_1.sendSuccess)(res, products);
     }
     catch (err) {
@@ -60,6 +63,19 @@ const getCategories = async (_req, res) => {
     }
 };
 exports.getCategories = getCategories;
+const toggleProductLike = async (req, res) => {
+    try {
+        if (!req.user) {
+            return (0, apiResponse_1.sendError)(res, 'Authentication required', 401);
+        }
+        const result = await product_service_1.ProductService.toggleProductLike(req.user._id.toString(), (0, params_1.getParam)(req.params.id));
+        return (0, apiResponse_1.sendSuccess)(res, result);
+    }
+    catch (err) {
+        return (0, apiResponse_1.sendError)(res, err.message, 404);
+    }
+};
+exports.toggleProductLike = toggleProductLike;
 const getSuppliers = async (_req, res) => {
     try {
         const suppliers = await SupplierProfile_1.SupplierProfile.find({ status: 'active' }).select('storeName slug description');

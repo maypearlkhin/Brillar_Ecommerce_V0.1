@@ -12,8 +12,10 @@ const Product_1 = require("../models/Product");
 const Order_1 = require("../models/Order");
 const Category_1 = require("../models/Category");
 const slugify_1 = require("../utils/slugify");
+const productAttributes_1 = require("../constants/productAttributes");
 const category_service_1 = require("./category.service");
 const platform_1 = require("../config/platform");
+const orderStatus_1 = require("../utils/orderStatus");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 async function countLowStockProducts(supplierProfileId) {
     const products = await Product_1.Product.find({
@@ -299,12 +301,24 @@ class SupplierService {
         const resolvedCategoryId = await resolveProductCategory(supplierProfileId, data.categoryId, data.categoryName);
         const stockQuantity = Number(data.stockQuantity) || 0;
         const status = resolveProductStatus(stockQuantity, data.action, data.status);
+        const productType = data.productType
+            ? (0, productAttributes_1.normalizeProductType)(data.productType) ?? undefined
+            : undefined;
+        const gender = data.gender
+            ? (0, productAttributes_1.normalizeProductGender)(data.gender) ?? undefined
+            : undefined;
+        const minAge = data.minAge !== undefined && data.minAge !== null ? Number(data.minAge) : undefined;
+        const maxAge = data.maxAge !== undefined && data.maxAge !== null ? Number(data.maxAge) : undefined;
         const product = await Product_1.Product.create({
             name: data.name,
             sku: data.sku,
             brand: data.brand,
             description: data.description,
             categoryId: resolvedCategoryId,
+            productType,
+            gender,
+            minAge: minAge !== undefined && !Number.isNaN(minAge) ? minAge : undefined,
+            maxAge: maxAge !== undefined && !Number.isNaN(maxAge) ? maxAge : undefined,
             price: data.price,
             cost: data.cost,
             stockQuantity,
@@ -334,6 +348,24 @@ class SupplierService {
             product.brand = data.brand;
         if (data.description !== undefined)
             product.description = data.description;
+        if (data.productType !== undefined) {
+            product.productType = data.productType
+                ? (0, productAttributes_1.normalizeProductType)(data.productType) ?? undefined
+                : undefined;
+        }
+        if (data.gender !== undefined) {
+            product.gender = data.gender
+                ? (0, productAttributes_1.normalizeProductGender)(data.gender) ?? undefined
+                : undefined;
+        }
+        if (data.minAge !== undefined) {
+            const minAge = Number(data.minAge);
+            product.minAge = Number.isNaN(minAge) ? undefined : minAge;
+        }
+        if (data.maxAge !== undefined) {
+            const maxAge = Number(data.maxAge);
+            product.maxAge = Number.isNaN(maxAge) ? undefined : maxAge;
+        }
         if (data.price !== undefined)
             product.price = Number(data.price);
         if (data.cost !== undefined)
@@ -414,25 +446,19 @@ class SupplierService {
         return { orders: supplierOrders, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
     }
     static async updateFulfillment(supplierProfileId, orderId, fulfillmentStatus) {
-        const validTransitions = {
-            pending: ['confirmed', 'cancelled'],
-            confirmed: ['processing', 'cancelled'],
-            processing: ['shipped', 'cancelled'],
-            shipped: ['delivered'],
-            delivered: [],
-            cancelled: [],
-        };
-        const order = await Order_1.Order.findById(orderId);
-        if (!order)
-            throw new Error('Order not found');
-        const supplierOrder = order.supplierOrders.find((so) => so.supplierId.toString() === supplierProfileId);
-        if (!supplierOrder)
-            throw new Error('Order not found for this supplier');
-        const allowed = validTransitions[supplierOrder.fulfillmentStatus] || [];
-        if (!allowed.includes(fulfillmentStatus)) {
-            throw new Error(`Cannot transition from ${supplierOrder.fulfillmentStatus} to ${fulfillmentStatus}`);
+        if (!orderStatus_1.VALID_FULFILLMENT_STATUSES.includes(fulfillmentStatus)) {
+            throw new Error('Invalid fulfillment status');
         }
-        supplierOrder.fulfillmentStatus = fulfillmentStatus;
+        const supplierObjectId = new mongoose_1.Types.ObjectId(supplierProfileId);
+        const order = await Order_1.Order.findOneAndUpdate({
+            _id: orderId,
+            'supplierOrders.supplierId': supplierObjectId,
+        }, {
+            $set: { 'supplierOrders.$.fulfillmentStatus': fulfillmentStatus },
+        }, { new: true });
+        if (!order)
+            throw new Error('Order not found for this supplier');
+        (0, orderStatus_1.syncOrderStatusFromFulfillment)(order);
         await order.save();
         return order;
     }
@@ -498,6 +524,7 @@ class AdminSupplierService {
             existingProfile.contactEmail = app.email;
             existingProfile.contactPhone = app.phone;
             existingProfile.categoryIds = categoryIds;
+            existingProfile.businessAddress = app.businessAddress;
             existingProfile.verificationStatus = 'verified';
             await existingProfile.save();
         }
@@ -509,6 +536,7 @@ class AdminSupplierService {
                 description: app.description,
                 contactEmail: app.email,
                 contactPhone: app.phone,
+                businessAddress: app.businessAddress,
                 categoryIds,
                 verificationStatus: 'verified',
                 status: 'active',
@@ -597,6 +625,7 @@ class AdminSupplierService {
             description: data.description,
             contactEmail: data.email,
             contactPhone: data.phone,
+            businessAddress: data.businessAddress,
             categoryIds,
             verificationStatus: 'verified',
             status: data.status || 'active',
@@ -608,6 +637,7 @@ class AdminSupplierService {
             email: data.email,
             phone: data.phone,
             description: data.description,
+            businessAddress: data.businessAddress,
             categories: resolvedCategoryNames.length ? resolvedCategoryNames : categoryNames,
             status: 'approved',
             submittedAt: new Date(),

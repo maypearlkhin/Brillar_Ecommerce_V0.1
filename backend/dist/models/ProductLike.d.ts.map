@@ -1,0 +1,1 @@
+{"version":3,"file":"ProductLike.d.ts","sourceRoot":"","sources":["../../src/models/ProductLike.ts"],"names":[],"mappings":"AAAA,OAAO,QAAQ,EAAE,EAAU,KAAK,EAAE,MAAM,UAAU,CAAC;AAEnD,MAAM,WAAW,YAAY;IAC3B,MAAM,EAAE,KAAK,CAAC,QAAQ,CAAC;IACvB,SAAS,EAAE,KAAK,CAAC,QAAQ,CAAC;IAC1B,SAAS,EAAE,IAAI,CAAC;CACjB;AAaD,eAAO,MAAM,WAAW;;;;;;qBAAiE,CAAC"}

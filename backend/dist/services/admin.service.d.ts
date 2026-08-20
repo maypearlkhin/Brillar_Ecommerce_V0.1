@@ -104,25 +104,59 @@ export declare class AdminOrderService {
     }>;
 }
 export declare class FAQService {
-    static getPublicFAQs(): Promise<(import("mongoose").Document<unknown, {}, import("../models/FAQ").IFAQ, {}, import("mongoose").DefaultSchemaOptions> & import("../models/FAQ").IFAQ & Required<{
+    private static normalizePagination;
+    static getPublicFAQs(options?: {
+        page?: number;
+        limit?: number;
+    }): Promise<(import("mongoose").Document<unknown, {}, import("../models/FAQ").IFAQ, {}, import("mongoose").DefaultSchemaOptions> & import("../models/FAQ").IFAQ & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
-    })[]>;
-    static getAllFAQs(): Promise<(import("mongoose").Document<unknown, {}, import("../models/FAQ").IFAQ, {}, import("mongoose").DefaultSchemaOptions> & import("../models/FAQ").IFAQ & Required<{
+    })[] | {
+        faqs: (import("mongoose").Document<unknown, {}, import("../models/FAQ").IFAQ, {}, import("mongoose").DefaultSchemaOptions> & import("../models/FAQ").IFAQ & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
+        })[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            pages: number;
+        };
+    }>;
+    static getAllFAQs(options?: {
+        page?: number;
+        limit?: number;
+    }): Promise<(import("mongoose").Document<unknown, {}, import("../models/FAQ").IFAQ, {}, import("mongoose").DefaultSchemaOptions> & import("../models/FAQ").IFAQ & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
-    })[]>;
+    })[] | {
+        faqs: (import("mongoose").Document<unknown, {}, import("../models/FAQ").IFAQ, {}, import("mongoose").DefaultSchemaOptions> & import("../models/FAQ").IFAQ & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        } & {
+            id: string;
+        })[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            pages: number;
+        };
+    }>;
     static createFAQ(data: {
         question: string;
         answer: string;
         category: string;
-        displayOrder?: number;
         isActive?: boolean;
     }): Promise<import("mongoose").Document<unknown, {}, import("../models/FAQ").IFAQ, {}, import("mongoose").DefaultSchemaOptions> & import("../models/FAQ").IFAQ & Required<{
         _id: import("mongoose").Types.ObjectId;

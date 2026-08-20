@@ -1,6 +1,6 @@
-import { Types } from 'mongoose';
+import { QueryFilter, Types } from 'mongoose';
 import { Product } from '../models/Product';
-import { ProductLike } from '../models/ProductLike';
+import { IProductLike, ProductLike } from '../models/ProductLike';
 import { Category } from '../models/Category';
 import { SupplierProfile } from '../models/SupplierProfile';
 import {
@@ -28,6 +28,17 @@ export interface ProductQuery {
 export const PUBLIC_PRODUCT_STATUSES = ['active', 'out_of_stock'];
 
 export const HIDDEN_PRODUCT_STATUSES = ['draft', 'archived', 'inactive'];
+
+function isMongooseDocument(
+  value: unknown,
+): value is { toObject: () => Record<string, unknown> } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toObject' in value &&
+    typeof (value as { toObject?: unknown }).toObject === 'function'
+  );
+}
 
 export async function getActiveSupplierIds() {
   const suppliers = await SupplierProfile.find({ status: 'active' }).select('_id');
@@ -57,6 +68,11 @@ export class ProductService {
     if (products.length === 0) return [];
 
     const productIds = products.map((product) => product._id);
+    const productObjectIds = productIds.map((productId) =>
+      productId instanceof Types.ObjectId
+        ? productId
+        : new Types.ObjectId(productId.toString()),
+    );
     const likeCounts = await ProductLike.aggregate<{ _id: Types.ObjectId; count: number }>([
       { $match: { productId: { $in: productIds } } },
       { $group: { _id: '$productId', count: { $sum: 1 } } },
@@ -66,17 +82,16 @@ export class ProductService {
     let likedIds = new Set<string>();
     if (userId) {
       const userObjectId = new Types.ObjectId(userId);
-      const likes = await ProductLike.find({
+      const likeFilter: QueryFilter<IProductLike> = {
         userId: userObjectId,
-        productId: { $in: productIds },
-      }).select('productId');
+        productId: { $in: productObjectIds },
+      };
+      const likes = await ProductLike.find(likeFilter).select('productId');
       likedIds = new Set(likes.map((like) => like.productId.toString()));
     }
 
     return products.map((product) => ({
-      ...(typeof (product as { toObject?: () => Record<string, unknown> }).toObject === 'function'
-        ? (product as { toObject: () => Record<string, unknown> }).toObject()
-        : product),
+      ...(isMongooseDocument(product) ? product.toObject() : product),
       likeCount: countMap.get(product._id.toString()) ?? 0,
       ...(userId ? { likedByCurrentUser: likedIds.has(product._id.toString()) } : {}),
     }));

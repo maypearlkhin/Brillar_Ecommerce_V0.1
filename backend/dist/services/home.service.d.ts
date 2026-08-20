@@ -1,17 +1,23 @@
 export declare class HomeService {
-    static getHomeData(): Promise<{
+    static getHomeData(userId?: string): Promise<{
         stats: {
             productCount: number;
             supplierCount: number;
             categoryCount: number;
         };
-        featured: (import("mongoose").Document<unknown, {}, import("../models/Product").IProduct, {}, import("mongoose").DefaultSchemaOptions> & import("../models/Product").IProduct & Required<{
+        featured: ({
+            likeCount: number;
+            likedByCurrentUser?: boolean | undefined;
+        } | (import("mongoose").Document<unknown, {}, import("../models/Product").IProduct, {}, import("mongoose").DefaultSchemaOptions> & import("../models/Product").IProduct & Required<{
             _id: import("mongoose").Types.ObjectId;
         }> & {
             __v: number;
         } & {
             id: string;
-        })[];
+        } & {
+            likeCount: number;
+            likedByCurrentUser?: boolean | undefined;
+        }))[];
         categories: {
             _id: import("mongoose").Types.ObjectId;
             name: string;

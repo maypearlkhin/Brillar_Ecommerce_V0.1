@@ -37,6 +37,7 @@ const express_1 = require("express");
 const express_validator_1 = require("express-validator");
 const adminController = __importStar(require("../controllers/admin.controller"));
 const supplierController = __importStar(require("../controllers/supplier.controller"));
+const FAQ_1 = require("../models/FAQ");
 const auth_1 = require("../middleware/auth");
 const validate_1 = require("../middleware/validate");
 const email_1 = require("../utils/email");
@@ -68,6 +69,7 @@ router.post('/suppliers', [
         .withMessage('Password must be at least 6 characters'),
     (0, express_validator_1.body)('categories').optional().isArray().withMessage('Categories must be an array'),
     (0, express_validator_1.body)('categories.*').optional().isString().trim().notEmpty(),
+    (0, express_validator_1.body)('businessAddress').optional().trim(),
 ], validate_1.validate, supplierController.adminCreateSupplier);
 router.post('/suppliers/:id/suspend', supplierController.adminSuspendSupplier);
 router.post('/suppliers/:id/reactivate', supplierController.adminReactivateSupplier);
@@ -76,9 +78,20 @@ router.get('/customers/:id', adminController.getCustomer);
 router.patch('/customers/:id/toggle-status', adminController.toggleCustomerStatus);
 router.get('/orders', adminController.getOrders);
 router.get('/orders/:id', adminController.getOrder);
+const faqBodyValidators = [
+    (0, express_validator_1.body)('question').trim().notEmpty().withMessage('Question is required'),
+    (0, express_validator_1.body)('answer').trim().notEmpty().withMessage('Answer is required'),
+    (0, express_validator_1.body)('category')
+        .trim()
+        .notEmpty()
+        .withMessage('Category is required')
+        .isIn([...FAQ_1.FAQ_CATEGORIES])
+        .withMessage(`Category must be one of: ${FAQ_1.FAQ_CATEGORIES.join(', ')}`),
+    (0, express_validator_1.body)('isActive').optional(),
+];
 router.get('/faqs', adminController.getAllFAQs);
-router.post('/faqs', adminController.createFAQ);
-router.put('/faqs/:id', adminController.updateFAQ);
+router.post('/faqs', faqBodyValidators, validate_1.validate, adminController.createFAQ);
+router.put('/faqs/:id', faqBodyValidators, validate_1.validate, adminController.updateFAQ);
 router.delete('/faqs/:id', adminController.deleteFAQ);
 router.get('/configuration', adminController.getConfiguration);
 router.post('/configuration', [

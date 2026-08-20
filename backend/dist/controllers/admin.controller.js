@@ -65,9 +65,11 @@ const getOrder = async (req, res) => {
     }
 };
 exports.getOrder = getOrder;
-const getPublicFAQs = async (_req, res) => {
+const getPublicFAQs = async (req, res) => {
     try {
-        const faqs = await admin_service_1.FAQService.getPublicFAQs();
+        const page = req.query.page !== undefined ? Number(req.query.page) : undefined;
+        const limit = req.query.limit !== undefined ? Number(req.query.limit) : undefined;
+        const faqs = await admin_service_1.FAQService.getPublicFAQs({ page, limit });
         return (0, apiResponse_1.sendSuccess)(res, faqs);
     }
     catch (err) {
@@ -75,9 +77,11 @@ const getPublicFAQs = async (_req, res) => {
     }
 };
 exports.getPublicFAQs = getPublicFAQs;
-const getAllFAQs = async (_req, res) => {
+const getAllFAQs = async (req, res) => {
     try {
-        const faqs = await admin_service_1.FAQService.getAllFAQs();
+        const page = req.query.page !== undefined ? Number(req.query.page) : undefined;
+        const limit = req.query.limit !== undefined ? Number(req.query.limit) : undefined;
+        const faqs = await admin_service_1.FAQService.getAllFAQs({ page, limit });
         return (0, apiResponse_1.sendSuccess)(res, faqs);
     }
     catch (err) {

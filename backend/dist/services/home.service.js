@@ -10,15 +10,15 @@ const categoryImageOverrides = {
     'home-living': '/images/categories/home-living.jpg',
 };
 class HomeService {
-    static async getHomeData() {
+    static async getHomeData(userId) {
         const activeSupplierIds = await (0, product_service_1.getActiveSupplierIds)();
         const [productCount, supplierCount, categoryCount, featured, categories, faqs] = await Promise.all([
             Product_1.Product.countDocuments({ status: 'active', supplierId: { $in: activeSupplierIds } }),
             SupplierProfile_1.SupplierProfile.countDocuments({ status: 'active' }),
             Category_1.Category.countDocuments({ isActive: true }),
-            product_service_1.ProductService.getFeatured(8),
+            product_service_1.ProductService.getFeatured(8, userId),
             Category_1.Category.find({ isActive: true }).sort({ displayOrder: 1 }),
-            FAQ_1.FAQ.find({ isActive: true }).sort({ displayOrder: 1 }).limit(3),
+            FAQ_1.FAQ.find({ isActive: true }).sort({ category: 1, createdAt: 1 }).limit(3),
         ]);
         const categoryPreviews = await Promise.all(categories.map(async (cat) => {
             const product = await Product_1.Product.findOne({
