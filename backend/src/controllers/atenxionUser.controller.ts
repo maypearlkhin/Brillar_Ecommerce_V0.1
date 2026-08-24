@@ -53,7 +53,7 @@ export const getProducts = async (req: Request, res: Response) => {
       sort: req.query.sort as string,
       ...(req.query.page ? { page: Number(req.query.page) } : {}),
       ...(req.query.limit ? { limit: Number(req.query.limit) } : {}),
-    }, getUserId(req));
+    });
     return sendSuccess(res, result);
   } catch (err) {
     return sendError(res, (err as Error).message, 500);
