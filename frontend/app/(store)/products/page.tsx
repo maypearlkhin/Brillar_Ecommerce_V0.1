@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense, useMemo, useRef, useCallback } from 'rea
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Box, Container, Grid, Typography, MenuItem, Select, FormControl,
-  Pagination, Breadcrumbs, Link as MuiLink, ToggleButton, ToggleButtonGroup,
+  Breadcrumbs, Link as MuiLink, ToggleButton, ToggleButtonGroup,
   Paper, alpha,
 } from '@mui/material';
 import {
@@ -12,7 +12,7 @@ import {
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { productService } from '@/services/product.service';
-import { Product, Category, Pagination as PaginationType } from '@/types';
+import { Product, Category } from '@/types';
 import ProductCard from '@/components/storefront/ProductCard';
 import ProductListCard from '@/components/storefront/products/ProductListCard';
 import ProductsFilterSidebar from '@/components/storefront/products/ProductsFilterSidebar';
@@ -29,7 +29,6 @@ function ProductsContent() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [pagination, setPagination] = useState<PaginationType | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -39,7 +38,6 @@ function ProductsContent() {
   const type = searchParams.get('type') || '';
   const age = searchParams.get('age') || '';
   const sort = searchParams.get('sort') || 'newest';
-  const page = Number(searchParams.get('page')) || 1;
   const inStock = searchParams.get('inStock') === 'true';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
@@ -55,7 +53,7 @@ function ProductsContent() {
         search, category, gender, type,
         ...(age ? { age: Number(age) } : {}),
         sort,
-        page, inStock,
+        inStock,
         ...(minPrice ? { minPrice: Number(minPrice) } : {}),
         ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
       });
@@ -63,13 +61,12 @@ function ProductsContent() {
       if (requestId !== requestIdRef.current) return;
 
       setProducts(data.products);
-      setPagination(data.pagination);
       seedProducts(data.products);
     } finally {
       if (requestId !== requestIdRef.current) return;
       setLoading(false);
     }
-  }, [search, category, gender, type, age, sort, page, inStock, minPrice, maxPrice, seedProducts]);
+  }, [search, category, gender, type, age, sort, inStock, minPrice, maxPrice, seedProducts]);
 
   const updateParams = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -77,7 +74,7 @@ function ProductsContent() {
       if (v) params.set(k, v);
       else params.delete(k);
     });
-    if (!updates.page) params.delete('page');
+    params.delete('page');
     router.push(`/products?${params.toString()}`);
   };
 
@@ -102,9 +99,6 @@ function ProductsContent() {
     });
     return counts;
   }, [categories]);
-
-  const resultStart = pagination ? (page - 1) * pagination.limit + 1 : 0;
-  const resultEnd = pagination ? Math.min(page * pagination.limit, pagination.total) : 0;
 
   return (
     <Box sx={{ bgcolor: colors.cream, minHeight: '60vh' }}>
@@ -178,9 +172,9 @@ function ProductsContent() {
                   </ToggleButton>
                 </ToggleButtonGroup>
 
-                {pagination && pagination.total > 0 && (
+                {!loading && products.length > 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    Showing {resultStart}–{resultEnd} of {pagination.total} results
+                    Showing {products.length} result{products.length === 1 ? '' : 's'}
                   </Typography>
                 )}
               </Box>
@@ -218,17 +212,6 @@ function ProductsContent() {
                   </Grid>
                 ))}
               </Grid>
-            )}
-
-            {pagination && pagination.pages > 1 && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <Pagination
-                  count={pagination.pages}
-                  page={page}
-                  onChange={(_, p) => updateParams({ page: String(p) })}
-                  color="primary"
-                />
-              </Box>
             )}
           </Grid>
         </Grid>
