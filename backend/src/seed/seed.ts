@@ -238,22 +238,22 @@ async function seed() {
   const productDefs = [
   // Northstar Electronics
     { supplier: 0, category: 'electronics', name: 'Wireless Mechanical Keyboard', sku: 'NE-KB-001', price: 89.99, cost: 42.00, stock: 45, image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400' },
-    { supplier: 0, category: 'electronics', name: 'USB-C Hub 7-in-1', sku: 'NE-HUB-002', price: 49.99, cost: 22.00, stock: 80, image: '/images/products/usb-c-hub-7in1.jpg' },
+    { supplier: 0, category: 'electronics', name: 'USB-C Hub 7-in-1', sku: 'NE-HUB-002', price: 49.99, cost: 22.00, stock: 80, image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400' },
     { supplier: 0, category: 'electronics', name: 'Noise-Cancelling Headphones', sku: 'NE-HP-003', price: 199.99, cost: 95.00, stock: 30, image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', minAge: 18, maxAge: 99 },
     { supplier: 0, category: 'electronics', name: 'Portable Bluetooth Speaker', sku: 'NE-SP-004', price: 69.99, cost: 32.00, stock: 55, image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400' },
     { supplier: 0, category: 'electronics', name: 'Wireless Mouse Pro', sku: 'NE-MS-005', price: 39.99, cost: 15.00, stock: 100, image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400' },
     { supplier: 0, category: 'electronics', name: '27" Monitor Stand', sku: 'NE-ST-006', price: 34.99, cost: 14.00, stock: 3, image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400' },
-    { supplier: 0, category: 'electronics', name: 'Webcam HD 1080p', sku: 'NE-WC-007', price: 59.99, cost: 28.00, stock: 40, image: '/images/products/webcam-hd-1080p.jpg' },
+    { supplier: 0, category: 'electronics', name: 'Webcam HD 1080p', sku: 'NE-WC-007', price: 59.99, cost: 28.00, stock: 40, image: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=400' },
     // Harbor Home
     { supplier: 1, category: 'home-living', name: 'Ceramic Table Lamp', sku: 'HH-LP-001', price: 54.99, cost: 22.00, stock: 25, image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400', minAge: 18, maxAge: 99 },
     { supplier: 1, category: 'home-living', name: 'Linen Throw Pillow Set', sku: 'HH-PP-002', price: 39.99, cost: 16.00, stock: 60, image: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=400', minAge: 18, maxAge: 99 },
     { supplier: 1, category: 'home-living', name: 'Bamboo Storage Basket', sku: 'HH-BS-003', price: 29.99, cost: 11.00, stock: 45, image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400', minAge: 18, maxAge: 99 },
-    { supplier: 1, category: 'home-living', name: 'Scented Candle Collection', sku: 'HH-CD-004', price: 24.99, cost: 8.00, stock: 90, image: '/images/products/scented-candle-collection.jpg', minAge: 18, maxAge: 99 },
-    { supplier: 1, category: 'home-living', name: 'Wall Mirror Round 24"', sku: 'HH-MR-005', price: 79.99, cost: 35.00, stock: 15, image: '/images/products/wall-mirror-round.jpg', minAge: 18, maxAge: 99 },
-    { supplier: 1, category: 'home-living', name: 'Cotton Bath Towel Set', sku: 'HH-TW-006', price: 44.99, cost: 18.00, stock: 70, image: '/images/products/cotton-bath-towel-set.jpg', minAge: 18, maxAge: 99 },
+    { supplier: 1, category: 'home-living', name: 'Scented Candle Collection', sku: 'HH-CD-004', price: 24.99, cost: 8.00, stock: 90, image: 'https://images.unsplash.com/photo-1549497538-303791108f95?w=400', minAge: 18, maxAge: 99 },
+    { supplier: 1, category: 'home-living', name: 'Wall Mirror Round 24"', sku: 'HH-MR-005', price: 79.99, cost: 35.00, stock: 15, image: 'https://images.unsplash.com/photo-1618220179428-22790b461013?w=400', minAge: 18, maxAge: 99 },
+    { supplier: 1, category: 'home-living', name: 'Cotton Bath Towel Set', sku: 'HH-TW-006', price: 44.99, cost: 18.00, stock: 70, image: 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=400', minAge: 18, maxAge: 99 },
     // Vertex Office Supply
-    { supplier: 2, category: 'office-supplies', name: 'Ergonomic Office Chair', sku: 'VO-CH-001', price: 299.99, cost: 150.00, stock: 12, image: '/images/products/ergonomic-office-chair.jpg' },
-    { supplier: 2, category: 'office-supplies', name: 'Standing Desk Converter', sku: 'VO-DS-002', price: 189.99, cost: 85.00, stock: 20, image: '/images/products/standing-desk-converter.jpg' },
+    { supplier: 2, category: 'office-supplies', name: 'Ergonomic Office Chair', sku: 'VO-CH-001', price: 299.99, cost: 150.00, stock: 12, image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=400' },
+    { supplier: 2, category: 'office-supplies', name: 'Standing Desk Converter', sku: 'VO-DS-002', price: 189.99, cost: 85.00, stock: 20, image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400' },
     { supplier: 2, category: 'office-supplies', name: 'Premium Notebook Set (3-pack)', sku: 'VO-NB-003', price: 18.99, cost: 6.00, stock: 150, image: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=400' },
     { supplier: 2, category: 'office-supplies', name: 'Desk Organizer Tray', sku: 'VO-OR-004', price: 22.99, cost: 8.00, stock: 85, image: 'https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=400' },
     { supplier: 2, category: 'office-supplies', name: 'LED Desk Lamp', sku: 'VO-DL-005', price: 45.99, cost: 19.00, stock: 50, image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400' },
@@ -264,13 +264,13 @@ async function seed() {
     { supplier: 0, category: 'fashion-accessories', name: 'Men Casual Oxford Shirt', sku: 'NE-SH-009', price: 45.99, cost: 20.00, stock: 50, image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400', productType: 'shirt', gender: 'male', minAge: 18, maxAge: 99 },
     { supplier: 1, category: 'fashion-accessories', name: 'Kids Cotton T-Shirt', sku: 'HH-KS-009', price: 19.99, cost: 8.00, stock: 80, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400', productType: 'shirt', gender: 'boys', minAge: 8, maxAge: 12 },
     // Jewellery
-    { supplier: 1, category: 'jewellery', name: 'Gold Pendant Necklace', sku: 'HH-NK-010', price: 89.99, cost: 38.00, stock: 22, image: 'https://images.unsplash.com/photo-1599643478518-a784e5c4fe8c?w=400', productType: 'necklace', gender: 'female', minAge: 18, maxAge: 99 },
+    { supplier: 1, category: 'jewellery', name: 'Gold Pendant Necklace', sku: 'HH-NK-010', price: 89.99, cost: 38.00, stock: 22, image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400', productType: 'necklace', gender: 'female', minAge: 18, maxAge: 99 },
     { supplier: 1, category: 'jewellery', name: 'Sterling Silver Chain Bracelet', sku: 'HH-BR-011', price: 64.99, cost: 28.00, stock: 35, image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400', productType: 'bracelet', gender: 'male', minAge: 18, maxAge: 99 },
     { supplier: 1, category: 'jewellery', name: 'Kids Heart Earrings Set', sku: 'HH-ER-012', price: 24.99, cost: 10.00, stock: 48, image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400', productType: 'earrings', gender: 'girls', minAge: 8, maxAge: 12 },
     { supplier: 0, category: 'jewellery', name: 'Classic Diamond Engagement Ring', sku: 'NE-RG-010', price: 499.99, cost: 220.00, stock: 8, image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400', productType: 'ring', gender: 'female', minAge: 18, maxAge: 99 },
-    { supplier: 0, category: 'jewellery', name: 'Minimalist Silver Anklet', sku: 'NE-AK-011', price: 34.99, cost: 14.00, stock: 40, image: 'https://images.unsplash.com/photo-1617038260897-41a9faf033a4?w=400', productType: 'anklet', gender: 'female', minAge: 16, maxAge: 99 },
+    { supplier: 0, category: 'jewellery', name: 'Minimalist Silver Anklet', sku: 'NE-AK-011', price: 34.99, cost: 14.00, stock: 40, image: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=400', productType: 'anklet', gender: 'female', minAge: 16, maxAge: 99 },
     { supplier: 1, category: 'health-wellness', name: 'Aromatherapy Diffuser', sku: 'HH-AD-007', price: 36.99, cost: 14.00, stock: 40, image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400' },
-    { supplier: 2, category: 'electronics', name: 'Document Scanner Portable', sku: 'VO-SC-008', price: 129.99, cost: 65.00, stock: 18, image: '/images/products/document-scanner.jpg' },
+    { supplier: 2, category: 'electronics', name: 'Document Scanner Portable', sku: 'VO-SC-008', price: 129.99, cost: 65.00, stock: 18, image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400' },
   ];
 
   const products = [];
@@ -397,7 +397,7 @@ async function seed() {
           stateRegion: 'IL',
           postalCode: '62704',
         },
-        paymentMethod: 'demo_card',
+        paymentMethod: 'Prepaid',
         paymentStatus: 'paid',
         subtotal,
         total: subtotal,
@@ -410,7 +410,7 @@ async function seed() {
   // FAQs
   const faqDefs = [
     { question: 'How does multi-supplier checkout work?', answer: 'When you purchase items from multiple sellers, we create a single order with separate fulfillment tracking for each supplier. You receive one confirmation, and each seller ships their items independently.', category: 'Orders' },
-    { question: 'What payment methods are accepted?', answer: 'We accept Cash on Delivery and Demo Card Payment for this marketplace. All payments are simulated for development purposes.', category: 'Payments' },
+    { question: 'What payment methods are accepted?', answer: 'We accept Cash on Delivery and Prepaid for this marketplace. All payments are simulated for development purposes.', category: 'Payments' },
     { question: 'How do I become a supplier?', answer: 'Click "Become a Supplier" in the navigation, create an account or log in, and submit your application. Our team reviews applications within 2-3 business days.', category: 'Suppliers' },
     { question: 'What is your return policy?', answer: 'Returns are accepted within 14 days of delivery for unused items in original packaging. Contact the supplier directly through your order details to initiate a return.', category: 'Returns' },
     { question: 'How can I track my order?', answer: 'Visit your Orders page to view order status and fulfillment updates from each supplier involved in your purchase.', category: 'Orders' },

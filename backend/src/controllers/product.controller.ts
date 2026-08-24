@@ -19,6 +19,8 @@ export const getProducts = async (req: AuthRequest, res: Response) => {
       gender: req.query.gender as string,
       age: req.query.age ? Number(req.query.age) : undefined,
       sort: req.query.sort as string,
+      ...(req.query.page ? { page: Number(req.query.page) } : {}),
+      ...(req.query.limit ? { limit: Number(req.query.limit) } : {}),
     }, req.user?._id?.toString());
     return sendSuccess(res, result);
   } catch (err) {

@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Brillar E-Commerce Atenxion User API",
-    "description": "Agent/integration endpoints for customer cart and order operations. Mirrors the web app customer routes (`/api/cart`, `/api/orders`) with the same HTTP methods, payloads, and service flow — but **without JWT middleware**. Every request must include **`userId`** (MongoDB `_id` of the customer) in the **JSON body** and/or **query string**.\n\n**Atenxion convention:** `userId` is read from `body.userId` first, then `query.userId`. The web app continues to use canonical customer routes with Bearer JWT (`GET /api/orders`, `POST /api/cart`, etc.) without `userId` in the payload.\n\n**Response envelope:** All endpoints return `{ success, message, data }` on success, or `{ success, message, errors }` on failure.",
-    "version": "1.0.0",
+    "description": "Agent/integration endpoints for customer product search, cart, checkout, and order operations. Mirrors the web app routes (`GET /api/products`, `/api/cart`, `POST /api/checkout`, `/api/orders`) with the same HTTP methods, payloads, and service flow — but **without JWT middleware**. Every request must include **`userId`** (MongoDB `_id` of the customer) in the **JSON body** and/or **query string**.\n\n**Atenxion convention:** `userId` is read from `body.userId` first, then `query.userId`. The web app continues to use canonical customer/public routes with Bearer JWT without `userId` in the payload.\n\n**Checkout:** Send `productId` + `quantity` (single item) or `items[]` (multiple) to populate the cart before placing the order. Omit them to checkout from the user's existing cart.\n\n**Product search sort values:** `newest` (default), `price_asc` (cheapest), `price_desc` (most expensive), `name`.\n\n**Response envelope:** All endpoints return `{ success, message, data }` on success, or `{ success, message, errors }` on failure.",
+    "version": "1.1.0",
     "contact": {
       "name": "Brillar API Support",
       "email": "api-support@brillarbroadband.com"
@@ -16,6 +16,130 @@
     }
   ],
   "paths": {
+    "/api/atenxionUser/products": {
+      "get": {
+        "summary": "Search Products",
+        "description": "Search and filter products for the customer identified by `userId`. Same handler semantics as `GET /api/products`. Supports category, gender, age, price range, and sort (newest / cheapest / most expensive).",
+        "tags": ["Products"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "description": "MongoDB `_id` of the customer. May also be sent in the request body.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0f" }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Case-insensitive match on name, description, SKU, brand.",
+            "schema": { "type": "string", "example": "necklace" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Category slug filter (e.g. `jewellery`, `electronics`).",
+            "schema": { "type": "string", "example": "jewellery" }
+          },
+          {
+            "name": "supplier",
+            "in": "query",
+            "required": false,
+            "description": "Supplier slug filter.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Product type slug (e.g. `ring`, `shirt`).",
+            "schema": { "type": "string", "example": "ring" }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "description": "Gender filter: `male`, `female`, `unisex`, `boys`, `girls`.",
+            "schema": { "type": "string", "example": "female" }
+          },
+          {
+            "name": "age",
+            "in": "query",
+            "required": false,
+            "description": "Numeric age — matches products whose minAge/maxAge range includes it.",
+            "schema": { "type": "integer", "example": 18 }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "example": 20 }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "example": 500 }
+          },
+          {
+            "name": "inStock",
+            "in": "query",
+            "required": false,
+            "description": "Set to `true` for in-stock products only.",
+            "schema": { "type": "string", "enum": ["true"], "example": "true" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Sort order: `newest`, `price_asc` (cheapest), `price_desc` (most expensive), `name`.",
+            "schema": {
+              "type": "string",
+              "enum": ["newest", "price_asc", "price_desc", "name"],
+              "default": "newest",
+              "example": "price_asc"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "example": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 12, "example": 12 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductListResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error or missing userId",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "userId is required",
+                  "errors": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/atenxionUser/orders": {
       "get": {
         "summary": "Get My Orders",
@@ -104,7 +228,7 @@
                           "city": "Singapore",
                           "postalCode": "238858"
                         },
-                        "paymentMethod": "card",
+                        "paymentMethod": "Prepaid",
                         "paymentStatus": "paid",
                         "subtotal": 89.99,
                         "total": 89.99,
@@ -203,7 +327,7 @@
                       "addressLine1": "123 Orchard Road",
                       "city": "Singapore"
                     },
-                    "paymentMethod": "card",
+                    "paymentMethod": "Prepaid",
                     "paymentStatus": "paid",
                     "subtotal": 89.99,
                     "total": 89.99,
@@ -470,6 +594,105 @@
           }
         }
       }
+    },
+    "/api/atenxionUser/checkout": {
+      "post": {
+        "summary": "Checkout",
+        "description": "Places an order for the customer identified by `userId`. Same handler semantics as `POST /api/checkout`. Optionally send `productId` + `quantity` or an `items` array to populate the cart before checkout; omit them to use the existing cart.",
+        "tags": ["Checkout"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckoutBody" },
+              "examples": {
+                "singleItemCheckout": {
+                  "summary": "Checkout with one product",
+                  "value": {
+                    "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "productId": "664a1b2c3d4e5f6a7b8c9d0b",
+                    "quantity": 1,
+                    "deliveryAddress": {
+                      "fullName": "Jane Customer",
+                      "phone": "+6591234567",
+                      "addressLine1": "123 Orchard Road",
+                      "city": "Singapore",
+                      "postalCode": "238858"
+                    },
+                    "paymentMethod": "Prepaid"
+                  }
+                },
+                "multiItemCheckout": {
+                  "summary": "Checkout with multiple products",
+                  "value": {
+                    "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "items": [
+                      { "productId": "664a1b2c3d4e5f6a7b8c9d0b", "quantity": 2 },
+                      { "productId": "664a1b2c3d4e5f6a7b8c9d0c", "quantity": 1 }
+                    ],
+                    "deliveryAddress": {
+                      "fullName": "Jane Customer",
+                      "phone": "+6591234567",
+                      "addressLine1": "123 Orchard Road",
+                      "city": "Singapore"
+                    },
+                    "paymentMethod": "Prepaid"
+                  }
+                },
+                "existingCartCheckout": {
+                  "summary": "Checkout from existing cart",
+                  "value": {
+                    "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "deliveryAddress": {
+                      "fullName": "Jane Customer",
+                      "phone": "+6591234567",
+                      "addressLine1": "123 Orchard Road",
+                      "city": "Singapore"
+                    },
+                    "paymentMethod": "Prepaid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order placed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — missing userId, empty cart, invalid address, or stock error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "missingUserId": {
+                    "summary": "Missing userId",
+                    "value": {
+                      "success": false,
+                      "message": "userId is required",
+                      "errors": []
+                    }
+                  },
+                  "emptyCart": {
+                    "summary": "Cart is empty",
+                    "value": {
+                      "success": false,
+                      "message": "Cart is empty",
+                      "errors": []
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -517,6 +740,110 @@
             "minimum": 0,
             "description": "New quantity for the line item. Values ≤ 0 remove the item."
           }
+        }
+      },
+      "CheckoutItem": {
+        "type": "object",
+        "required": ["productId"],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "MongoDB `_id` of the product."
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Quantity to add before checkout. Defaults to 1."
+          }
+        }
+      },
+      "CheckoutBody": {
+        "type": "object",
+        "required": ["userId", "deliveryAddress", "paymentMethod"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "MongoDB `_id` of the customer."
+          },
+          "productId": {
+            "type": "string",
+            "description": "Single product to checkout. Use with `quantity`, or use `items` for multiple products."
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Quantity when using `productId`. Defaults to 1."
+          },
+          "items": {
+            "type": "array",
+            "description": "Multiple products to add to cart before checkout. Clears existing cart first.",
+            "items": { "$ref": "#/components/schemas/CheckoutItem" }
+          },
+          "deliveryAddress": { "$ref": "#/components/schemas/DeliveryAddress" },
+          "paymentMethod": {
+            "type": "string",
+            "description": "Payment method identifier (e.g. `Prepaid`).",
+            "example": "Prepaid"
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "sku": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "compareAtPrice": { "type": "number" },
+          "imageUrls": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "out_of_stock"]
+          },
+          "stockQuantity": { "type": "integer" },
+          "categoryId": { "type": "string" },
+          "supplierId": { "$ref": "#/components/schemas/SupplierRef" },
+          "gender": { "type": "string" },
+          "minAge": { "type": "integer" },
+          "maxAge": { "type": "integer" },
+          "isLiked": {
+            "type": "boolean",
+            "description": "Whether the requesting user has liked this product."
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProductListData": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Product" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "ProductListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/ProductListData" }
+        }
+      },
+      "CheckoutResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Order placed successfully" },
+          "data": { "$ref": "#/components/schemas/Order" }
         }
       },
       "ErrorResponse": {
@@ -699,12 +1026,20 @@
   },
   "tags": [
     {
-      "name": "Orders",
-      "description": "Customer order history and order detail (requires userId, no JWT)"
+      "name": "Products",
+      "description": "Product search and filtering (requires userId, no JWT)"
     },
     {
       "name": "Cart",
       "description": "Add, update, and remove cart items (requires userId, no JWT)"
+    },
+    {
+      "name": "Checkout",
+      "description": "Place orders from cart or inline items (requires userId, no JWT)"
+    },
+    {
+      "name": "Orders",
+      "description": "Customer order history and order detail (requires userId, no JWT)"
     }
   ]
 }

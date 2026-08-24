@@ -20,6 +20,8 @@ export interface ProductQuery {
   maxPrice?: number;
   inStock?: boolean;
   sort?: string;
+  page?: number;
+  limit?: number;
 }
 
 /** Statuses visible on the public storefront (active suppliers only). */
@@ -161,11 +163,31 @@ export class ProductService {
         sort = { createdAt: -1 };
     }
 
-    const products = await Product.find(filter)
+    const productsQuery = Product.find(filter)
       .populate('categoryId', 'name slug')
       .populate('supplierId', 'storeName slug')
       .sort(sort);
 
+    const usePagination =
+      query.page !== undefined ||
+      query.limit !== undefined;
+    const page = Math.max(1, query.page ?? 1);
+    const limit = Math.max(1, Math.min(query.limit ?? 12, 100));
+
+    if (usePagination) {
+      const skip = (page - 1) * limit;
+      const [products, total] = await Promise.all([
+        productsQuery.clone().skip(skip).limit(limit),
+        Product.countDocuments(filter),
+      ]);
+
+      return {
+        products: await ProductService.attachLikeStatus(products, userId),
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+      };
+    }
+
+    const products = await productsQuery;
     return {
       products: await ProductService.attachLikeStatus(products, userId),
     };

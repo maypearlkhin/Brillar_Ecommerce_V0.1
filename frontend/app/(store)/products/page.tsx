@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import {
   Box, Container, Grid, Typography, MenuItem, Select, FormControl,
   Breadcrumbs, Link as MuiLink, ToggleButton, ToggleButtonGroup,
-  Paper, alpha,
+  Paper, alpha, Pagination, Stack,
 } from '@mui/material';
 import {
   GridViewOutlined, ViewListOutlined, NavigateNext,
@@ -24,6 +24,8 @@ import { colors } from '@/theme/colors';
 
 type ViewMode = 'list' | 'grid';
 
+const PRODUCTS_PAGE_SIZE = 12;
+
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -31,6 +33,8 @@ function ProductsContent() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [totalResults, setTotalResults] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || '';
@@ -41,6 +45,7 @@ function ProductsContent() {
   const inStock = searchParams.get('inStock') === 'true';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
+  const page = Math.max(1, Number(searchParams.get('page')) || 1);
   const requestIdRef = useRef(0);
   const { seedProducts } = useProductLikeContext();
 
@@ -56,25 +61,36 @@ function ProductsContent() {
         inStock,
         ...(minPrice ? { minPrice: Number(minPrice) } : {}),
         ...(maxPrice ? { maxPrice: Number(maxPrice) } : {}),
+        page,
+        limit: PRODUCTS_PAGE_SIZE,
       });
 
       if (requestId !== requestIdRef.current) return;
 
       setProducts(data.products);
+      setTotalResults(data.pagination?.total ?? data.products.length);
+      setTotalPages(data.pagination?.pages ?? 1);
       seedProducts(data.products);
     } finally {
       if (requestId !== requestIdRef.current) return;
       setLoading(false);
     }
-  }, [search, category, gender, type, age, sort, inStock, minPrice, maxPrice, seedProducts]);
+  }, [search, category, gender, type, age, sort, inStock, minPrice, maxPrice, page, seedProducts]);
 
-  const updateParams = (updates: Record<string, string>) => {
+  const updateParams = (updates: Record<string, string>, resetPage = true) => {
     const params = new URLSearchParams(searchParams.toString());
     Object.entries(updates).forEach(([k, v]) => {
       if (v) params.set(k, v);
       else params.delete(k);
     });
-    params.delete('page');
+    if (resetPage) params.delete('page');
+    router.push(`/products?${params.toString()}`);
+  };
+
+  const setPage = (nextPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextPage <= 1) params.delete('page');
+    else params.set('page', String(nextPage));
     router.push(`/products?${params.toString()}`);
   };
 
@@ -172,9 +188,9 @@ function ProductsContent() {
                   </ToggleButton>
                 </ToggleButtonGroup>
 
-                {!loading && products.length > 0 && (
+                {!loading && totalResults > 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    Showing {products.length} result{products.length === 1 ? '' : 's'}
+                    Showing {((page - 1) * PRODUCTS_PAGE_SIZE) + 1}–{Math.min(page * PRODUCTS_PAGE_SIZE, totalResults)} of {totalResults} result{totalResults === 1 ? '' : 's'}
                   </Typography>
                 )}
               </Box>
@@ -199,19 +215,31 @@ function ProductsContent() {
             ) : products.length === 0 ? (
               <EmptyState title="No products found" description="Try adjusting your filters or search terms." />
             ) : viewMode === 'list' ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Stack spacing={2}>
                 {products.map((p) => (
                   <ProductListCard key={p._id} product={p} />
                 ))}
-              </Box>
+                {totalPages > 1 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1 }}>
+                    <Pagination count={totalPages} page={page} onChange={(_, p) => setPage(p)} color="primary" />
+                  </Box>
+                )}
+              </Stack>
             ) : (
-              <Grid container spacing={2}>
-                {products.map((p) => (
-                  <Grid key={p._id} size={{ xs: 6, sm: 4, md: 4 }}>
-                    <ProductCard product={p} />
-                  </Grid>
-                ))}
-              </Grid>
+              <Stack spacing={2}>
+                <Grid container spacing={2}>
+                  {products.map((p) => (
+                    <Grid key={p._id} size={{ xs: 6, sm: 4, md: 4 }}>
+                      <ProductCard product={p} />
+                    </Grid>
+                  ))}
+                </Grid>
+                {totalPages > 1 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', pt: 1 }}>
+                    <Pagination count={totalPages} page={page} onChange={(_, p) => setPage(p)} color="primary" />
+                  </Box>
+                )}
+              </Stack>
             )}
           </Grid>
         </Grid>

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { CartService } from '../services/cart.service';
-import { OrderService } from '../services/order.service';
+import { CheckoutService, OrderService } from '../services/order.service';
+import { ProductService } from '../services/product.service';
 import { sendSuccess, sendError } from '../utils/apiResponse';
 import { getParam, getQuery } from '../utils/params';
 
@@ -10,6 +11,53 @@ const getUserId = (req: Request) => {
     throw new Error('userId is required');
   }
   return userId;
+};
+
+const normalizeCheckoutItems = (body: Record<string, unknown>) => {
+  if (Array.isArray(body.items)) {
+    return body.items
+      .filter(
+        (item): item is { productId: string; quantity?: number } =>
+          typeof item === 'object'
+          && item !== null
+          && typeof (item as { productId?: unknown }).productId === 'string'
+      )
+      .map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity || 1,
+      }));
+  }
+
+  if (typeof body.productId === 'string') {
+    return [{
+      productId: body.productId,
+      quantity: Number(body.quantity) || 1,
+    }];
+  }
+
+  return [];
+};
+
+export const getProducts = async (req: Request, res: Response) => {
+  try {
+    const result = await ProductService.getProducts({
+      search: req.query.search as string,
+      category: req.query.category as string,
+      supplier: req.query.supplier as string,
+      minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
+      maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
+      inStock: req.query.inStock === 'true',
+      type: req.query.type as string,
+      gender: req.query.gender as string,
+      age: req.query.age ? Number(req.query.age) : undefined,
+      sort: req.query.sort as string,
+      ...(req.query.page ? { page: Number(req.query.page) } : {}),
+      ...(req.query.limit ? { limit: Number(req.query.limit) } : {}),
+    }, getUserId(req));
+    return sendSuccess(res, result);
+  } catch (err) {
+    return sendError(res, (err as Error).message, 500);
+  }
 };
 
 export const addToCart = async (req: Request, res: Response) => {
@@ -45,6 +93,29 @@ export const removeCartItem = async (req: Request, res: Response) => {
       getParam(req.params.productId)
     );
     return sendSuccess(res, cart, 'Item removed');
+  } catch (err) {
+    return sendError(res, (err as Error).message, 400);
+  }
+};
+
+export const checkout = async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req);
+    const items = normalizeCheckoutItems(req.body);
+
+    if (items.length > 0) {
+      await CartService.clearCart(userId);
+      for (const item of items) {
+        await CartService.addItem(userId, item.productId, item.quantity);
+      }
+    }
+
+    const order = await CheckoutService.placeOrder(
+      userId,
+      req.body.deliveryAddress,
+      req.body.paymentMethod
+    );
+    return sendSuccess(res, order, 'Order placed successfully', 201);
   } catch (err) {
     return sendError(res, (err as Error).message, 400);
   }
