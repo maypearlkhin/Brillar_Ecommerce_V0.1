@@ -4,3 +4,10 @@ backend/node_modules/
 
 frontend/.next/
 backend/dist/
+
+# Local env files (use Render/Vercel dashboard env vars in production)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env.local

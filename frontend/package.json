@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@copilotkit/a2ui-renderer": "^1.68.3",
+    "@copilotkit/react-core": "^1.68.3",
+    "@copilotkit/runtime": "^1.68.3",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.3.1",
@@ -17,7 +20,8 @@
     "axios": "^1.19.0",
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
