@@ -3,7 +3,7 @@ import { ApiResponse, Category, Pagination, Product, SupplierRef } from '@/types
 
 export const productService = {
   getProducts: (params?: Record<string, string | number | boolean>) =>
-    api.get<ApiResponse<{ products: Product[]; pagination: Pagination }>>('/products', { params })
+    api.get<ApiResponse<{ products: Product[]; pagination?: Pagination }>>('/products', { params })
       .then((r) => r.data.data),
 
   getProduct: (id: string) =>

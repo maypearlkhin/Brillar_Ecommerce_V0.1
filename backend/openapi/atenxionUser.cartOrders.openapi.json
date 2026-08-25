@@ -1,0 +1,808 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Brillar E-Commerce Atenxion User — Cart, Checkout & Orders API",
+    "description": "Agent/integration endpoints for cart, checkout, and order operations. Mirrors the web app customer routes (`/api/cart`, `POST /api/checkout`, `/api/orders`) with the same HTTP methods, payloads, and service flow — but **without JWT middleware**. Every request must include **`userId`** (MongoDB `_id` of the customer) in the **JSON body** and/or **query string**.\n\n**Atenxion convention:** `userId` is read from `body.userId` first, then `query.userId`.\n\n**Checkout:** Send `productId` + `quantity` (single item) or `items[]` (multiple) to populate the cart before placing the order. Omit them to checkout from the user's existing cart.\n\n**Response envelope:** `{ success, message, data }` on success, or `{ success, message, errors }` on failure.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Brillar API Support",
+      "email": "api-support@brillarbroadband.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/api/atenxionUser/cart": {
+      "post": {
+        "summary": "Add to Cart",
+        "description": "Adds a product to the customer's cart (or increases quantity if already present). Same handler semantics as `POST /api/cart`. Include **`userId`** in the JSON body.",
+        "tags": ["Cart"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddToCartBody" },
+              "example": {
+                "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                "productId": "664a1b2c3d4e5f6a7b8c9d0b",
+                "quantity": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item added to cart",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartResponse" },
+                "example": {
+                  "success": true,
+                  "message": "Item added to cart",
+                  "data": {
+                    "_id": "674a1b2c3d4e5f6a7b8c9d0c",
+                    "customerId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "items": [
+                      {
+                        "productId": {
+                          "_id": "664a1b2c3d4e5f6a7b8c9d0b",
+                          "name": "Wireless Mechanical Keyboard",
+                          "slug": "wireless-mechanical-keyboard",
+                          "imageUrls": ["https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400"],
+                          "status": "active",
+                          "stockQuantity": 45
+                        },
+                        "supplierId": {
+                          "_id": "664a1b2c3d4e5f6a7b8c9d0a",
+                          "storeName": "Northstar Electronics",
+                          "slug": "northstar-electronics"
+                        },
+                        "quantity": 1,
+                        "unitPrice": 89.99
+                      }
+                    ],
+                    "updatedAt": "2026-05-12T10:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — missing userId, product unavailable, or insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "missingUserId": {
+                    "summary": "Missing userId",
+                    "value": {
+                      "success": false,
+                      "message": "userId is required",
+                      "errors": []
+                    }
+                  },
+                  "productUnavailable": {
+                    "summary": "Product not available",
+                    "value": {
+                      "success": false,
+                      "message": "Product not available",
+                      "errors": []
+                    }
+                  },
+                  "insufficientStock": {
+                    "summary": "Insufficient stock",
+                    "value": {
+                      "success": false,
+                      "message": "Insufficient stock",
+                      "errors": []
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/atenxionUser/cart/{productId}": {
+      "put": {
+        "summary": "Update Cart Item Quantity",
+        "description": "Updates the quantity of a cart line item. Same handler semantics as `PUT /api/cart/:productId`. Pass **`userId`** in the JSON body (or query). Setting quantity to 0 or below removes the item.",
+        "tags": ["Cart"],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "MongoDB `_id` of the product in the cart.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0b" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCartItemBody" },
+              "example": {
+                "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                "quantity": 2
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cart updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartResponse" },
+                "example": {
+                  "success": true,
+                  "message": "Cart updated",
+                  "data": {
+                    "_id": "674a1b2c3d4e5f6a7b8c9d0c",
+                    "customerId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "items": [],
+                    "updatedAt": "2026-05-12T10:05:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — missing userId, cart/item not found, or insufficient stock",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "Cart not found",
+                  "errors": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove from Cart",
+        "description": "Removes a product from the customer's cart. Same handler semantics as `DELETE /api/cart/:productId`. Pass **`userId`** in the query string or JSON body.",
+        "tags": ["Cart"],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "description": "MongoDB `_id` of the product to remove.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0b" }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "description": "MongoDB `_id` of the customer. May also be sent in the request body.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0f" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Item removed from cart",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartResponse" },
+                "example": {
+                  "success": true,
+                  "message": "Item removed",
+                  "data": {
+                    "_id": "674a1b2c3d4e5f6a7b8c9d0c",
+                    "customerId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "items": [],
+                    "updatedAt": "2026-05-12T10:10:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — missing userId or cart/item not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "Item not in cart",
+                  "errors": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/atenxionUser/checkout": {
+      "post": {
+        "summary": "Checkout",
+        "description": "Places an order for the customer identified by `userId`. Same handler semantics as `POST /api/checkout`. Optionally send `productId` + `quantity` or an `items` array to populate the cart before checkout; omit them to use the existing cart.",
+        "tags": ["Checkout"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckoutBody" },
+              "examples": {
+                "singleItemCheckout": {
+                  "summary": "Checkout with one product",
+                  "value": {
+                    "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "productId": "664a1b2c3d4e5f6a7b8c9d0b",
+                    "quantity": 1,
+                    "deliveryAddress": {
+                      "fullName": "Jane Customer",
+                      "phone": "+6591234567",
+                      "addressLine1": "123 Orchard Road",
+                      "city": "Singapore",
+                      "postalCode": "238858"
+                    },
+                    "paymentMethod": "Prepaid"
+                  }
+                },
+                "multiItemCheckout": {
+                  "summary": "Checkout with multiple products",
+                  "value": {
+                    "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "items": [
+                      { "productId": "664a1b2c3d4e5f6a7b8c9d0b", "quantity": 2 },
+                      { "productId": "664a1b2c3d4e5f6a7b8c9d0c", "quantity": 1 }
+                    ],
+                    "deliveryAddress": {
+                      "fullName": "Jane Customer",
+                      "phone": "+6591234567",
+                      "addressLine1": "123 Orchard Road",
+                      "city": "Singapore"
+                    },
+                    "paymentMethod": "Prepaid"
+                  }
+                },
+                "existingCartCheckout": {
+                  "summary": "Checkout from existing cart",
+                  "value": {
+                    "userId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "deliveryAddress": {
+                      "fullName": "Jane Customer",
+                      "phone": "+6591234567",
+                      "addressLine1": "123 Orchard Road",
+                      "city": "Singapore"
+                    },
+                    "paymentMethod": "Prepaid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order placed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CheckoutResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — missing userId, empty cart, invalid address, or stock error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "missingUserId": {
+                    "summary": "Missing userId",
+                    "value": {
+                      "success": false,
+                      "message": "userId is required",
+                      "errors": []
+                    }
+                  },
+                  "emptyCart": {
+                    "summary": "Cart is empty",
+                    "value": {
+                      "success": false,
+                      "message": "Cart is empty",
+                      "errors": []
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/atenxionUser/orders": {
+      "get": {
+        "summary": "Get My Orders",
+        "description": "Retrieves paginated order history for the customer identified by `userId`. Same handler semantics as `GET /api/orders`.",
+        "tags": ["Orders"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "description": "MongoDB `_id` of the customer.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0f" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number (1-based). Defaults to 1.",
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "example": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Orders per page. Defaults to 10.",
+            "schema": { "type": "integer", "minimum": 1, "default": 10, "example": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orders fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderListResponse" },
+                "example": {
+                  "success": true,
+                  "message": "Success",
+                  "data": {
+                    "orders": [
+                      {
+                        "_id": "674a1b2c3d4e5f6a7b8c9d0e",
+                        "orderNumber": "ORD-20260512-A1B2C3",
+                        "customerId": "664a1b2c3d4e5f6a7b8c9d0f",
+                        "supplierOrders": [
+                          {
+                            "_id": "674a1b2c3d4e5f6a7b8c9d0f",
+                            "supplierId": {
+                              "_id": "664a1b2c3d4e5f6a7b8c9d0a",
+                              "storeName": "Northstar Electronics",
+                              "slug": "northstar-electronics"
+                            },
+                            "items": [
+                              {
+                                "productId": "664a1b2c3d4e5f6a7b8c9d0b",
+                                "nameSnapshot": "Wireless Mechanical Keyboard",
+                                "skuSnapshot": "NE-KB-001",
+                                "unitPrice": 89.99,
+                                "unitCost": 42,
+                                "quantity": 1,
+                                "lineTotal": 89.99
+                              }
+                            ],
+                            "subtotal": 89.99,
+                            "fulfillmentStatus": "pending"
+                          }
+                        ],
+                        "deliveryAddress": {
+                          "fullName": "Jane Customer",
+                          "phone": "+6591234567",
+                          "addressLine1": "123 Orchard Road",
+                          "city": "Singapore",
+                          "postalCode": "238858"
+                        },
+                        "paymentMethod": "Prepaid",
+                        "paymentStatus": "paid",
+                        "subtotal": 89.99,
+                        "total": 89.99,
+                        "status": "pending",
+                        "displayStatus": "pending",
+                        "createdAt": "2026-05-12T10:00:00.000Z",
+                        "updatedAt": "2026-05-12T10:00:00.000Z"
+                      }
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "limit": 10,
+                      "total": 1,
+                      "pages": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing userId",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "userId is required",
+                  "errors": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "Internal server error",
+                  "errors": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/atenxionUser/orders/{id}": {
+      "get": {
+        "summary": "Get Order Detail",
+        "description": "Retrieves a single order by ID for the customer identified by `userId`. Same handler semantics as `GET /api/orders/:id`.",
+        "tags": ["Orders"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "MongoDB `_id` of the order.",
+            "schema": { "type": "string", "example": "674a1b2c3d4e5f6a7b8c9d0e" }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "description": "MongoDB `_id` of the customer.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0f" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetailResponse" },
+                "example": {
+                  "success": true,
+                  "message": "Success",
+                  "data": {
+                    "_id": "674a1b2c3d4e5f6a7b8c9d0e",
+                    "orderNumber": "ORD-20260512-A1B2C3",
+                    "customerId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "supplierOrders": [],
+                    "deliveryAddress": {
+                      "fullName": "Jane Customer",
+                      "phone": "+6591234567",
+                      "addressLine1": "123 Orchard Road",
+                      "city": "Singapore"
+                    },
+                    "paymentMethod": "Prepaid",
+                    "paymentStatus": "paid",
+                    "subtotal": 89.99,
+                    "total": 89.99,
+                    "status": "pending",
+                    "displayStatus": "pending",
+                    "createdAt": "2026-05-12T10:00:00.000Z",
+                    "updatedAt": "2026-05-12T10:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing userId",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "userId is required",
+                  "errors": []
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Order not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "Order not found",
+                  "errors": []
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddToCartBody": {
+        "type": "object",
+        "required": ["userId", "productId"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "MongoDB `_id` of the customer."
+          },
+          "productId": {
+            "type": "string",
+            "description": "MongoDB `_id` of the product to add."
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Quantity to add. Defaults to 1 if omitted."
+          }
+        }
+      },
+      "UpdateCartItemBody": {
+        "type": "object",
+        "required": ["userId", "quantity"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "MongoDB `_id` of the customer."
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "New quantity for the line item. Values ≤ 0 remove the item."
+          }
+        }
+      },
+      "CheckoutItem": {
+        "type": "object",
+        "required": ["productId"],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "MongoDB `_id` of the product."
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Quantity to add before checkout. Defaults to 1."
+          }
+        }
+      },
+      "CheckoutBody": {
+        "type": "object",
+        "required": ["userId", "deliveryAddress", "paymentMethod"],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "MongoDB `_id` of the customer."
+          },
+          "productId": {
+            "type": "string",
+            "description": "Single product to checkout. Use with `quantity`, or use `items` for multiple products."
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "Quantity when using `productId`. Defaults to 1."
+          },
+          "items": {
+            "type": "array",
+            "description": "Multiple products to add to cart before checkout. Clears existing cart first.",
+            "items": { "$ref": "#/components/schemas/CheckoutItem" }
+          },
+          "deliveryAddress": { "$ref": "#/components/schemas/DeliveryAddress" },
+          "paymentMethod": {
+            "type": "string",
+            "description": "Payment method identifier (e.g. `Prepaid`).",
+            "example": "Prepaid"
+          }
+        }
+      },
+      "CheckoutResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Order placed successfully" },
+          "data": { "$ref": "#/components/schemas/Order" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "pages": { "type": "integer" }
+        }
+      },
+      "SupplierRef": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "storeName": { "type": "string" },
+          "slug": { "type": "string" }
+        }
+      },
+      "ProductRef": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "imageUrls": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "out_of_stock"]
+          },
+          "stockQuantity": { "type": "integer" }
+        }
+      },
+      "CartItem": {
+        "type": "object",
+        "properties": {
+          "productId": { "$ref": "#/components/schemas/ProductRef" },
+          "supplierId": { "$ref": "#/components/schemas/SupplierRef" },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "unitPrice": { "type": "number" }
+        }
+      },
+      "Cart": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "customerId": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CartItem" }
+          },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CartResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Cart" }
+        }
+      },
+      "DeliveryAddress": {
+        "type": "object",
+        "properties": {
+          "fullName": { "type": "string" },
+          "phone": { "type": "string" },
+          "addressLine1": { "type": "string" },
+          "addressLine2": { "type": "string" },
+          "city": { "type": "string" },
+          "stateRegion": { "type": "string" },
+          "postalCode": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "productId": { "type": "string" },
+          "nameSnapshot": { "type": "string" },
+          "skuSnapshot": { "type": "string" },
+          "unitPrice": { "type": "number" },
+          "unitCost": { "type": "number" },
+          "quantity": { "type": "integer" },
+          "lineTotal": { "type": "number" }
+        }
+      },
+      "SupplierOrder": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "supplierId": { "$ref": "#/components/schemas/SupplierRef" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderItem" }
+          },
+          "subtotal": { "type": "number" },
+          "fulfillmentStatus": {
+            "type": "string",
+            "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"]
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string" },
+          "supplierOrders": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SupplierOrder" }
+          },
+          "deliveryAddress": { "$ref": "#/components/schemas/DeliveryAddress" },
+          "paymentMethod": { "type": "string" },
+          "paymentStatus": {
+            "type": "string",
+            "enum": ["pending", "paid", "failed", "refunded"]
+          },
+          "subtotal": { "type": "number" },
+          "total": { "type": "number" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "processing", "completed", "cancelled"]
+          },
+          "displayStatus": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "OrderListData": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Order" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "OrderListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/OrderListData" }
+        }
+      },
+      "OrderDetailResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Order" }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Cart",
+      "description": "Add, update, and remove cart items (requires userId, no JWT)"
+    },
+    {
+      "name": "Checkout",
+      "description": "Place orders from cart or inline items (requires userId, no JWT)"
+    },
+    {
+      "name": "Orders",
+      "description": "Customer order history and order detail (requires userId, no JWT)"
+    }
+  ]
+}

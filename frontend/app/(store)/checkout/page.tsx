@@ -188,7 +188,7 @@ function CheckoutContent() {
     try {
       setSubmitting(true);
       setError('');
-      const order = await orderService.checkout(address, 'demo_card');
+      const order = await orderService.checkout(address, 'Prepaid');
       sessionStorage.setItem(CHECKOUT_ORDER_ID_KEY, String(order._id));
       if (cart) {
         syncCart({ ...cart, items: [] });

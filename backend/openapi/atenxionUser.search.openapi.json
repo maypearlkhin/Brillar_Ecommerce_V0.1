@@ -1,0 +1,250 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Brillar E-Commerce Atenxion User — Product Search API",
+    "description": "Agent/integration endpoint for product search and filtering. Mirrors `GET /api/products` with the same query filters and service flow — but **without JWT middleware** and **without `userId`**. Public product listing only; like status is not resolved for a specific customer.\n\n**Sort values:** `newest` (default), `price_asc` (cheapest), `price_desc` (most expensive), `name`.\n\n**Response envelope:** `{ success, message, data }` on success, or `{ success, message, errors }` on failure.",
+    "version": "1.1.0",
+    "contact": {
+      "name": "Brillar API Support",
+      "email": "api-support@brillarbroadband.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/api/atenxionUser/products": {
+      "get": {
+        "summary": "Search Products",
+        "description": "Search and filter products. Same handler semantics as unauthenticated `GET /api/products`. Supports category, gender, age, price range, and sort (newest / cheapest / most expensive).",
+        "tags": ["Products"],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Case-insensitive match on name, description, SKU, brand.",
+            "schema": { "type": "string", "example": "necklace" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Category slug filter (e.g. `jewellery`, `electronics`).",
+            "schema": { "type": "string", "example": "jewellery" }
+          },
+          {
+            "name": "supplier",
+            "in": "query",
+            "required": false,
+            "description": "Supplier slug filter.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Product type slug (e.g. `ring`, `shirt`).",
+            "schema": { "type": "string", "example": "ring" }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "description": "Gender filter: `male`, `female`, `unisex`, `boys`, `girls`.",
+            "schema": { "type": "string", "example": "female" }
+          },
+          {
+            "name": "age",
+            "in": "query",
+            "required": false,
+            "description": "Numeric age — matches products whose minAge/maxAge range includes it.",
+            "schema": { "type": "integer", "example": 18 }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "example": 20 }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "example": 500 }
+          },
+          {
+            "name": "inStock",
+            "in": "query",
+            "required": false,
+            "description": "Set to `true` for in-stock products only.",
+            "schema": { "type": "string", "enum": ["true"], "example": "true" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Sort order: `newest`, `price_asc` (cheapest), `price_desc` (most expensive), `name`.",
+            "schema": {
+              "type": "string",
+              "enum": ["newest", "price_asc", "price_desc", "name"],
+              "default": "newest",
+              "example": "price_asc"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "example": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 12, "example": 12 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductListResponse" },
+                "example": {
+                  "success": true,
+                  "message": "Success",
+                  "data": {
+                    "products": [
+                      {
+                        "_id": "664a1b2c3d4e5f6a7b8c9d0b",
+                        "name": "Gold Pendant Necklace",
+                        "slug": "gold-pendant-necklace",
+                        "sku": "JW-NK-001",
+                        "price": 129.99,
+                        "imageUrls": ["https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400"],
+                        "status": "active",
+                        "stockQuantity": 12,
+                        "gender": "female",
+                        "isLiked": false
+                      }
+                    ],
+                    "pagination": {
+                      "page": 1,
+                      "limit": 12,
+                      "total": 1,
+                      "pages": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "Internal server error",
+                  "errors": []
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "pages": { "type": "integer" }
+        }
+      },
+      "SupplierRef": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "storeName": { "type": "string" },
+          "slug": { "type": "string" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "sku": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "compareAtPrice": { "type": "number" },
+          "imageUrls": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "out_of_stock"]
+          },
+          "stockQuantity": { "type": "integer" },
+          "categoryId": { "type": "string" },
+          "supplierId": { "$ref": "#/components/schemas/SupplierRef" },
+          "gender": { "type": "string" },
+          "minAge": { "type": "integer" },
+          "maxAge": { "type": "integer" },
+          "isLiked": {
+            "type": "boolean",
+            "description": "Omitted or false when no customer context is provided."
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProductListData": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Product" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "ProductListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/ProductListData" }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Products",
+      "description": "Product search and filtering (no JWT, no userId)"
+    }
+  ]
+}

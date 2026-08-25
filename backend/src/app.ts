@@ -8,6 +8,7 @@ import customerRoutes from './routes/customer.routes';
 import supplierRoutes from './routes/supplier.routes';
 import adminRoutes from './routes/admin.routes';
 import integrationRoutes from './routes/integration.routes';
+import atenxionUserRoutes from './routes/atenxionUser.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -30,6 +31,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api', publicRoutes);
+app.use('/api/atenxionUser', atenxionUserRoutes);
 app.use('/api', customerRoutes);
 app.use('/api/supplier', supplierRoutes);
 app.use('/api/admin', adminRoutes);
