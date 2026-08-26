@@ -17,7 +17,11 @@ function getActiveWidgetRole(pathname: string, userRole?: UserRole | null): User
   if (pathname.startsWith('/supplier')) {
     return userRole === 'supplier' ? 'supplier' : null;
   }
-  if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
+  if (
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/ai-mode')
+  ) {
     return null;
   }
 

@@ -1,6 +1,5 @@
-import { createCustomerTools } from './customer';
-import { createPublicTools } from './public';
+import { createOpenApiTools, type ToolContext } from '../openapi';
 
-export function createAllTools(userToken?: string) {
-  return [...createPublicTools(), ...createCustomerTools(userToken)];
+export function createAllTools(context: ToolContext = {}) {
+  return createOpenApiTools(context);
 }

@@ -1,0 +1,547 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Brillar E-Commerce Customer — Browse & Discovery API",
+    "description": "Public storefront endpoints for the customer shopping flow. Used by the A2UI shopping assistant (`search_products`, `get_product_details`, `get_featured_products`, `list_categories`, `list_suppliers`, `get_faqs`, `get_homepage` tools).\n\n**Authentication:** All endpoints are callable without a token. Send an optional `Authorization: Bearer <JWT>` header (from `POST /api/auth/login`) to resolve per-customer fields such as `isLiked` on products.\n\n**Sort values:** `newest` (default), `price_asc` (cheapest), `price_desc` (most expensive), `name`.\n\n**Response envelope:** `{ success, message, data }` on success, or `{ success, message, errors }` on failure.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Brillar API Support",
+      "email": "api-support@brillarbroadband.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/api/home": {
+      "get": {
+        "summary": "Get Homepage",
+        "description": "Homepage highlights: marketplace stats, featured products, category previews, and top FAQs. Copilot tool: `get_homepage`.",
+        "tags": ["Home"],
+        "security": [{ "bearerAuth": [] }, {}],
+        "responses": {
+          "200": {
+            "description": "Homepage data fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HomeResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "summary": "Search Products",
+        "description": "Search and filter marketplace products. Copilot tool: `search_products`.",
+        "tags": ["Products"],
+        "security": [{ "bearerAuth": [] }, {}],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Case-insensitive match on name, description, SKU, brand.",
+            "schema": { "type": "string", "example": "necklace" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Category slug filter (e.g. `jewellery`, `electronics`).",
+            "schema": { "type": "string", "example": "jewellery" }
+          },
+          {
+            "name": "supplier",
+            "in": "query",
+            "required": false,
+            "description": "Supplier slug filter.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Product type slug (e.g. `ring`, `shirt`).",
+            "schema": { "type": "string", "example": "ring" }
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "description": "Gender filter: `male`, `female`, `unisex`, `boys`, `girls`.",
+            "schema": { "type": "string", "example": "female" }
+          },
+          {
+            "name": "age",
+            "in": "query",
+            "required": false,
+            "description": "Numeric age — matches products whose minAge/maxAge range includes it.",
+            "schema": { "type": "integer", "example": 18 }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "example": 20 }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "example": 500 }
+          },
+          {
+            "name": "inStock",
+            "in": "query",
+            "required": false,
+            "description": "Set to `true` for in-stock products only.",
+            "schema": { "type": "string", "enum": ["true"], "example": "true" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Sort order: `newest`, `price_asc`, `price_desc`, `name`.",
+            "schema": {
+              "type": "string",
+              "enum": ["newest", "price_asc", "price_desc", "name"],
+              "default": "newest",
+              "example": "price_asc"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1, "example": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 12, "example": 12 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductListResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/featured": {
+      "get": {
+        "summary": "Get Featured Products",
+        "description": "Returns a curated list of featured marketplace products. Copilot tool: `get_featured_products`.",
+        "tags": ["Products"],
+        "security": [{ "bearerAuth": [] }, {}],
+        "responses": {
+          "200": {
+            "description": "Featured products fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeaturedProductsResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "summary": "Get Product Details",
+        "description": "Full details for a single product by MongoDB `_id`. Copilot tool: `get_product_details`.",
+        "tags": ["Products"],
+        "security": [{ "bearerAuth": [] }, {}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "MongoDB `_id` of the product.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0b" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProductDetailResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "summary": "List Categories",
+        "description": "Active product categories with product counts. Copilot tool: `list_categories`.",
+        "tags": ["Catalog"],
+        "responses": {
+          "200": {
+            "description": "Categories fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CategoryListResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/suppliers": {
+      "get": {
+        "summary": "List Suppliers",
+        "description": "Active marketplace suppliers. Copilot tool: `list_suppliers`.",
+        "tags": ["Catalog"],
+        "responses": {
+          "200": {
+            "description": "Suppliers fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupplierListResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/faq": {
+      "get": {
+        "summary": "Get Public FAQs",
+        "description": "Public FAQs about orders, payments, returns, and account help. Copilot tool: `get_faqs`. Omit `page` and `limit` to return all active FAQs.",
+        "tags": ["FAQ"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "example": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "example": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "FAQs fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FaqListResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Optional JWT from POST /api/auth/login or POST /api/auth/register. Enables per-customer fields such as isLiked."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "pages": { "type": "integer" }
+        }
+      },
+      "SupplierRef": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "storeName": { "type": "string" },
+          "slug": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "sku": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "compareAtPrice": { "type": "number" },
+          "imageUrls": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "out_of_stock"]
+          },
+          "stockQuantity": { "type": "integer" },
+          "categoryId": { "type": "string" },
+          "supplierId": { "$ref": "#/components/schemas/SupplierRef" },
+          "gender": { "type": "string" },
+          "minAge": { "type": "integer" },
+          "maxAge": { "type": "integer" },
+          "isLiked": {
+            "type": "boolean",
+            "description": "Resolved when a valid Bearer token is provided; otherwise false or omitted."
+          },
+          "likeCount": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ProductListData": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Product" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "ProductListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/ProductListData" }
+        }
+      },
+      "ProductDetailResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/Product" }
+        }
+      },
+      "FeaturedProductsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Product" }
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "description": { "type": "string" },
+          "displayOrder": { "type": "integer" },
+          "isActive": { "type": "boolean" },
+          "productCount": { "type": "integer" },
+          "imageUrl": { "type": "string", "nullable": true }
+        }
+      },
+      "CategoryListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          }
+        }
+      },
+      "SupplierListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SupplierRef" }
+          }
+        }
+      },
+      "Faq": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string" },
+          "question": { "type": "string" },
+          "answer": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["Orders", "Payments", "Suppliers", "Returns", "Account", "General"]
+          },
+          "isActive": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "FaqListData": {
+        "type": "object",
+        "properties": {
+          "faqs": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Faq" }
+          },
+          "pagination": { "$ref": "#/components/schemas/Pagination" }
+        }
+      },
+      "FaqListResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": {
+            "oneOf": [
+              {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/Faq" }
+              },
+              { "$ref": "#/components/schemas/FaqListData" }
+            ]
+          }
+        }
+      },
+      "HomeStats": {
+        "type": "object",
+        "properties": {
+          "productCount": { "type": "integer" },
+          "supplierCount": { "type": "integer" },
+          "categoryCount": { "type": "integer" }
+        }
+      },
+      "HomeData": {
+        "type": "object",
+        "properties": {
+          "stats": { "$ref": "#/components/schemas/HomeStats" },
+          "featured": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Product" }
+          },
+          "categories": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Category" }
+          },
+          "faqs": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Faq" }
+          }
+        }
+      },
+      "HomeResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "$ref": "#/components/schemas/HomeData" }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Home",
+      "description": "Homepage highlights (optional JWT for liked products)"
+    },
+    {
+      "name": "Products",
+      "description": "Product search, featured list, and product detail (optional JWT)"
+    },
+    {
+      "name": "Catalog",
+      "description": "Categories and suppliers (no auth)"
+    },
+    {
+      "name": "FAQ",
+      "description": "Public help content (no auth)"
+    }
+  ]
+}

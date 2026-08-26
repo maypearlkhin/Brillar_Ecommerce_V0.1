@@ -15,8 +15,10 @@ import {
   StoreOutlined,
   LoginOutlined,
   PersonAddOutlined,
+  AutoAwesome,
 } from '@mui/icons-material';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth, useLogout } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import HeaderSearch from '@/components/storefront/HeaderSearch';
@@ -26,6 +28,8 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
   const { user, isAuthenticated } = useAuth();
   const logoutAndNavigate = useLogout();
   const { itemCount } = useCart();
+  const pathname = usePathname() || '';
+  const isAiMode = pathname === '/ai-mode';
 
   const handleLogout = () => {
     logoutAndNavigate('/');
@@ -85,6 +89,28 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
 
         {!hideSearch && <HeaderSearch />}
 
+        <Button
+          component={Link}
+          href="/ai-mode"
+          variant={isAiMode ? 'contained' : 'outlined'}
+          size="small"
+          startIcon={<AutoAwesome sx={{ fontSize: 18 }} />}
+          sx={{
+            borderRadius: '20px',
+            textTransform: 'none',
+            fontWeight: 600,
+            fontSize: '0.8rem',
+            px: 1.75,
+            py: 0.75,
+            flexShrink: 0,
+            display: { xs: 'none', sm: 'inline-flex' },
+            borderColor: isAiMode ? 'primary.main' : 'divider',
+            boxShadow: isAiMode ? colors.cardShadow : 'none',
+          }}
+        >
+          AI Mode
+        </Button>
+
         <Box
           sx={{
             display: 'flex',
@@ -97,6 +123,17 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
           <Tooltip title="Products">
             <IconButton component={Link} href="/products" size="small" sx={{ display: { xs: 'none', md: 'inline-flex' } }}>
               <CategoryOutlined fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="AI Mode">
+            <IconButton
+              component={Link}
+              href="/ai-mode"
+              size="small"
+              color={isAiMode ? 'primary' : 'default'}
+              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+            >
+              <AutoAwesome fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Help">

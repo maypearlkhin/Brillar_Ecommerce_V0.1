@@ -21,14 +21,22 @@ export default function CopilotProvider({ children }: { children: React.ReactNod
   return (
     <CopilotKit
       runtimeUrl="/api/copilotkit"
+      useSingleEndpoint
       headers={(): Record<string, string> => {
         if (typeof window === 'undefined') return {};
         const token = localStorage.getItem('token');
         if (!token) return {};
         return { Authorization: `Bearer ${token}` };
       }}
+      showDevConsole={false}
       properties={properties}
-      a2ui={{ catalog: brillarCatalog }}
+      a2ui={{
+        catalog: brillarCatalog,
+        recovery: {
+          debugExposure: 'hidden',
+          showAfterMs: 5000,
+        },
+      }}
     >
       {children}
     </CopilotKit>
