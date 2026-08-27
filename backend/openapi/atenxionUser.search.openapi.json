@@ -44,13 +44,6 @@
             "schema": { "type": "string" }
           },
           {
-            "name": "type",
-            "in": "query",
-            "required": false,
-            "description": "Product type slug (e.g. `ring`, `shirt`).",
-            "schema": { "type": "string", "example": "ring" }
-          },
-          {
             "name": "gender",
             "in": "query",
             "required": false,

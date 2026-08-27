@@ -60,6 +60,15 @@ export const getProducts = async (req: Request, res: Response) => {
   }
 };
 
+export const getCart = async (req: Request, res: Response) => {
+  try {
+    const cart = await CartService.getCart(getUserId(req));
+    return sendSuccess(res, cart);
+  } catch (err) {
+    return sendError(res, (err as Error).message, 500);
+  }
+};
+
 export const addToCart = async (req: Request, res: Response) => {
   try {
     const cart = await CartService.addItem(

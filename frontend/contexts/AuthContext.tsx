@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { User } from '@/types';
 import { authService } from '@/services/auth.service';
 import { getRoleHomePath } from '@/utils/authRedirect';
+import { sendLoginEvent } from '@/utils/atenxionLogin';
+import { sendLogoutEvent } from '@/utils/atenxionLogout';
 
 interface AuthContextType {
   user: User | null;
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSupplierStatus(result.supplierStatus || null);
     localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
+    void sendLoginEvent();
     return { redirect: getRedirectPath(result.user, result.supplierStatus), role: result.user.role };
   };
 
@@ -66,9 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(result.token);
     localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
+    void sendLoginEvent();
   };
 
   const logout = useCallback(() => {
+    void sendLogoutEvent();
     setUser(null);
     setToken(null);
     setSupplierStatus(null);

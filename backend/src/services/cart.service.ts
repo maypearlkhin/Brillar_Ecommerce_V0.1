@@ -89,9 +89,12 @@ export class CartService {
     const cart = await Cart.findOne({ customerId });
     if (!cart) throw new Error('Cart not found');
 
-    cart.items = cart.items.filter(
-      (item) => item.productId.toString() !== productId
+    const itemIndex = cart.items.findIndex(
+      (item) => item.productId.toString() === productId
     );
+    if (itemIndex < 0) throw new Error('Item not in cart');
+
+    cart.items.splice(itemIndex, 1);
     await cart.save();
     return this.getCart(customerId);
   }

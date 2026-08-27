@@ -13,4 +13,10 @@ export const integrationService = {
         params: role ? { role } : undefined,
       })
       .then((r) => r.data.data),
+
+  notifyLogin: (userId: string) =>
+    api.post<{ success: boolean; data: { sent: boolean } }>('/integration/user-login', { userId }),
+
+  notifyLogout: (userId: string) =>
+    api.post<{ success: boolean; data: { sent: boolean } }>('/integration/user-logout', { userId }),
 };
