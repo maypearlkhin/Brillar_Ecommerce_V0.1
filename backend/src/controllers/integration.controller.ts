@@ -59,7 +59,7 @@ export const notifyUserLogout = async (req: AuthRequest, res: Response) => {
       return sendError(res, 'userId does not match the authenticated user', 403);
     }
 
-    await sendLogoutEvent(userId);
+    await sendLogoutEvent(userId, req.user.role);
     return sendSuccess(res, { sent: true });
   } catch (err) {
     return sendError(res, (err as Error).message, 500);
