@@ -15,7 +15,7 @@ interface AuthContextType {
   supplierStatus: string | null;
   login: (email: string, password: string) => Promise<{ redirect: string; role: User['role'] }>;
   register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (user: User) => void;
   isAuthenticated: boolean;
 }
@@ -72,8 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void sendLoginEvent();
   };
 
-  const logout = useCallback(() => {
-    void sendLogoutEvent();
+  const logout = useCallback(async () => {
+    await sendLogoutEvent();
     setUser(null);
     setToken(null);
     setSupplierStatus(null);
@@ -118,12 +118,14 @@ export function useLogout() {
 
   return useCallback(
     (path = '/') => {
-      logout();
-      window.requestAnimationFrame(() => {
-        window.setTimeout(() => {
-          router.replace(path);
-        }, 50);
-      });
+      void (async () => {
+        await logout();
+        window.requestAnimationFrame(() => {
+          window.setTimeout(() => {
+            router.replace(path);
+          }, 50);
+        });
+      })();
     },
     [logout, router],
   );

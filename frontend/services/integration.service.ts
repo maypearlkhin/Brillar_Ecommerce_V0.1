@@ -17,6 +17,10 @@ export const integrationService = {
   notifyLogin: (userId: string) =>
     api.post<{ success: boolean; data: { sent: boolean } }>('/integration/user-login', { userId }),
 
-  notifyLogout: (userId: string) =>
-    api.post<{ success: boolean; data: { sent: boolean } }>('/integration/user-logout', { userId }),
+  notifyLogout: (userId: string, token?: string) =>
+    api.post<{ success: boolean; data: { sent: boolean } }>(
+      '/integration/user-logout',
+      { userId },
+      token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+    ),
 };

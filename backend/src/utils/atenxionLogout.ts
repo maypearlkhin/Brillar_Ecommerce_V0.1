@@ -1,10 +1,5 @@
 import { ConfigurationService } from '../services/admin.service';
-
-function getAtenxionBaseUrl(): string | null {
-  const endpointDomain = process.env.ENDPOINT_DOMAIN?.trim();
-  if (!endpointDomain) return null;
-  return `https://${endpointDomain}`;
-}
+import { getAtenxionBaseUrl } from './atenxionEndpoint';
 
 export const sendLogoutEvent = async (userId: string, role: string): Promise<void> => {
   try {
@@ -15,23 +10,47 @@ export const sendLogoutEvent = async (userId: string, role: string): Promise<voi
     if (!widget?.token) return;
 
     const endpoint = `${endpointDomain}/post-login/user-logout`;
+    const requestBody = {
+      userId,
+      message: `User logged out successfully with userId: ${userId}`,
+    };
+    const requestHeaders = {
+      'Content-Type': 'application/json',
+      Authorization: widget.token,
+    };
+
+    console.log('[Atenxion Logout] Request:', {
+      endpoint,
+      method: 'POST',
+      headers: requestHeaders,
+      body: requestBody,
+    });
+
     const response = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: widget.token,
-      },
-      body: JSON.stringify({
-        userId,
-        message: `User logged out successfully with userId: ${userId}`,
-      }),
+      headers: requestHeaders,
+      body: JSON.stringify(requestBody),
+    });
+
+    const responseText = await response.text().catch(() => '');
+    let responseData: unknown = responseText;
+    try {
+      responseData = responseText ? JSON.parse(responseText) : null;
+    } catch {
+      // keep raw text if not JSON
+    }
+
+    console.log('[Atenxion Logout] Response:', {
+      status: response.status,
+      ok: response.ok,
+      data: responseData,
     });
 
     if (!response.ok) {
       console.log(
         'Failed calling api to Atenxion Backend for user logout',
         response.status,
-        await response.text().catch(() => '')
+        responseText
       );
     }
   } catch (e) {

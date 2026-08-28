@@ -17,9 +17,10 @@ function getStoredUser(): User | null {
 export const sendLogoutEvent = async (): Promise<void> => {
   try {
     const user = getStoredUser();
-    if (!user?.id) return;
+    const token = localStorage.getItem('token');
+    if (!user?.id || !token) return;
 
-    await integrationService.notifyLogout(user.id);
+    await integrationService.notifyLogout(user.id, token);
   } catch (e) {
     console.log('Failed calling api to Atenxion Backend for user logout', e);
   }
