@@ -9,8 +9,6 @@ import { UserRole } from '@/types';
 const WIDGET_SCRIPT_ID = 'brillar-role-widget';
 
 function getActiveWidgetRole(pathname: string, userRole?: UserRole | null): UserRole | null {
-  if (!userRole) return null;
-
   if (pathname.startsWith('/admin')) {
     return userRole === 'admin' ? 'admin' : null;
   }
@@ -25,7 +23,8 @@ function getActiveWidgetRole(pathname: string, userRole?: UserRole | null): User
     return null;
   }
 
-  return userRole === 'customer' ? 'customer' : null;
+  if (userRole && userRole !== 'customer') return null;
+  return 'customer';
 }
 
 function normalizeScriptUrl(url: string): string {
@@ -33,6 +32,17 @@ function normalizeScriptUrl(url: string): string {
   const srcMatch = trimmed.match(/src=["']([^"']+)["']/i);
   if (srcMatch) return srcMatch[1];
   return trimmed;
+}
+
+function withUserIdParam(scriptUrl: string, userId: string): string {
+  try {
+    const url = new URL(scriptUrl);
+    url.searchParams.set('userId', userId);
+    return url.toString();
+  } catch {
+    const separator = scriptUrl.includes('?') ? '&' : '?';
+    return `${scriptUrl}${separator}userId=${encodeURIComponent(userId)}`;
+  }
 }
 
 function hideWidgetApis() {
@@ -71,11 +81,10 @@ function teardownWidget() {
 }
 
 export default function RoleWidget() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, loading } = useAuth();
   const pathname = usePathname() || '';
 
-  const activeRole =
-    !loading && isAuthenticated ? getActiveWidgetRole(pathname, user?.role) : null;
+  const activeRole = !loading ? getActiveWidgetRole(pathname, user?.role) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +118,8 @@ export default function RoleWidget() {
 
         const script = document.createElement('script');
         script.id = WIDGET_SCRIPT_ID;
-        script.src = normalizeScriptUrl(config.url);
+        const scriptUrl = normalizeScriptUrl(config.url);
+        script.src = user?.id ? withUserIdParam(scriptUrl, user.id) : scriptUrl;
         script.async = true;
         script.setAttribute('data-access-token', config.token);
         script.setAttribute('data-token', config.token);
@@ -127,7 +137,7 @@ export default function RoleWidget() {
       if (teardownTimer) clearTimeout(teardownTimer);
       scheduleTeardown();
     };
-  }, [activeRole]);
+  }, [activeRole, user?.id]);
 
   return null;
 }

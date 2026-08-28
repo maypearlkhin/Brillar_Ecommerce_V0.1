@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { User } from '@/types';
 import { authService } from '@/services/auth.service';
 import { getRoleHomePath } from '@/utils/authRedirect';
+import { sendLoginEvent } from '@/utils/atenxionLogin';
+import { sendLogoutEvent } from '@/utils/atenxionLogout';
 
 interface AuthContextType {
   user: User | null;
@@ -13,7 +15,7 @@ interface AuthContextType {
   supplierStatus: string | null;
   login: (email: string, password: string) => Promise<{ redirect: string; role: User['role'] }>;
   register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (user: User) => void;
   isAuthenticated: boolean;
 }
@@ -57,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSupplierStatus(result.supplierStatus || null);
     localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
+    void sendLoginEvent();
     return { redirect: getRedirectPath(result.user, result.supplierStatus), role: result.user.role };
   };
 
@@ -66,9 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(result.token);
     localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
+    void sendLoginEvent();
   };
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await sendLogoutEvent();
     setUser(null);
     setToken(null);
     setSupplierStatus(null);
@@ -113,12 +118,14 @@ export function useLogout() {
 
   return useCallback(
     (path = '/') => {
-      logout();
-      window.requestAnimationFrame(() => {
-        window.setTimeout(() => {
-          router.replace(path);
-        }, 50);
-      });
+      void (async () => {
+        await logout();
+        window.requestAnimationFrame(() => {
+          window.setTimeout(() => {
+            router.replace(path);
+          }, 50);
+        });
+      })();
     },
     [logout, router],
   );

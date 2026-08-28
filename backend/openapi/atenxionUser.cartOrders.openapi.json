@@ -17,6 +17,84 @@
   ],
   "paths": {
     "/api/atenxionUser/cart": {
+      "get": {
+        "summary": "Get Cart",
+        "description": "Retrieves the customer's cart (creates an empty cart if none exists). Same handler semantics as `GET /api/cart`. Pass **`userId`** in the query string.",
+        "tags": ["Cart"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "description": "MongoDB `_id` of the customer.",
+            "schema": { "type": "string", "example": "664a1b2c3d4e5f6a7b8c9d0f" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cart fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CartResponse" },
+                "example": {
+                  "success": true,
+                  "message": "Success",
+                  "data": {
+                    "_id": "674a1b2c3d4e5f6a7b8c9d0c",
+                    "customerId": "664a1b2c3d4e5f6a7b8c9d0f",
+                    "items": [
+                      {
+                        "productId": {
+                          "_id": "664a1b2c3d4e5f6a7b8c9d0b",
+                          "name": "Wireless Mechanical Keyboard",
+                          "slug": "wireless-mechanical-keyboard",
+                          "imageUrls": ["https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=400"],
+                          "status": "active",
+                          "stockQuantity": 45
+                        },
+                        "supplierId": {
+                          "_id": "664a1b2c3d4e5f6a7b8c9d0a",
+                          "storeName": "Northstar Electronics",
+                          "slug": "northstar-electronics"
+                        },
+                        "quantity": 1,
+                        "unitPrice": 89.99
+                      }
+                    ],
+                    "updatedAt": "2026-05-12T10:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing userId",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "userId is required",
+                  "errors": []
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "success": false,
+                  "message": "Internal server error",
+                  "errors": []
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "summary": "Add to Cart",
         "description": "Adds a product to the customer's cart (or increases quantity if already present). Same handler semantics as `POST /api/cart`. Include **`userId`** in the JSON body.",
