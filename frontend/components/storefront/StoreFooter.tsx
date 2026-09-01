@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function StoreFooter() {
   return (
-    <Box component="footer" sx={{ bgcolor: 'secondary.main', color: 'rgba(255,255,255,0.75)', mt: 'auto', py: 5 }}>
+    <Box component="footer" sx={{ bgcolor: 'secondary.main', color: 'rgba(255,255,255,0.75)', flexShrink: 0, py: 5 }}>
       <Container maxWidth="lg">
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, sm: 4 }}>

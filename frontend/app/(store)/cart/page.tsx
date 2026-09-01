@@ -15,13 +15,13 @@ import { formatPrice } from '@/utils/format';
 import { CartItem } from '@/types';
 import { colors } from '@/theme/colors';
 
-const cartShellSx = {
+const cartPageSx = {
   bgcolor: colors.orangePale,
-  border: '1px solid',
-  borderColor: colors.orangePaleBorder,
-  borderRadius: '18px',
-  p: { xs: 2, sm: 2.5, md: 3 },
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85)',
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: '100%',
+  py: { xs: 3, md: 4 },
 } as const;
 
 const cartCardSx = {
@@ -47,9 +47,9 @@ function CartContent() {
 
   if (!cart?.items?.length) {
     return (
-      <Box sx={{ bgcolor: colors.cream, py: { xs: 4, md: 5 } }}>
-        <Container maxWidth="sm">
-          <Box sx={{ ...cartShellSx, textAlign: 'center', py: { xs: 4, md: 5 } }}>
+      <Box sx={cartPageSx}>
+        <Container maxWidth="sm" sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ ...cartCardSx, textAlign: 'center', py: { xs: 4, md: 5 }, width: '100%' }}>
             <EmptyState
               compact
               title="Your cart is empty"
@@ -74,8 +74,8 @@ function CartContent() {
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <Box sx={{ bgcolor: colors.cream, pt: { xs: 3, md: 4 }, pb: { xs: 2, md: 2.5 } }}>
-      <Container maxWidth="lg">
+    <Box sx={cartPageSx}>
+      <Container maxWidth="lg" sx={{ flex: 1 }}>
         <Box sx={{ mb: { xs: 2.5, md: 3 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.75 }}>
             <Box
@@ -105,8 +105,7 @@ function CartContent() {
           </Box>
         </Box>
 
-        <Box sx={cartShellSx}>
-          <Grid container spacing={3}>
+        <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 8 }}>
               {Object.entries(grouped).map(([sid, group]) => (
                 <Paper key={sid} elevation={0} sx={{ ...cartCardSx, mb: 2, '&:last-of-type': { mb: 0 } }}>
@@ -271,7 +270,6 @@ function CartContent() {
               </Paper>
             </Grid>
           </Grid>
-        </Box>
       </Container>
     </Box>
   );

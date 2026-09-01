@@ -168,6 +168,7 @@ function ProductsContent() {
                   exclusive
                   onChange={(_, v) => v && setViewMode(v)}
                   sx={{
+                    gap: 1,
                     '& .MuiToggleButton-root': {
                       borderRadius: '8px',
                       border: `1px solid ${colors.divider}`,
@@ -177,6 +178,10 @@ function ProductsContent() {
                         color: colors.orange,
                         borderColor: alpha(colors.orange, 0.4),
                       },
+                    },
+                    '& .MuiToggleButtonGroup-grouped:not(:first-of-type)': {
+                      marginLeft: 0,
+                      borderLeft: `1px solid ${colors.divider}`,
                     },
                   }}
                 >

@@ -6,19 +6,85 @@ import {
   Slider, Divider, InputAdornment,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 import { Category } from '@/types';
 import { colors } from '@/theme/colors';
+import { formatPrice } from '@/utils/format';
 import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 
 const PRICE_SLIDER_MAX = 500;
 const PRICE_FILTER_DEBOUNCE_MS = 400;
 
+const clampPrice = (value: number, lower = 0, upper = PRICE_SLIDER_MAX) =>
+  Math.min(upper, Math.max(lower, value));
+
+const parsePriceInput = (raw: string): number => {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return 0;
+  return clampPrice(parseInt(digits, 10));
+};
+
+const priceSliderSx = {
+  mx: 0.5,
+  height: 22,
+  py: 0,
+  '& .MuiSlider-rail': {
+    opacity: 1,
+    height: 4,
+    borderRadius: 999,
+    bgcolor: colors.divider,
+  },
+  '& .MuiSlider-track': {
+    height: 4,
+    borderRadius: 999,
+    border: 'none',
+    bgcolor: colors.orange,
+  },
+  '& .MuiSlider-thumb': {
+    width: 16,
+    height: 16,
+    bgcolor: colors.orange,
+    border: `2px solid ${colors.white}`,
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.18)',
+    '&:hover, &.Mui-focusVisible, &.Mui-active': {
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.22)',
+    },
+    '&::before': { boxShadow: 'none' },
+  },
+};
+
 const preventNumberInputWheelChange = (event: React.WheelEvent<HTMLInputElement>) => {
   event.currentTarget.blur();
 };
 
+const categoryScrollSx = {
+  mb: 2,
+  '& .simplebar-track.simplebar-vertical': {
+    width: 6,
+    background: 'transparent',
+    right: 0,
+  },
+  '& .simplebar-scrollbar::before': {
+    background: colors.divider,
+    borderRadius: 999,
+    opacity: 0.85,
+    left: 1,
+    right: 1,
+  },
+  '& .simplebar-scrollbar:hover::before, & .simplebar-scrollbar.simplebar-visible::before': {
+    background: colors.textSecondary,
+    opacity: 1,
+  },
+  '& .simplebar-content-wrapper': {
+    paddingRight: '12px !important',
+  },
+} as const;
+
 const priceInputSlotProps = {
   htmlInput: {
+    inputMode: 'numeric' as const,
+    pattern: '[0-9]*',
     onWheel: preventNumberInputWheelChange,
   },
 };
@@ -93,12 +159,25 @@ export default function ProductsFilterSidebar({
     debouncedApplyPrice();
   };
 
+  const handleMinInputChange = (raw: string) => {
+    const next = parsePriceInput(raw);
+    setSliderMin(Math.min(next, sliderMax));
+    debouncedApplyPrice();
+  };
+
+  const handleMaxInputChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, '');
+    const next = digits ? clampPrice(parseInt(digits, 10)) : PRICE_SLIDER_MAX;
+    setSliderMax(Math.max(next, sliderMin));
+    debouncedApplyPrice();
+  };
+
   return (
     <Paper
       elevation={0}
       sx={{
         py: 2.5,
-        px: { xs: 3, md: 3.5 },
+        px: 2.5,
         position: 'sticky',
         top: 72,
         border: `1px solid ${colors.divider}`,
@@ -132,79 +211,83 @@ export default function ProductsFilterSidebar({
         sx={{ mb: 1.5, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
       />
 
-      <Box sx={{ mb: 2, maxHeight: 220, overflowY: 'auto' }}>
-        {filteredCategories.map((cat) => (
-          <Box
-            key={cat._id}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              py: 0.35,
-            }}
-          >
-            <FormControlLabel
-              sx={{ flex: 1, mr: 1 }}
-              control={
-                <Checkbox
-                  size="small"
-                  checked={selectedCategory === cat.slug}
-                  onChange={() => onCategoryChange(selectedCategory === cat.slug ? '' : cat.slug)}
-                  color="primary"
-                />
-              }
-              label={<Typography variant="body2">{cat.name}</Typography>}
-            />
-            <Typography variant="caption" color="text.secondary">
-              ({categoryCounts[cat.slug] ?? 0})
-            </Typography>
-          </Box>
-        ))}
+      <Box sx={categoryScrollSx}>
+        <SimpleBar style={{ maxHeight: 220 }}>
+          {filteredCategories.map((cat) => (
+            <Box
+              key={cat._id}
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                py: 0.35,
+              }}
+            >
+              <FormControlLabel
+                sx={{ flex: 1, mr: 1 }}
+                control={
+                  <Checkbox
+                    size="small"
+                    checked={selectedCategory === cat.slug}
+                    onChange={() => onCategoryChange(selectedCategory === cat.slug ? '' : cat.slug)}
+                    color="primary"
+                  />
+                }
+                label={<Typography variant="body2">{cat.name}</Typography>}
+              />
+              <Typography variant="caption" color="text.secondary">
+                ({categoryCounts[cat.slug] ?? 0})
+              </Typography>
+            </Box>
+          ))}
+        </SimpleBar>
       </Box>
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Price Range</Typography>
-      <Slider
-        value={[sliderMin, sliderMax]}
-        min={0}
-        max={PRICE_SLIDER_MAX}
-        onChange={handleSliderChange}
-        onChangeCommitted={flushApplyPrice}
-        color="primary"
-        size="small"
-        sx={{ mb: 2, px: 0.5 }}
-      />
-      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-        <TextField
-          label="Min"
+      <Box sx={{ mb: 1.5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.75 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Price Range</Typography>
+          <Typography variant="caption" sx={{ fontWeight: 600, color: colors.orange }}>
+            {formatPrice(sliderMin)} – {formatPrice(sliderMax)}
+          </Typography>
+        </Box>
+        <Slider
+          value={[sliderMin, sliderMax]}
+          min={0}
+          max={PRICE_SLIDER_MAX}
+          onChange={handleSliderChange}
+          onChangeCommitted={flushApplyPrice}
+          color="primary"
           size="small"
-          type="number"
-          value={sliderMin}
-          slotProps={priceInputSlotProps}
-          onChange={(e) => {
-            setSliderMin(Number(e.target.value) || 0);
-            debouncedApplyPrice();
-          }}
-          onBlur={flushApplyPrice}
-          sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+          sx={{ ...priceSliderSx, mb: 0.75 }}
         />
-        <TextField
-          label="Max"
-          size="small"
-          type="number"
-          value={sliderMax}
-          slotProps={priceInputSlotProps}
-          onChange={(e) => {
-            setSliderMax(Number(e.target.value) || PRICE_SLIDER_MAX);
-            debouncedApplyPrice();
-          }}
-          onBlur={flushApplyPrice}
-          sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-        />
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <TextField
+            label="Min"
+            size="small"
+            type="text"
+            placeholder="0"
+            value={sliderMin === 0 ? '' : String(sliderMin)}
+            slotProps={priceInputSlotProps}
+            onChange={(e) => handleMinInputChange(e.target.value)}
+            onBlur={flushApplyPrice}
+            sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+          />
+          <TextField
+            label="Max"
+            size="small"
+            type="text"
+            value={String(sliderMax)}
+            slotProps={priceInputSlotProps}
+            onChange={(e) => handleMaxInputChange(e.target.value)}
+            onBlur={flushApplyPrice}
+            sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
+          />
+        </Box>
       </Box>
 
-      <Divider sx={{ my: 2 }} />
+      <Divider sx={{ mb: 1.5, mt: 2.5 }} />
 
       <FormControlLabel
         control={
