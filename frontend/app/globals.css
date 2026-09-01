@@ -24,24 +24,46 @@ a { color: inherit; }
 
 .ai-mode-chat-shell {
   height: 100%;
+  width: 100%;
   --a2ui-primary-color: var(--color-orange);
+  --ai-mode-chat-gutter: clamp(24px, 8vw, 160px);
 }
 
 .ai-mode-chat-shell .ai-mode-chat {
   --copilot-kit-background-color: #f7f7f8;
   height: 100%;
-}
-
-.ai-mode-chat-shell .ai-mode-chat [data-copilot-chat-view] {
-  background: transparent;
-  justify-content: center;
-}
-
-.ai-mode-chat-shell .ai-mode-chat [data-copilot-chat-input-container] {
-  max-width: 720px;
-  margin: 0 auto;
   width: 100%;
-  padding-bottom: 1rem;
+}
+
+/* Remove CopilotKit's default scroll-area padding so gutters stay in sync */
+.ai-mode-chat-shell .copilotKitChat [class*="overflow-y-auto"] > div {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Shared horizontal gutters for messages and input divisions */
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-scroll-content"],
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-input-overlay"],
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] {
+  padding-left: var(--ai-mode-chat-gutter);
+  padding-right: var(--ai-mode-chat-gutter);
+  box-sizing: border-box;
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-scroll-content"] {
+  width: 100%;
+}
+
+/* Let inner CopilotKit columns fill the guttered area */
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-scroll-content"] > [class*="max-w-3xl"],
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-input-overlay"] [class*="max-w-3xl"],
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] > [class*="max-w-3xl"] {
+  max-width: 100% !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .ai-mode-chat-shell .ai-mode-chat [data-copilot-chat-welcome] {

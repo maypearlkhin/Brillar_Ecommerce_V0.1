@@ -10,7 +10,7 @@ import {
   ALLOWED_EMAIL_DOMAINS_MESSAGE,
   isAllowedCustomerSupplierEmail,
 } from '@/utils/email';
-import AuthPageLayout from '@/components/storefront/AuthPageLayout';
+import AuthPageLayout, { authCardSx } from '@/components/storefront/AuthPageLayout';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -40,7 +40,7 @@ export default function RegisterPage() {
   return (
     <AuthPageLayout>
       <Container maxWidth="xs">
-        <Paper sx={{ p: 4 }}>
+        <Paper sx={authCardSx}>
           <Typography variant="h5" gutterBottom color="primary.main">Create Account</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Join Brillar Market to start shopping

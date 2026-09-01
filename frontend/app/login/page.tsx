@@ -11,7 +11,7 @@ import {
   isAllowedCustomerSupplierEmail,
 } from '@/utils/email';
 import { getRoleHomePath } from '@/utils/authRedirect';
-import AuthPageLayout from '@/components/storefront/AuthPageLayout';
+import AuthPageLayout, { authCardSx } from '@/components/storefront/AuthPageLayout';
 import LoadingState from '@/components/common/LoadingState';
 
 function LoginForm() {
@@ -58,7 +58,7 @@ function LoginForm() {
         <LoadingState />
       ) : (
         <Container maxWidth="xs">
-          <Paper sx={{ p: 4 }}>
+          <Paper sx={authCardSx}>
             <Typography variant="h5" gutterBottom color="primary.main">Sign In</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               Welcome back to Brillar Market

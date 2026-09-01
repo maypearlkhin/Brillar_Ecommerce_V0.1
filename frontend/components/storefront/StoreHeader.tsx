@@ -30,6 +30,7 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
   const { itemCount } = useCart();
   const pathname = usePathname() || '';
   const isAiMode = pathname === '/ai-mode';
+  const showSearch = !hideSearch && !isAiMode;
 
   const handleLogout = () => {
     logoutAndNavigate('/');
@@ -87,29 +88,31 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
           </Box>
         </Link>
 
-        {!hideSearch && <HeaderSearch />}
+        {showSearch && <HeaderSearch />}
 
-        <Button
-          component={Link}
-          href="/ai-mode"
-          variant={isAiMode ? 'contained' : 'outlined'}
-          size="small"
-          startIcon={<AutoAwesome sx={{ fontSize: 18 }} />}
-          sx={{
-            borderRadius: '20px',
-            textTransform: 'none',
-            fontWeight: 600,
-            fontSize: '0.8rem',
-            px: 1.75,
-            py: 0.75,
-            flexShrink: 0,
-            display: { xs: 'none', sm: 'inline-flex' },
-            borderColor: isAiMode ? 'primary.main' : 'divider',
-            boxShadow: isAiMode ? colors.cardShadow : 'none',
-          }}
-        >
-          AI Mode
-        </Button>
+        {!isAiMode && (
+          <Button
+            component={Link}
+            href="/ai-mode"
+            variant="outlined"
+            size="small"
+            startIcon={<AutoAwesome sx={{ fontSize: 18 }} />}
+            sx={{
+              borderRadius: '20px',
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              px: 1.75,
+              py: 0.75,
+              flexShrink: 0,
+              display: { xs: 'none', sm: 'inline-flex' },
+              borderColor: 'divider',
+              boxShadow: 'none',
+            }}
+          >
+            AI Mode
+          </Button>
+        )}
 
         <Box
           sx={{
@@ -117,7 +120,7 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
             alignItems: 'center',
             gap: 1.25,
             flexShrink: 0,
-            ml: hideSearch ? 'auto' : 0,
+            ml: showSearch ? 0 : 'auto',
           }}
         >
           <Tooltip title="Products">
@@ -125,17 +128,18 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
               <CategoryOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="AI Mode">
-            <IconButton
-              component={Link}
-              href="/ai-mode"
-              size="small"
-              color={isAiMode ? 'primary' : 'default'}
-              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
-            >
-              <AutoAwesome fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          {!isAiMode && (
+            <Tooltip title="AI Mode">
+              <IconButton
+                component={Link}
+                href="/ai-mode"
+                size="small"
+                sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+              >
+                <AutoAwesome fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="Help">
             <IconButton component={Link} href="/faq" size="small" sx={{ display: { xs: 'none', md: 'inline-flex' } }}>
               <HelpOutlineOutlined fontSize="small" />

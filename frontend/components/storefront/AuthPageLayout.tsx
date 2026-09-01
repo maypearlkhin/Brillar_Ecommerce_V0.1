@@ -1,8 +1,15 @@
 'use client';
 
 import { Box } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import StoreHeader from '@/components/storefront/StoreHeader';
 import { colors } from '@/theme/colors';
+
+export const authCardSx: SxProps<Theme> = {
+  p: 4,
+  borderRadius: '12px',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+};
 
 export default function AuthPageLayout({ children }: { children: React.ReactNode }) {
   return (

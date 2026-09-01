@@ -55,47 +55,19 @@ export default function AiModeChat() {
       className="ai-mode-chat-shell"
 
       sx={{
-
         flex: 1,
-
         display: 'flex',
-
         flexDirection: 'column',
-
         width: '100%',
-
-        maxWidth: 820,
-
-        mx: 'auto',
-
-        px: { xs: 2, sm: 3 },
-
-        py: { xs: 2, sm: 3 },
-
         minHeight: 0,
-
         '& .ai-mode-chat': {
-
           flex: 1,
-
           display: 'flex',
-
           flexDirection: 'column',
-
           minHeight: 0,
-
           height: '100%',
-
+          width: '100%',
         },
-
-        '& .ai-mode-chat [data-copilot-chat-view]': {
-
-          flex: 1,
-
-          minHeight: 0,
-
-        },
-
       }}
 
     >
