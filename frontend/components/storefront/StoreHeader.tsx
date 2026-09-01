@@ -30,7 +30,9 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
   const { itemCount } = useCart();
   const pathname = usePathname() || '';
   const isAiMode = pathname === '/ai-mode';
+  const isAuthPage = pathname === '/login' || pathname === '/register';
   const showSearch = !hideSearch && !isAiMode;
+  const showAiMode = !isAiMode && !isAuthPage;
 
   const handleLogout = () => {
     logoutAndNavigate('/');
@@ -90,7 +92,7 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
 
         {showSearch && <HeaderSearch />}
 
-        {!isAiMode && (
+        {showAiMode && (
           <Button
             component={Link}
             href="/ai-mode"
@@ -128,7 +130,7 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
               <CategoryOutlined fontSize="small" />
             </IconButton>
           </Tooltip>
-          {!isAiMode && (
+          {showAiMode && (
             <Tooltip title="AI Mode">
               <IconButton
                 component={Link}

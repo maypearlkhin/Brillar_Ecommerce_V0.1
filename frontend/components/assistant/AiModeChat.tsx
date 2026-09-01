@@ -84,7 +84,7 @@ export default function AiModeChat() {
 
           welcomeMessageText: 'Ready when you are.',
 
-          chatInputPlaceholder: 'Ask about products, orders, or policies...',
+          chatInputPlaceholder: 'Type / for quick access',
 
           chatDisclaimerText: 'AI can make mistakes. Please verify important information.',
 

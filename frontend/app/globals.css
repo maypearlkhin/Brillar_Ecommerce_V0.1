@@ -26,7 +26,11 @@ a { color: inherit; }
   height: 100%;
   width: 100%;
   --a2ui-primary-color: var(--color-orange);
-  --ai-mode-chat-gutter: clamp(24px, 8vw, 160px);
+  --ai-mode-chat-input-max-width: 720px;
+  --ai-mode-chat-padding-x: 15vw;
+  --ai-mode-welcome-bottom-margin: 23vh;
+  --ai-mode-welcome-section-gap: 2.5rem;
+  --ai-mode-welcome-input-gap: 0.75rem;
 }
 
 .ai-mode-chat-shell .ai-mode-chat {
@@ -41,12 +45,41 @@ a { color: inherit; }
   padding-right: 0 !important;
 }
 
-/* Shared horizontal gutters for messages and input divisions */
-.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-scroll-content"],
-.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-input-overlay"],
+/* Remove CopilotKit width caps */
+.ai-mode-chat-shell .copilotKitChat [class*="max-w-3xl"] {
+  max-width: none !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+}
+
+/* Nested CopilotKit columns (e.g. input wrapper) — no extra horizontal padding */
+.ai-mode-chat-shell .copilotKitChat [class*="max-w-3xl"] [class*="max-w-3xl"] {
+  padding-inline: 0 !important;
+}
+
+/* Welcome screen layout — flexbox only */
 .ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] {
-  padding-left: var(--ai-mode-chat-gutter);
-  padding-right: var(--ai-mode-chat-gutter);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  padding-inline: 0 !important;
+  box-sizing: border-box;
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] h1 {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-scroll-content"],
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-input-overlay"] {
+  padding-inline: var(--ai-mode-chat-padding-x);
   box-sizing: border-box;
 }
 
@@ -54,21 +87,105 @@ a { color: inherit; }
   width: 100%;
 }
 
-/* Let inner CopilotKit columns fill the guttered area */
-.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-scroll-content"] > [class*="max-w-3xl"],
-.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-input-overlay"] [class*="max-w-3xl"],
+/* Welcome group parent: heading + input bar + disclaimer */
 .ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] > [class*="max-w-3xl"] {
-  max-width: 100% !important;
-  width: 100% !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: var(--ai-mode-welcome-section-gap);
+  width: 100%;
+  margin-bottom: var(--ai-mode-welcome-bottom-margin);
+  padding-inline: var(--ai-mode-chat-padding-x) !important;
+  box-sizing: border-box;
 }
 
-.ai-mode-chat-shell .ai-mode-chat [data-copilot-chat-welcome] {
-  text-align: center;
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #1a1a1a;
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] > [class*="max-w-3xl"] > * {
+  margin-block: 0 !important;
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] > [class*="max-w-3xl"] > :nth-child(2) {
+  align-self: center;
+  width: 100%;
+  max-width: var(--ai-mode-chat-input-max-width);
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-scroll-content"] > [class*="max-w-3xl"] {
+  max-width: var(--ai-mode-chat-input-max-width) !important;
+  margin-inline: auto !important;
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-input-overlay"] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-input-overlay"] > * {
+  width: 100%;
+  max-width: var(--ai-mode-chat-input-max-width);
+}
+
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] > [class*="max-w-3xl"] > :nth-child(3):empty {
+  display: none !important;
+}
+
+/* Group 2: chat bar + disclaimer */
+.ai-mode-chat-shell .copilotKitChat [data-testid="copilot-welcome-screen"] > [class*="max-w-3xl"] > :nth-child(2) > [data-copilotkit] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: var(--ai-mode-welcome-input-gap);
+  width: 100%;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-chat-input"] {
+  width: 100% !important;
+  border: 1px solid var(--color-divider) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.10) !important;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-chat-input"] [data-testid="copilot-add-menu-button"] {
+  border: 1px solid var(--color-divider) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-chat-input"] [data-testid="copilot-add-menu-button"]:hover:not(:disabled) {
+  background: #fafafa !important;
+  color: var(--color-text) !important;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-chat-textarea"] {
+  color: var(--color-text) !important;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-chat-textarea"]::placeholder {
+  color: var(--color-text-secondary) !important;
+  opacity: 1;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-send-button"] {
+  border-radius: 10px !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-send-button"]:not(:disabled) {
+  background-color: var(--color-orange) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-send-button"]:not(:disabled):hover {
+  background-color: var(--color-orange-dark) !important;
+  opacity: 1 !important;
+}
+
+.ai-mode-chat-shell [data-testid="copilot-send-button"]:disabled {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
 }
