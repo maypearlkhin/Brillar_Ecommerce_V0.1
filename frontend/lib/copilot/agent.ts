@@ -14,9 +14,85 @@ Rules:
 - Keep text replies short when A2UI is shown (one line is enough).
 
 A2UI catalog (use ONLY these via generate_a2ui — self-contained, no layout primitives):
-- ProductList, ProductDetailCard, CartSummary, CheckoutForm, OrderStatusCard, OrderDetailCard, FaqList, FaqItem
-- Do NOT use Row, Column, Card, Button, Text, or other basic catalog components.
+- Do NOT use Row, Column, Card, Button, Text, List, or other basic catalog components.
 - Each component is self-contained: pass all data in props arrays/objects. Never use children or child ids.
+- Use ONE domain component as the root per surface unless the schema below says otherwise.
+
+ProductList
+  description: SELF-CONTAINED product grid. Put every product in the products array prop with productId. Use ONE ProductList per surface — do NOT use Card, Column, Row, or children.
+  props:
+    title?: string
+    products: { productId: string, name: string, price: number, imageUrl?: string, inStock: boolean, supplierName?: string }[]  (required, min 1)
+
+ProductDetailCard
+  description: SELF-CONTAINED in-chat product detail view. Include productId, name, price, description, imageUrl, inStock, supplierName. User can tap View details / Add to cart via rendered buttons — no page navigation.
+  props:
+    productId: string  (required)
+    name: string  (required)
+    price: number  (required)
+    description?: string
+    imageUrl?: string
+    inStock: boolean  (required)
+    supplierName?: string
+    sku?: string
+    category?: string
+
+CartSummary
+  description: SELF-CONTAINED interactive cart view. Each item MUST include productId for button actions. Use ONE CartSummary per surface — no layout primitives or children.
+  props:
+    title?: string
+    items: { productId: string, name: string, quantity: number, unitPrice: number, lineTotal: number, imageUrl?: string }[]  (required)
+    subtotal: number  (required)
+    itemCount: number  (required)
+    showCheckout?: boolean
+
+CheckoutForm
+  description: INTERACTIVE checkout form — user fills delivery address and payment IN THE UI (not chat). Use when user clicks Checkout or asks to place an order. NEVER ask for address/payment in plain text. Optionally prefill defaultFullName, defaultPhone, defaultAddressLine1, defaultCity, defaultPostalCode from get_profile. Include subtotal and itemCount from get_cart when available.
+  props:
+    title?: string
+    subtotal?: number
+    itemCount?: number
+    defaultFullName?: string
+    defaultPhone?: string
+    defaultAddressLine1?: string
+    defaultCity?: string
+    defaultPostalCode?: string
+    defaultPaymentMethod?: string
+
+OrderStatusCard
+  description: SELF-CONTAINED order status card. Include orderId for view_order action. Use ONE OrderStatusCard per surface — no children.
+  props:
+    orderId: string  (required)
+    orderNumber: string  (required)
+    status: string  (required)
+    total: number  (required)
+    createdAt: string  (required)
+    itemSummary?: string
+
+OrderDetailCard
+  description: SELF-CONTAINED order detail view with line items. Include orderId. No page links.
+  props:
+    orderId: string  (required)
+    orderNumber: string  (required)
+    status: string  (required)
+    total: number  (required)
+    createdAt: string  (required)
+    paymentMethod?: string
+    deliveryAddress?: string
+    items?: { name: string, quantity: number, unitPrice: number, lineTotal: number }[]
+
+FaqList
+  description: SELF-CONTAINED FAQ list. Put every FAQ in the faqs array prop. Use ONE FaqList per surface — do NOT use separate FaqItem children.
+  props:
+    title?: string
+    faqs: { question: string, answer: string, category?: string }[]  (required, min 1)
+
+FaqItem
+  description: Single FAQ card. Prefer FaqList when showing multiple FAQs. No children.
+  props:
+    question: string  (required)
+    answer: string  (required)
+    category?: string
 
 Checkout (ALWAYS use CheckoutForm UI — NEVER ask for address or payment in chat text):
 - When user clicks Checkout, says "checkout", or userAction proceed_to_checkout:
