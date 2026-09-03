@@ -2,6 +2,7 @@
 
 import {
   CopilotChat,
+  CopilotChatMessageView,
   useConfigureSuggestions,
   useFrontendTool,
 } from '@copilotkit/react-core/v2';
@@ -9,7 +10,9 @@ import { Box } from '@mui/material';
 import { useMemo } from 'react';
 import { z } from 'zod';
 import AiModeChatInput from '@/components/assistant/AiModeChatInput';
+import AiModeConversationLayout from '@/components/assistant/AiModeConversationLayout';
 import AiModeSuggestionView from '@/components/assistant/AiModeSuggestionView';
+import AiModeTextMessageView from '@/components/assistant/AiModeTextMessageView';
 import AiModeWelcomeScreen from '@/components/assistant/AiModeWelcomeScreen';
 import { useCart } from '@/contexts/CartContext';
 import { AI_MODE_SUGGESTIONS } from '@/lib/copilot/suggestions';
@@ -82,17 +85,23 @@ export default function AiModeChat() {
         welcomeScreen={AiModeWelcomeScreen}
         input={AiModeChatInput}
         suggestionView={AiModeSuggestionView}
-        messageView={{
-          className: 'ai-mode-message-view',
-          userMessage: { className: 'ai-mode-user-message' },
-          assistantMessage: { className: 'ai-mode-assistant-message' },
-        }}
+        messageView={
+          AiModeTextMessageView as unknown as typeof CopilotChatMessageView
+        }
         labels={{
           welcomeMessageText: 'Ready when you are.',
           chatInputPlaceholder: 'Ask anything...',
           chatDisclaimerText: 'AI can make mistakes. Please verify important information.',
         }}
-      />
+      >
+        {({ scrollView, input, suggestionView }) => (
+          <AiModeConversationLayout
+            scrollView={scrollView}
+            input={input}
+            suggestionView={suggestionView}
+          />
+        )}
+      </CopilotChat>
     </Box>
   );
 }

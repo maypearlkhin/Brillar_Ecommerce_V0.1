@@ -5,7 +5,6 @@ import { Box } from '@mui/material';
 import StoreHeader from '@/components/storefront/StoreHeader';
 import StoreFooter from '@/components/storefront/StoreFooter';
 import { AiModeLoadingProvider, useAiModeLoading } from '@/contexts/AiModeLoadingContext';
-import { colors } from '@/theme/colors';
 
 const STORE_HEADER_HEIGHT = 56;
 
@@ -44,7 +43,7 @@ function StoreChromeContent({ children }: { children: React.ReactNode }) {
                 overflow: 'hidden',
               }
             : {}),
-          bgcolor: isAiMode && !hideHeader ? colors.orangePale : undefined,
+          bgcolor: isAiMode && !hideHeader ? '#ffffff' : undefined,
         }}
       >
         {children}
