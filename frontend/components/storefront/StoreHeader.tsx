@@ -18,17 +18,19 @@ import {
   AutoAwesome,
 } from '@mui/icons-material';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth, useLogout } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import HeaderSearch from '@/components/storefront/HeaderSearch';
 import { colors } from '@/theme/colors';
+import { markAiModeLoadingEntry } from '@/lib/ai-mode/entry';
 
 export default function StoreHeader({ hideSearch = false }: { hideSearch?: boolean }) {
   const { user, isAuthenticated } = useAuth();
   const logoutAndNavigate = useLogout();
   const { itemCount } = useCart();
   const pathname = usePathname() || '';
+  const router = useRouter();
   const isAiMode = pathname === '/ai-mode';
   const isAuthPage = pathname === '/login' || pathname === '/register';
   const showSearch = !hideSearch && !isAiMode;
@@ -36,6 +38,11 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
 
   const handleLogout = () => {
     logoutAndNavigate('/');
+  };
+
+  const handleAiModeEnter = () => {
+    markAiModeLoadingEntry();
+    router.push('/ai-mode');
   };
 
   const authActionsSx = {
@@ -94,8 +101,7 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
 
         {showAiMode && (
           <Button
-            component={Link}
-            href="/ai-mode"
+            onClick={handleAiModeEnter}
             variant="outlined"
             size="small"
             startIcon={<AutoAwesome sx={{ fontSize: 18 }} />}
@@ -133,8 +139,7 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
           {showAiMode && (
             <Tooltip title="AI Mode">
               <IconButton
-                component={Link}
-                href="/ai-mode"
+                onClick={handleAiModeEnter}
                 size="small"
                 sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
               >

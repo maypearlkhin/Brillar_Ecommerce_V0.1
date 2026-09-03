@@ -4,10 +4,22 @@ import { useMemo } from 'react';
 import { CopilotKit } from '@copilotkit/react-core/v2';
 import '@copilotkit/react-core/v2/styles.css';
 import { useAuth } from '@/contexts/AuthContext';
+import AiModeCatalogUsageRenderer from '@/components/assistant/AiModeCatalogUsageRenderer';
 import { brillarCatalog } from '@/lib/a2ui/catalog';
+import { CopilotModelsProvider, useCopilotModels } from '@/lib/copilot/modelContext';
+import {
+  COPILOT_MODEL_HEADER,
+  getEnvDefaultModelId,
+  readStoredModelId,
+} from '@/lib/copilot/models';
 
-export default function CopilotProvider({ children }: { children: React.ReactNode }) {
+const AI_MODE_CATALOG_USAGE_RENDERERS = [
+  { render: AiModeCatalogUsageRenderer },
+] as const;
+
+function CopilotKitInner({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
+  const { selectedModelId } = useCopilotModels();
 
   const properties = useMemo(
     () => ({
@@ -18,18 +30,27 @@ export default function CopilotProvider({ children }: { children: React.ReactNod
     [isAuthenticated, user?.name, user?.role],
   );
 
+  const modelHeaderValue =
+    selectedModelId ||
+    readStoredModelId({ defaultModelId: getEnvDefaultModelId() });
+
   return (
     <CopilotKit
       runtimeUrl="/api/copilotkit"
       useSingleEndpoint
       headers={(): Record<string, string> => {
-        if (typeof window === 'undefined') return {};
-        const token = localStorage.getItem('token');
-        if (!token) return {};
-        return { Authorization: `Bearer ${token}` };
+        const headers: Record<string, string> = {
+          [COPILOT_MODEL_HEADER]: modelHeaderValue,
+        };
+        if (typeof window !== 'undefined') {
+          const token = localStorage.getItem('token');
+          if (token) headers.Authorization = `Bearer ${token}`;
+        }
+        return headers;
       }}
       showDevConsole={false}
       properties={properties}
+      renderCustomMessages={[...AI_MODE_CATALOG_USAGE_RENDERERS]}
       a2ui={{
         catalog: brillarCatalog,
         recovery: {
@@ -40,5 +61,13 @@ export default function CopilotProvider({ children }: { children: React.ReactNod
     >
       {children}
     </CopilotKit>
+  );
+}
+
+export default function CopilotProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <CopilotModelsProvider>
+      <CopilotKitInner>{children}</CopilotKitInner>
+    </CopilotModelsProvider>
   );
 }

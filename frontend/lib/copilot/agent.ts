@@ -1,5 +1,5 @@
 import { BuiltInAgent } from '@copilotkit/runtime/v2';
-import { COPILOT_DEFAULT_MODEL, getGoogleApiKey } from './config';
+import { COPILOT_MODEL_HEADER, resolveModelIdForAgent } from './models';
 import { createAllTools } from './tools';
 
 export const SHOPPING_ASSISTANT_PROMPT = `You are Brillar Market's shopping assistant for customers.
@@ -120,12 +120,15 @@ function extractBearerToken(request: Request): string | undefined {
   return match?.[1]?.trim() || undefined;
 }
 
+function extractModelId(request: Request): string {
+  return resolveModelIdForAgent(request.headers.get(COPILOT_MODEL_HEADER));
+}
+
 export function createShoppingAgent(request: Request) {
   const userToken = extractBearerToken(request);
 
   return new BuiltInAgent({
-    model: COPILOT_DEFAULT_MODEL,
-    apiKey: getGoogleApiKey(),
+    model: extractModelId(request),
     prompt: `${SHOPPING_ASSISTANT_PROMPT}\n\nSession: ${userToken ? 'authenticated customer' : 'guest visitor'}.`,
     maxSteps: 12,
     tools: createAllTools({ token: userToken }),

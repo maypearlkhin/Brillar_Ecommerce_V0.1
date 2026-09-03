@@ -1,8 +1,33 @@
-/** Default Gemini model for BuiltInAgent + generate_a2ui (free tier friendly). */
-export const COPILOT_DEFAULT_MODEL =
-  process.env.COPILOT_MODEL || 'google/gemini-2.5-flash';
+import { getEnvDefaultModelId } from './models';
 
-/** Google AI Studio API key — also accepts GEMINI_API_KEY from Google docs. */
+/** Default CopilotKit model (from env). */
+export const COPILOT_DEFAULT_MODEL = getEnvDefaultModelId();
+
 export function getGoogleApiKey(): string | undefined {
   return process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+}
+
+export function getOpenAiApiKey(): string | undefined {
+  return process.env.OPENAI_API_KEY;
+}
+
+export function getAnthropicApiKey(): string | undefined {
+  return process.env.ANTHROPIC_API_KEY;
+}
+
+export function getMinimaxApiKey(): string | undefined {
+  return process.env.MINIMAX_API_KEY;
+}
+
+export function getConfiguredProviderKeys(): string[] {
+  const providers: string[] = [];
+  if (getOpenAiApiKey()) providers.push('openai');
+  if (getAnthropicApiKey()) providers.push('anthropic');
+  if (getGoogleApiKey()) providers.push('google');
+  if (getMinimaxApiKey()) providers.push('minimax');
+  return providers;
+}
+
+export function hasAnyProviderKey(): boolean {
+  return getConfiguredProviderKeys().length > 0;
 }
