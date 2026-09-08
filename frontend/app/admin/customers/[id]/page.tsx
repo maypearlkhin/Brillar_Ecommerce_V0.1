@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Paper, Typography, Box, Button, Grid } from '@mui/material';
+import { Block, CheckCircle } from '@mui/icons-material';
 import { PageHeader } from '@/components/common/MetricCard';
+import { adminPrimaryActionButtonSx } from '@/components/admin/adminDialogStyles';
 import LoadingState from '@/components/common/LoadingState';
 import StatusChip from '@/components/common/StatusChip';
 import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
@@ -76,7 +78,17 @@ export default function AdminCustomerDetailPage() {
   return (
     <>
       <PageHeader title={customer?.name as string} subtitle={customer?.email as string}
-        action={<Button variant="outlined" onClick={handleToggle}>{customer?.isActive ? 'Deactivate' : 'Activate'}</Button>} />
+        action={(
+          <Button
+            variant="contained"
+            startIcon={customer?.isActive ? <Block /> : <CheckCircle />}
+            onClick={handleToggle}
+            sx={adminPrimaryActionButtonSx}
+          >
+            {customer?.isActive ? 'Deactivate' : 'Activate'}
+          </Button>
+        )}
+      />
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid size={{ xs: 4 }}><Paper sx={{ p: 2 }}><Typography variant="caption" color="text.secondary">Orders</Typography><Typography variant="h5">{data?.orderCount as number}</Typography></Paper></Grid>
         <Grid size={{ xs: 4 }}><Paper sx={{ p: 2 }}><Typography variant="caption" color="text.secondary">Total Spend</Typography><Typography variant="h5">{formatPrice(data?.totalSpend as number)}</Typography></Paper></Grid>

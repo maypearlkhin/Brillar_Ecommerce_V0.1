@@ -11,8 +11,15 @@ import {
   Typography,
 } from '@mui/material';
 import { AdminDialog, AdminDialogTitle, AdminDialogContent, AdminDialogActions } from '@/components/admin/AdminDialog';
-import { adminCancelButtonSx, adminDangerButtonSx, adminFieldSx } from '@/components/admin/adminDialogStyles';
 import {
+  adminCancelButtonSx,
+  adminDangerButtonSx,
+  adminDangerOutlinedButtonSx,
+  adminFieldSx,
+  adminPrimaryActionButtonSx,
+} from '@/components/admin/adminDialogStyles';
+import {
+  Add,
   AdminPanelSettingsOutlined,
   BoltOutlined,
   DeleteOutlined,
@@ -243,9 +250,9 @@ export default function AdminConfigurationPage() {
                 <Button
                   variant="outlined"
                   color="error"
-                  size="small"
                   startIcon={<DeleteOutlined />}
                   onClick={() => setRemoveTarget(tab)}
+                  sx={adminDangerOutlinedButtonSx}
                 >
                   Remove
                 </Button>
@@ -286,9 +293,10 @@ export default function AdminConfigurationPage() {
                 />
                 <Button
                   variant="contained"
-                  size="small"
+                  startIcon={<Add />}
                   onClick={handleAdd}
                   disabled={saving || (isWidgetTab && !canAddWidget)}
+                  sx={adminPrimaryActionButtonSx}
                 >
                   {saving ? 'Saving...' : 'Add Configuration'}
                 </Button>

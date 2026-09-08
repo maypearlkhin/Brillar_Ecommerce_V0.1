@@ -82,6 +82,19 @@ export const adminDangerButtonSx: SxProps<Theme> = {
   fontWeight: 600,
 };
 
+export const adminDangerOutlinedButtonSx: SxProps<Theme> = {
+  borderRadius: '10px',
+  px: 2.5,
+  py: 0.85,
+  fontWeight: 600,
+  fontSize: '0.875rem',
+  borderWidth: 2,
+  '&:hover': {
+    borderWidth: 2,
+    bgcolor: 'rgba(211, 47, 47, 0.04)',
+  },
+};
+
 export const adminPrimaryActionButtonSx: SxProps<Theme> = {
   borderRadius: '10px',
   px: 2.5,
