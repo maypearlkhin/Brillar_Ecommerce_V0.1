@@ -73,38 +73,30 @@ function buildOpenAiProviderOptions(
   return Object.keys(openai).length > 0 ? { openai } : undefined;
 }
 
-function applyOpenAiReasoningDefaults(config: ResolvedAgentModelConfig): ResolvedAgentModelConfig {
-  const effort = parseOptionalStringEnv('COPILOT_AGENT_OPENAI_REASONING_EFFORT');
-  const mode = parseOptionalStringEnv('COPILOT_AGENT_OPENAI_REASONING_MODE') as
-    | OpenAiReasoningOptions['reasoningMode']
-    | undefined;
-  const context = parseOptionalStringEnv('COPILOT_AGENT_OPENAI_REASONING_CONTEXT') as
-    | OpenAiReasoningOptions['reasoningContext']
-    | undefined;
-
+function applyOpenAiReasoningEnvOptions(
+  config: ResolvedAgentModelConfig,
+): ResolvedAgentModelConfig {
   const providerOptions = buildOpenAiProviderOptions({
-    reasoningEffort: effort,
-    reasoningMode: mode,
-    reasoningContext: context,
+    reasoningEffort: parseOptionalStringEnv('COPILOT_AGENT_OPENAI_REASONING_EFFORT'),
+    reasoningMode: parseOptionalStringEnv('COPILOT_AGENT_OPENAI_REASONING_MODE') as
+      | OpenAiReasoningOptions['reasoningMode']
+      | undefined,
+    reasoningContext: parseOptionalStringEnv('COPILOT_AGENT_OPENAI_REASONING_CONTEXT') as
+      | OpenAiReasoningOptions['reasoningContext']
+      | undefined,
   });
 
-  return {
-    ...config,
-    maxSteps: parseIntEnv('COPILOT_AGENT_OPENAI_REASONING_MAX_STEPS', config.maxSteps),
-    maxOutputTokens:
-      parseOptionalIntEnv('COPILOT_AGENT_OPENAI_REASONING_MAX_OUTPUT_TOKENS') ??
-      config.maxOutputTokens ??
-      4096,
-    providerOptions: providerOptions ?? config.providerOptions,
-  };
-}
+  if (!providerOptions) return config;
 
-function applyGoogleDefaults(config: ResolvedAgentModelConfig): ResolvedAgentModelConfig {
   return {
     ...config,
-    maxSteps: parseIntEnv('COPILOT_AGENT_GOOGLE_MAX_STEPS', config.maxSteps),
-    maxOutputTokens:
-      parseOptionalIntEnv('COPILOT_AGENT_GOOGLE_MAX_OUTPUT_TOKENS') ?? config.maxOutputTokens,
+    providerOptions: {
+      ...config.providerOptions,
+      openai: {
+        ...config.providerOptions?.openai,
+        ...providerOptions.openai,
+      },
+    },
   };
 }
 
@@ -136,21 +128,19 @@ function applyModelOverride(
 }
 
 /**
- * Resolve BuiltInAgent runtime settings for the active model id.
- * Precedence: defaults → provider family → COPILOT_AGENT_MODEL_OVERRIDES[modelId].
+ * Same base runtime for every model. Optional OpenAI reasoning API flags apply only
+ * to OpenAI reasoning models when COPILOT_AGENT_OPENAI_REASONING_* env vars are set.
+ * Per-model JSON overrides win last.
  */
 export function resolveAgentModelConfig(modelId: string): ResolvedAgentModelConfig {
-  const provider = modelId.split('/')[0]?.toLowerCase() ?? '';
-
   let config: ResolvedAgentModelConfig = {
     maxSteps: parseIntEnv('COPILOT_AGENT_MAX_STEPS', 14),
-    maxOutputTokens: parseOptionalIntEnv('COPILOT_AGENT_MAX_OUTPUT_TOKENS'),
+    maxOutputTokens: parseOptionalIntEnv('COPILOT_AGENT_MAX_OUTPUT_TOKENS') ?? 4096,
   };
 
+  const provider = modelId.split('/')[0]?.toLowerCase() ?? '';
   if (provider === 'openai' && isOpenAiReasoningModel(modelId)) {
-    config = applyOpenAiReasoningDefaults(config);
-  } else if (provider === 'google' || provider === 'gemini') {
-    config = applyGoogleDefaults(config);
+    config = applyOpenAiReasoningEnvOptions(config);
   }
 
   const override = parseModelOverrides()[modelId];

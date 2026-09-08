@@ -2,7 +2,6 @@
 
 import type { Message } from '@ag-ui/core';
 import AiModeCatalogUsageRenderer from '@/components/assistant/AiModeCatalogUsageRenderer';
-import AiModeUiCompanionRenderer from '@/components/assistant/AiModeUiCompanionRenderer';
 
 type AiModeCustomMessageRendererProps = {
   message: Message;
@@ -16,10 +15,5 @@ type AiModeCustomMessageRendererProps = {
 export default function AiModeCustomMessageRenderer(props: AiModeCustomMessageRendererProps) {
   if (props.position !== 'after') return null;
 
-  return (
-    <>
-      <AiModeUiCompanionRenderer {...props} />
-      <AiModeCatalogUsageRenderer {...props} />
-    </>
-  );
+  return <AiModeCatalogUsageRenderer {...props} />;
 }

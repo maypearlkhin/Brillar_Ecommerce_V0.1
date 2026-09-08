@@ -11,6 +11,7 @@ const runtime = new CopilotRuntime({
   a2ui: {
     defaultCatalogId: 'brillar-storefront',
     recovery: { maxAttempts: 2 },
+    injectA2UITool: 'generate_a2ui',
   },
 });
 

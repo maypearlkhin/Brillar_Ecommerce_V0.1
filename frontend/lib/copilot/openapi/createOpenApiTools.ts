@@ -10,6 +10,7 @@ import {
   parametersToZod,
   requestBodyToZod,
 } from './schemaToZod';
+import { applyToolParameterCoercions } from './toolParameterCoercions';
 import {
   customerFetch,
   isAuthRequired,
@@ -102,7 +103,8 @@ function createToolFromOperation(
   const queryShape = parametersToZod(queryParams, spec, 'query');
   const bodyShape = requestBodyToZod(resolvedBody, spec);
 
-  const parametersSchema = buildToolParameters(pathShape, queryShape, bodyShape);
+  let parametersSchema = buildToolParameters(pathShape, queryShape, bodyShape);
+  parametersSchema = applyToolParameterCoercions(toolName, parametersSchema);
   const requireAuth = isAuthRequired(operation.security);
 
   const pathParamNames = pathParams.map((p) => p.name);

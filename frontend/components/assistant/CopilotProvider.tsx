@@ -5,7 +5,7 @@ import { CopilotKit } from '@copilotkit/react-core/v2';
 import '@copilotkit/react-core/v2/styles.css';
 import { useAuth } from '@/contexts/AuthContext';
 import AiModeCustomMessageRenderer from '@/components/assistant/AiModeCustomMessageRenderer';
-import { AiModeCompanionDebugBridge } from '@/components/assistant/AiModeUiCompanionRenderer';
+import AiModeTurnDebugBridge from '@/components/assistant/AiModeTurnDebugBridge';
 import { brillarCatalog } from '@/lib/a2ui/catalog';
 import { CopilotModelsProvider, useCopilotModels } from '@/lib/copilot/modelContext';
 import {
@@ -63,7 +63,7 @@ function CopilotKitInner({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      <AiModeCompanionDebugBridge />
+      <AiModeTurnDebugBridge />
       {children}
     </CopilotKit>
   );

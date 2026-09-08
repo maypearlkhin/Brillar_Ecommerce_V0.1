@@ -17,14 +17,14 @@ export function schemaToZod(
 
   switch (resolved.type) {
     case 'integer': {
-      let base = z.number().int();
+      let base = z.coerce.number().int();
       if (resolved.minimum !== undefined) base = base.min(resolved.minimum);
       if (resolved.maximum !== undefined) base = base.max(resolved.maximum);
       if (resolved.description) base = base.describe(resolved.description);
       return required ? base : base.optional();
     }
     case 'number': {
-      let base = z.number();
+      let base = z.coerce.number();
       if (resolved.minimum !== undefined) base = base.min(resolved.minimum);
       if (resolved.maximum !== undefined) base = base.max(resolved.maximum);
       if (resolved.description) base = base.describe(resolved.description);

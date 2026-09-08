@@ -1,5 +1,5 @@
 export const AI_MODE_LOADING_FLAG = 'ai-mode-show-loading';
-export const AI_MODE_LOADING_DURATION_MS = 7000;
+export const AI_MODE_LOADING_DURATION_MS = 3000;
 
 export function markAiModeLoadingEntry() {
   if (typeof window === 'undefined') return;
