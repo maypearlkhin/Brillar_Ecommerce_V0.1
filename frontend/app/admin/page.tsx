@@ -123,15 +123,15 @@ export default function AdminDashboardPage() {
                     gap: 1,
                     px: 2,
                     py: 0.875,
-                    bgcolor: colors.cream,
+                    bgcolor: colors.orangePaleDeep,
                     borderBottom: '1px solid',
-                    borderColor: 'divider',
+                    borderColor: colors.orangePaleBorder,
                   }}
                 >
-                  <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'text.secondary' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: colors.charcoal }}>
                     Store
                   </Typography>
-                  <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'text.secondary' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: colors.charcoal }}>
                     Submitted
                   </Typography>
                 </Box>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import {
-  TableBody, TableCell, TableHead, TableRow, Button, Tabs, Tab, Box,
+  TableBody, TableCell, TableRow, Button, Tabs, Tab, Box,
   TextField, Grid, Alert, Typography,
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
@@ -198,16 +198,7 @@ export default function AdminSuppliersPage() {
         {loading ? (
           <Box sx={{ p: 2 }}><LoadingState /></Box>
         ) : (
-          <AdminTable embedded>
-            <TableHead>
-              <TableRow>
-                <TableCell>Store</TableCell>
-                <TableCell>Contact</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
+          <AdminTable embedded plainHeader>
             <TableBody>
               {suppliers.map((s) => (
                 <TableRow key={s._id as string} hover>

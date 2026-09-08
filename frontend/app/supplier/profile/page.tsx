@@ -13,9 +13,16 @@ import {
   adminFieldSx,
   adminSaveButtonSx,
   portalFormCardBodySx,
-  portalFormCardHeaderSx,
   portalFormCardSx,
 } from '@/components/admin/adminDialogStyles';
+
+const supplierFormCardHeaderSx = {
+  px: 2.5,
+  py: 1.25,
+  bgcolor: colors.orangePaleDeep,
+  borderBottom: '1px solid',
+  borderColor: colors.orangePaleBorder,
+};
 
 export default function SupplierProfilePage() {
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
@@ -69,7 +76,7 @@ export default function SupplierProfilePage() {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: 7 }}>
           <Paper elevation={0} sx={portalFormCardSx}>
-            <Box sx={portalFormCardHeaderSx}>
+            <Box sx={supplierFormCardHeaderSx}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, color: colors.charcoal }}>
                 Store details
               </Typography>
@@ -103,7 +110,7 @@ export default function SupplierProfilePage() {
 
         <Grid size={{ xs: 12, md: 5 }}>
           <Paper elevation={0} sx={portalFormCardSx}>
-            <Box sx={portalFormCardHeaderSx}>
+            <Box sx={supplierFormCardHeaderSx}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700, color: colors.charcoal }}>
                 Account status
               </Typography>

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import {
-  Table, TableBody, TableCell, TableHead, TableRow, Button, TextField, MenuItem, Box, IconButton, Tooltip,
+  TableBody, TableCell, TableHead, TableRow, Button, TextField, MenuItem, Box, IconButton, Tooltip,
 } from '@mui/material';
+import SupplierTable from '@/components/supplier/SupplierTable';
 import { Add, ArchiveOutlined } from '@mui/icons-material';
 import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
@@ -86,7 +87,7 @@ export default function SupplierProductsPage() {
 
       {loading ? <LoadingState /> : (
         <AdminPageCard flush>
-          <Table>
+          <SupplierTable embedded>
             <TableHead>
               <TableRow>
                 <TableCell>Product</TableCell>
@@ -128,7 +129,7 @@ export default function SupplierProductsPage() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </SupplierTable>
         </AdminPageCard>
       )}
 

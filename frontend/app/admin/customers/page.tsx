@@ -10,6 +10,7 @@ import EmptyState from '@/components/common/EmptyState';
 import StatusChip from '@/components/common/StatusChip';
 import AdminTable from '@/components/admin/AdminTable';
 import AdminPageCard from '@/components/admin/AdminPageCard';
+import { adminShellBorder } from '@/components/admin/adminDialogStyles';
 import { adminService } from '@/services/supplier.service';
 import { formatPrice, formatDate } from '@/utils/format';
 
@@ -32,8 +33,15 @@ export default function AdminCustomersPage() {
         title="Customers"
         subtitle="Registered shoppers on the marketplace"
       />
-      <AdminPageCard>
-        <Box sx={{ mb: 3 }}>
+      <AdminPageCard flush>
+        <Box
+          sx={{
+            px: 2,
+            py: 2,
+            borderBottom: '1px solid',
+            borderColor: adminShellBorder,
+          }}
+        >
           <TextField
             placeholder="Search by name or email..."
             value={search}
@@ -50,14 +58,18 @@ export default function AdminCustomersPage() {
             }}
           />
         </Box>
-        {loading ? <LoadingState /> : customers.length === 0 ? (
-          <EmptyState
-            title="No customers found"
-            description={search ? 'Try a different search term.' : 'Customers will appear here once they register.'}
-            icon={<PeopleOutlined sx={{ fontSize: 48 }} />}
-          />
+        {loading ? (
+          <Box sx={{ p: 2 }}><LoadingState /></Box>
+        ) : customers.length === 0 ? (
+          <Box sx={{ p: 2 }}>
+            <EmptyState
+              title="No customers found"
+              description={search ? 'Try a different search term.' : 'Customers will appear here once they register.'}
+              icon={<PeopleOutlined sx={{ fontSize: 48 }} />}
+            />
+          </Box>
         ) : (
-          <AdminTable>
+          <AdminTable embedded>
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>

@@ -2,8 +2,9 @@
 
 import { useEffect, useState, Fragment } from 'react';
 import {
-  Table, TableBody, TableCell, TableHead, TableRow, Select, MenuItem, Typography, Box, Collapse, Button, Snackbar, Alert,
+  TableBody, TableCell, TableHead, TableRow, Select, MenuItem, Typography, Box, Collapse, Button, Snackbar, Alert,
 } from '@mui/material';
+import SupplierTable from '@/components/supplier/SupplierTable';
 import { PageHeader } from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
 import StatusChip from '@/components/common/StatusChip';
@@ -112,7 +113,7 @@ export default function SupplierOrdersPage() {
         <Typography color="text.secondary">No orders yet</Typography>
       ) : (
         <AdminPageCard flush>
-          <Table>
+          <SupplierTable embedded>
             <TableHead>
               <TableRow>
                 <TableCell>Order</TableCell>
@@ -210,7 +211,7 @@ export default function SupplierOrdersPage() {
                 );
               })}
             </TableBody>
-          </Table>
+          </SupplierTable>
         </AdminPageCard>
       )}
 

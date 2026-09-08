@@ -79,9 +79,11 @@ interface PageHeaderProps {
   subtitle?: string;
   action?: React.ReactNode;
   dense?: boolean;
+  /** Light orange panel background — used on supplier Store Profile */
+  tinted?: boolean;
 }
 
-export function PageHeader({ title, subtitle, action, dense }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, action, dense, tinted }: PageHeaderProps) {
   return (
     <Box
       sx={{
@@ -90,6 +92,13 @@ export function PageHeader({ title, subtitle, action, dense }: PageHeaderProps) 
         alignItems: 'flex-start',
         mb: dense ? 1.5 : 3,
         gap: dense ? 1.5 : 2,
+        ...(tinted && {
+          bgcolor: colors.orangePaleDeep,
+          border: `1px solid ${colors.orangePaleBorder}`,
+          borderRadius: '14px',
+          px: { xs: 2, md: 2.5 },
+          py: { xs: 2, md: 2.5 },
+        }),
       }}
     >
       <Box sx={{ display: 'flex', gap: dense ? 1.5 : 2, alignItems: 'stretch' }}>

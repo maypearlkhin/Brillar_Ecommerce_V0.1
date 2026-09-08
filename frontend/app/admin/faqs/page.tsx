@@ -90,7 +90,7 @@ export default function AdminFAQsPage() {
       } />
       {loading ? <LoadingState /> : (
         <AdminPageCard flush>
-          <AdminTable embedded insetTop>
+          <AdminTable embedded>
             <TableHead>
               <TableRow>
                 <TableCell>Question</TableCell>

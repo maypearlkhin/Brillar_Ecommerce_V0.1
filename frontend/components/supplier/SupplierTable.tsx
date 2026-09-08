@@ -2,42 +2,28 @@
 
 import { Paper, Table, TableContainer } from '@mui/material';
 import { colors } from '@/theme/colors';
-import { adminShellBorder } from './adminDialogStyles';
 
-interface AdminTableProps {
+interface SupplierTableProps {
   children: React.ReactNode;
+  size?: 'small' | 'medium';
   /** Use inside AdminPageCard to avoid double borders */
   embedded?: boolean;
   /** Add space between card top edge and table header row */
   insetTop?: boolean;
-  /** Use neutral header styling instead of light orange */
-  plainHeader?: boolean;
 }
 
-const tintedHeaderSx = {
-  bgcolor: colors.orangePaleDeep,
-  color: colors.charcoal,
-  borderColor: colors.orangePaleBorder,
-};
-
-const plainHeaderSx = {
-  bgcolor: colors.cream,
-  color: 'text.secondary',
-  borderColor: adminShellBorder,
-};
-
-const buildTableSx = (plainHeader?: boolean) => ({
+const tableSx = {
   '& .MuiTableCell-head': {
-    ...(plainHeader ? plainHeaderSx : tintedHeaderSx),
-    fontSize: '0.6875rem',
+    bgcolor: colors.orangePaleDeep,
+    color: colors.charcoal,
     fontWeight: 700,
-    letterSpacing: '0.05em',
-    textTransform: 'uppercase',
+    fontSize: '0.8125rem',
     py: 1.25,
     px: 2,
-    lineHeight: 1.2,
+    lineHeight: 1.3,
     whiteSpace: 'nowrap',
     borderBottom: '1px solid',
+    borderColor: colors.orangePaleBorder,
   },
   '& .MuiTableCell-body': {
     py: 1.25,
@@ -48,17 +34,17 @@ const buildTableSx = (plainHeader?: boolean) => ({
   '& .MuiTableRow-root:last-child .MuiTableCell-body': {
     borderBottom: 0,
   },
-});
+};
 
-export default function AdminTable({
+export default function SupplierTable({
   children,
+  size = 'medium',
   embedded,
   insetTop,
-  plainHeader,
-}: AdminTableProps) {
+}: SupplierTableProps) {
   const table = (
     <TableContainer sx={insetTop ? { pt: 1.5 } : undefined}>
-      <Table size="small" sx={buildTableSx(plainHeader)}>
+      <Table size={size} sx={tableSx}>
         {children}
       </Table>
     </TableContainer>
@@ -72,7 +58,7 @@ export default function AdminTable({
       sx={{
         overflow: 'hidden',
         border: '1px solid',
-        borderColor: adminShellBorder,
+        borderColor: colors.orangePaleBorder,
         bgcolor: 'background.paper',
       }}
     >

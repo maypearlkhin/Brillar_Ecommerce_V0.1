@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Grid, Typography, Table, TableBody, TableCell, TableHead, TableRow, Box } from '@mui/material';
+import { Grid, Typography, TableBody, TableCell, TableHead, TableRow, Box } from '@mui/material';
+import SupplierTable from '@/components/supplier/SupplierTable';
 import { PageHeader } from '@/components/common/MetricCard';
 import MetricCard from '@/components/common/MetricCard';
 import LoadingState from '@/components/common/LoadingState';
@@ -48,7 +49,7 @@ export default function SupplierOverviewPage() {
             {!data?.recentOrders?.length ? (
               <Typography variant="body2" color="text.secondary">No orders yet</Typography>
             ) : (
-              <Table size="small">
+              <SupplierTable embedded size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Order</TableCell>
@@ -71,7 +72,7 @@ export default function SupplierOverviewPage() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </SupplierTable>
             )}
           </AdminPageCard>
         </Grid>

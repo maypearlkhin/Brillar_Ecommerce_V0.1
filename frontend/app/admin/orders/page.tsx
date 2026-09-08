@@ -26,7 +26,7 @@ export default function AdminOrdersPage() {
       <PageHeader title="Orders" subtitle="All marketplace orders across suppliers" />
       {loading ? <LoadingState /> : (
         <AdminPageCard flush>
-          <AdminTable embedded insetTop>
+          <AdminTable embedded>
           <TableHead>
             <TableRow>
               <TableCell>Order ID</TableCell>

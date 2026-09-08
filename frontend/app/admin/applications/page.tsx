@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  TableBody, TableCell, TableHead, TableRow, Button, Box,
+  TableBody, TableCell, TableRow, Button, Box,
   TextField, Typography, Tabs, Tab,
 } from '@mui/material';
 import { PageHeader } from '@/components/common/MetricCard';
@@ -76,18 +76,7 @@ export default function AdminApplicationsPage() {
         {loading ? (
           <Box sx={{ p: 2 }}><LoadingState /></Box>
         ) : (
-          <AdminTable embedded>
-          <TableHead>
-            <TableRow>
-              <TableCell>Store</TableCell>
-              <TableCell>Applicant</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Submitted</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
+          <AdminTable embedded plainHeader>
           <TableBody>
             {applications.map((app) => (
               <TableRow key={app._id} hover>
