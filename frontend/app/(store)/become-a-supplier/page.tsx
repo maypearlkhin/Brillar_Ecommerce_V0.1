@@ -14,6 +14,15 @@ import {
   isAllowedCustomerSupplierEmail,
 } from '@/utils/email';
 import LoadingState from '@/components/common/LoadingState';
+import {
+  adminDialogActionsSx,
+  adminFieldSx,
+  adminSaveButtonSx,
+  portalFormCardBodySx,
+  portalFormCardHeaderSx,
+  portalFormCardSx,
+} from '@/components/admin/adminDialogStyles';
+import { colors } from '@/theme/colors';
 import Link from 'next/link';
 
 export default function BecomeSupplierPage() {
@@ -110,88 +119,160 @@ export default function BecomeSupplierPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>Become a Supplier</Typography>
-      <Typography color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, color: colors.charcoal, mb: 1 }}>
+        Become a Supplier
+      </Typography>
+      <Typography color="text.secondary" sx={{ mb: 4, maxWidth: 720, lineHeight: 1.6 }}>
         Apply to sell your products on Brillar Market. Applications are reviewed within 2-3 business days.
       </Typography>
 
       {showStatus && (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Typography variant="h6">Application Status</Typography>
-            <Chip label={capitalize(application.status)} color={
-              application.status === 'pending' ? 'warning' :
-              application.status === 'approved' ? 'success' : 'error'
-            } />
-          </Box>
-          <Typography variant="body2" color="text.secondary">
-            Store: {application.storeName} · Submitted: {formatDate(application.submittedAt)}
-          </Typography>
-          {application.businessAddress && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-              Shop location: {application.businessAddress}
+        <Paper elevation={0} sx={{ ...portalFormCardSx, mb: 3 }}>
+          <Box sx={portalFormCardHeaderSx}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: colors.charcoal }}>
+              Application status
             </Typography>
-          )}
-          {application.adminNote && (
-            <Alert severity={application.status === 'rejected' ? 'error' : 'info'} sx={{ mt: 2 }}>
-              {application.adminNote}
-            </Alert>
-          )}
+          </Box>
+          <Box sx={portalFormCardBodySx}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Chip label={capitalize(application.status)} color={
+                application.status === 'pending' ? 'warning' :
+                application.status === 'approved' ? 'success' : 'error'
+              } />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Store: {application.storeName} · Submitted: {formatDate(application.submittedAt)}
+            </Typography>
+            {application.businessAddress && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+                Shop location: {application.businessAddress}
+              </Typography>
+            )}
+            {application.adminNote && (
+              <Alert severity={application.status === 'rejected' ? 'error' : 'info'} sx={{ mt: 2, borderRadius: '10px' }}>
+                {application.adminNote}
+              </Alert>
+            )}
+          </Box>
         </Paper>
       )}
 
       {(canEdit || !application) && (
-        <Paper sx={{ p: 3 }}>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
-          <Box component="form" onSubmit={handleSubmit}>
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField fullWidth label="Business / Store Name" required value={form.storeName}
-                  onChange={(e) => setForm({ ...form, storeName: e.target.value })} />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField fullWidth label="Contact Name" required value={form.contactName}
-                  onChange={(e) => setForm({ ...form, contactName: e.target.value })} />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField fullWidth label="Email" type="email" required value={form.email}
+        <Paper elevation={0} sx={portalFormCardSx}>
+          <Box sx={portalFormCardHeaderSx}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: colors.charcoal }}>
+              {application ? 'Update application' : 'Supplier application'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Tell us about your business. Required fields are marked with *.
+            </Typography>
+          </Box>
 
-                  onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <Box component="form" onSubmit={handleSubmit}>
+            <Box sx={portalFormCardBodySx}>
+              {error && <Alert severity="error" sx={{ mb: 2, borderRadius: '10px' }}>{error}</Alert>}
+              {success && <Alert severity="success" sx={{ mb: 2, borderRadius: '10px' }}>{success}</Alert>}
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Business / Store Name"
+                    required
+                    value={form.storeName}
+                    onChange={(e) => setForm({ ...form, storeName: e.target.value })}
+                    sx={adminFieldSx}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Contact Name"
+                    required
+                    value={form.contactName}
+                    onChange={(e) => setForm({ ...form, contactName: e.target.value })}
+                    sx={adminFieldSx}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    type="email"
+                    required
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    sx={adminFieldSx}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Phone"
+                    required
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    sx={adminFieldSx}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="Product Categories (comma-separated)"
+                    value={form.categories}
+                    onChange={(e) => setForm({ ...form, categories: e.target.value })}
+                    sx={adminFieldSx}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="Business Description"
+                    multiline
+                    rows={3}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    sx={adminFieldSx}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    required
+                    label="Shop location / business address"
+                    placeholder="Street, city, state, country"
+                    multiline
+                    rows={2}
+                    value={form.businessAddress}
+                    onChange={(e) => setForm({ ...form, businessAddress: e.target.value })}
+                    helperText="Your shop address shown to customers on product pages."
+                    sx={adminFieldSx}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label="Website (optional)"
+                    value={form.website}
+                    onChange={(e) => setForm({ ...form, website: e.target.value })}
+                    sx={adminFieldSx}
+                  />
+                </Grid>
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField fullWidth label="Phone" required value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField fullWidth label="Product Categories (comma-separated)" value={form.categories}
-                  onChange={(e) => setForm({ ...form, categories: e.target.value })} />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField fullWidth label="Business Description" multiline rows={3} value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Shop location / business address"
-                  placeholder="Street, city, state, country"
-                  multiline
-                  rows={2}
-                  value={form.businessAddress}
-                  onChange={(e) => setForm({ ...form, businessAddress: e.target.value })}
-                  helperText="Your shop address shown to customers on product pages."
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <TextField fullWidth label="Website (optional)" value={form.website}
-                  onChange={(e) => setForm({ ...form, website: e.target.value })} />
-              </Grid>
-            </Grid>
-            <Button type="submit" variant="contained" sx={{ mt: 3 }} disabled={submitting}>
-              {submitting ? 'Submitting...' : application ? 'Resubmit Application' : 'Submit Application'}
-            </Button>
+            </Box>
+
+            <Box sx={{ ...adminDialogActionsSx, display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ flex: 1 }} />
+              <Button
+                type="submit"
+                variant="contained"
+                color="secondary"
+                disabled={submitting}
+                sx={adminSaveButtonSx}
+              >
+                {submitting ? 'Submitting...' : application ? 'Resubmit Application' : 'Submit Application'}
+              </Button>
+            </Box>
           </Box>
         </Paper>
       )}
