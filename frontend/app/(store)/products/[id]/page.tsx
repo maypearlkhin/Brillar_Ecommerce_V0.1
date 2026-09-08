@@ -232,7 +232,15 @@ export default function ProductDetailPage() {
               )}
 
               <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 700,
+                    lineHeight: 1.3,
+                    flex: 1,
+                    fontSize: { xs: '1.35rem', md: '1.5rem' },
+                  }}
+                >
                   {product.name}
                 </Typography>
                 {/* Heart like UI temporarily hidden — restore useProductLike hook above to re-enable
