@@ -7,7 +7,8 @@ import {
   Breadcrumbs, Link as MuiLink, IconButton, Divider, alpha,
 } from '@mui/material';
 import {
-  AddShoppingCart, StorefrontOutlined, FavoriteBorder, Favorite,
+  AddShoppingCart, StorefrontOutlined,
+  // FavoriteBorder, Favorite,
   ShareOutlined, Remove, Add, NavigateNext, LocationOnOutlined,
 } from '@mui/icons-material';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ import { formatProductAgeRange, formatProductGender, formatProductType } from '@
 import LoadingState from '@/components/common/LoadingState';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { useProductLike } from '@/hooks/useProductLike';
+// import { useProductLike } from '@/hooks/useProductLike';
 import { useProductLikeContext } from '@/contexts/ProductLikeContext';
 import { useRefreshOnFocus } from '@/hooks/useRefreshOnFocus';
 import { getErrorMessage } from '@/services/api';
@@ -39,11 +40,11 @@ export default function ProductDetailPage() {
   const [buying, setBuying] = useState(false);
   const [snack, setSnack] = useState('');
   const { seedProducts } = useProductLikeContext();
-  const { liked, likeCount, toggleLike, canLike } = useProductLike(id, product?.likeCount ?? 0, {
-    isAuthenticated,
-    initialLiked: product?.likedByCurrentUser ?? false,
-    onAuthRequired: () => router.push(`/login?redirect=/products/${id}`),
-  });
+  // const { liked, likeCount, toggleLike, canLike } = useProductLike(id, product?.likeCount ?? 0, {
+  //   isAuthenticated,
+  //   initialLiked: product?.likedByCurrentUser ?? false,
+  //   onAuthRequired: () => router.push(`/login?redirect=/products/${id}`),
+  // });
 
   const loadProduct = useCallback(async () => {
     try {
@@ -230,10 +231,11 @@ export default function ProductDetailPage() {
                 </Box>
               )}
 
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.3, flex: 1 }}>
                   {product.name}
                 </Typography>
+                {/* Heart like UI temporarily hidden — restore useProductLike hook above to re-enable
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                   <IconButton
                     size="small"
@@ -252,6 +254,7 @@ export default function ProductDetailPage() {
                     {likeCount}
                   </Typography>
                 </Box>
+                */}
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, mb: 2.5 }}>

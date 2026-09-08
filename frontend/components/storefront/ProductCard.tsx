@@ -75,7 +75,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               }}
             />
           </Box>
-          <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5, pt: 2, pb: 1.5 }}>
+          <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1, pt: 2, pb: 1.5 }}>
             {supplier && (
               <Typography variant="caption" color="secondary.main" noWrap sx={{ textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '0.68rem' }}>
                 {supplier.storeName}
@@ -86,6 +86,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               overflow: 'hidden', textOverflow: 'ellipsis',
               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
               lineHeight: 1.35,
+              minHeight: '2.7em',
             }}>
               {product.name}
             </Typography>

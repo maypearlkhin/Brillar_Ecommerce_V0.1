@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, Button, Paper, Snackbar, alpha, IconButton } from '@mui/material';
-import { ShoppingCartOutlined, Favorite, FavoriteBorder } from '@mui/icons-material';
+import { Box, Typography, Button, Paper, Snackbar, alpha } from '@mui/material';
+// import { IconButton } from '@mui/material'; // needed when heart like UI is restored
+import { ShoppingCartOutlined } from '@mui/icons-material';
+// import { Favorite, FavoriteBorder } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { Product } from '@/types';
 import { formatPrice } from '@/utils/format';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
-import { useProductLike } from '@/hooks/useProductLike';
+// import { useProductLike } from '@/hooks/useProductLike';
 import { getErrorMessage } from '@/services/api';
 import { colors } from '@/theme/colors';
 
@@ -20,11 +22,11 @@ export default function ProductListCard({ product }: ProductListCardProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { addToCart } = useCart();
-  const { liked, likeCount, toggleLike, canLike } = useProductLike(product._id, product.likeCount ?? 0, {
-    isAuthenticated,
-    initialLiked: product.likedByCurrentUser ?? false,
-    onAuthRequired: () => router.push(`/login?redirect=/products/${product._id}`),
-  });
+  // const { liked, likeCount, toggleLike, canLike } = useProductLike(product._id, product.likeCount ?? 0, {
+  //   isAuthenticated,
+  //   initialLiked: product.likedByCurrentUser ?? false,
+  //   onAuthRequired: () => router.push(`/login?redirect=/products/${product._id}`),
+  // });
   const [adding, setAdding] = useState(false);
   const [snack, setSnack] = useState('');
 
@@ -101,7 +103,7 @@ export default function ProductListCard({ product }: ProductListCardProps) {
         </Box>
 
         <Box sx={{ flex: 1, minWidth: 0, py: 0.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 0.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
             <Typography
               variant="subtitle1"
               sx={{
@@ -113,10 +115,12 @@ export default function ProductListCard({ product }: ProductListCardProps) {
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
+                minHeight: '2.7em',
               }}
             >
               {product.name}
             </Typography>
+            {/* Heart like UI temporarily hidden — restore useProductLike hook above to re-enable
             <Box
               sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}
               onClick={(e) => e.stopPropagation()}
@@ -137,6 +141,7 @@ export default function ProductListCard({ product }: ProductListCardProps) {
                 {likeCount}
               </Typography>
             </Box>
+            */}
           </Box>
 
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
@@ -148,7 +153,7 @@ export default function ProductListCard({ product }: ProductListCardProps) {
             </Typography>
           )}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mt: 0.75 }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: colors.orange, fontSize: '1.1rem' }}>
               {formatPrice(product.price)}
             </Typography>
