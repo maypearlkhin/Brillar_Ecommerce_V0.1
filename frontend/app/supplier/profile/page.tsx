@@ -115,13 +115,19 @@ export default function SupplierProfilePage() {
                 Account status
               </Typography>
             </Box>
-            <Box sx={portalFormCardBodySx}>
-              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <Box sx={{ ...portalFormCardBodySx, pb: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
                 <StatusChip status={profile?.status || 'active'} />
                 <StatusChip status={profile?.verificationStatus || 'verified'} />
               </Box>
+            </Box>
 
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Approved categories</Typography>
+            <Box sx={supplierFormCardHeaderSx}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, color: colors.charcoal }}>
+                Approved categories
+              </Typography>
+            </Box>
+            <Box sx={portalFormCardBodySx}>
               {profile?.categoryIds?.length ? (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
                   {profile.categoryIds.map((c) => (
