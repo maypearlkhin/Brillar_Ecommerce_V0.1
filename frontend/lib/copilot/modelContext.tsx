@@ -51,10 +51,20 @@ export function CopilotModelsProvider({ children }: { children: React.ReactNode 
       setError(null);
 
       try {
-        const response = await fetch('/api/copilot/models');
+        const response = await fetch('/api/copilot/models', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+          },
+        });
         const payload = (await response.json()) as {
           models?: CopilotModel[];
           defaultModelId?: string;
+          sources?: { openai?: string; google?: string };
+          openAiModelCount?: number;
+          googleModelCount?: number;
+          warnings?: string[];
           error?: string;
         };
 
@@ -78,6 +88,15 @@ export function CopilotModelsProvider({ children }: { children: React.ReactNode 
         setDefaultModelId(resolvedDefault);
         setSelectedModelIdState(resolvedSelected);
         storeModelId(resolvedSelected);
+
+        console.log('[AI Mode] Models loaded:', {
+          total: fetchedModels.length,
+          sources: payload.sources,
+          openAiModelCount: payload.openAiModelCount,
+          googleModelCount: payload.googleModelCount,
+          warnings: payload.warnings,
+          selectedModelId: resolvedSelected,
+        });
       } catch (loadError) {
         if (cancelled) return;
         const message =
@@ -107,7 +126,19 @@ export function CopilotModelsProvider({ children }: { children: React.ReactNode 
     });
     storeModelId(resolved);
     setSelectedModelIdState(resolved);
+    console.log('[AI Mode] Model selected:', {
+      id: resolved,
+      label: getModelLabel(resolved, models),
+    });
   }, [defaultModelId, models]);
+
+  useEffect(() => {
+    if (!selectedModelId || loading) return;
+    console.log('[AI Mode] Active model:', {
+      id: selectedModelId,
+      label: getModelLabel(selectedModelId, models),
+    });
+  }, [selectedModelId, models, loading]);
 
   const getLabel = useCallback(
     (modelId: string) => getModelLabel(modelId, models),

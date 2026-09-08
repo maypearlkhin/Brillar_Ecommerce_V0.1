@@ -24,6 +24,7 @@ import {
   type BrillarCatalogDefinitions,
 } from './definitions';
 import CheckoutFormCard from './CheckoutFormCard';
+import BabyAuthCard from '@/components/assistant/baby-auth/BabyAuthCard';
 import { formatPrice, formatDate, capitalize } from '@/utils/format';
 import { colors } from '@/theme/colors';
 
@@ -40,6 +41,26 @@ const cardSx = {
   border: `1px solid ${colors.divider}`,
   boxShadow: colors.cardShadow,
   overflow: 'hidden',
+};
+
+const productListActionButtonSx = {
+  flex: 1,
+  minWidth: 0,
+  borderRadius: '8px',
+};
+
+const productListImageSx = {
+  position: 'relative',
+  width: '100%',
+  aspectRatio: '4 / 3',
+  overflow: 'hidden',
+  bgcolor: 'grey.100',
+  '& img': {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+  },
 };
 
 const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
@@ -63,13 +84,13 @@ const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
       >
         {props.products.map((product) => (
           <Card key={product.productId} sx={cardSx}>
-            <CardMedia
-              component="img"
-              height="160"
-              image={product.imageUrl || '/placeholder-product.svg'}
-              alt={product.name}
-              sx={{ objectFit: 'cover', bgcolor: 'grey.100' }}
-            />
+            <Box sx={productListImageSx}>
+              <CardMedia
+                component="img"
+                image={product.imageUrl || '/placeholder-product.svg'}
+                alt={product.name}
+              />
+            </Box>
             <CardContent>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }} gutterBottom>
                 {product.name}
@@ -88,13 +109,14 @@ const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
                 color={product.inStock ? 'success' : 'default'}
                 sx={{ mt: 1, mb: 1.5 }}
               />
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+              <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
                 <Button
                   size="small"
                   variant="outlined"
                   onClick={() =>
                     dispatchAction(dispatch, 'view_product', { productId: product.productId })
                   }
+                  sx={productListActionButtonSx}
                 >
                   View details
                 </Button>
@@ -105,7 +127,11 @@ const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
                     onClick={() =>
                       dispatchAction(dispatch, 'add_to_cart', { productId: product.productId })
                     }
-                    sx={{ bgcolor: colors.orange, '&:hover': { bgcolor: colors.orangeDark } }}
+                    sx={{
+                      ...productListActionButtonSx,
+                      bgcolor: colors.orange,
+                      '&:hover': { bgcolor: colors.orangeDark },
+                    }}
                   >
                     Add to cart
                   </Button>
@@ -119,35 +145,34 @@ const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
   ),
 
   ProductDetailCard: ({ props, dispatch }) => (
-    <Card sx={cardSx}>
-      <CardMedia
-        component="img"
-        height="220"
-        image={props.imageUrl || '/placeholder-product.svg'}
-        alt={props.name}
-        sx={{ objectFit: 'cover', bgcolor: 'grey.100' }}
-      />
+    <Card sx={{ ...cardSx, maxWidth: 360, width: '100%', mx: 'auto' }}>
+      <Box sx={productListImageSx}>
+        <CardMedia
+          component="img"
+          image={props.imageUrl || '/placeholder-product.svg'}
+          alt={props.name}
+        />
+      </Box>
       <CardContent>
-        <Typography variant="h5" sx={{ fontWeight: 700 }} gutterBottom>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }} gutterBottom>
           {props.name}
         </Typography>
         <Typography variant="h6" sx={{ color: colors.orange, mb: 1 }}>
           {formatPrice(props.price)}
         </Typography>
         {props.supplierName && (
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Sold by {props.supplierName}
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1 }}>
+            {props.supplierName}
           </Typography>
         )}
-        {props.category && (
-          <Chip label={props.category} size="small" sx={{ mr: 1, mb: 1 }} />
-        )}
-        <Chip
-          size="small"
-          label={props.inStock ? 'In stock' : 'Out of stock'}
-          color={props.inStock ? 'success' : 'default'}
-          sx={{ mb: 2 }}
-        />
+        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 1.5 }}>
+          {props.category && <Chip label={props.category} size="small" />}
+          <Chip
+            size="small"
+            label={props.inStock ? 'In stock' : 'Out of stock'}
+            color={props.inStock ? 'success' : 'default'}
+          />
+        </Stack>
         {props.description && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             {props.description}
@@ -155,11 +180,18 @@ const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
         )}
         {props.inStock && (
           <Button
+            fullWidth
+            size="small"
             variant="contained"
             onClick={() =>
               dispatchAction(dispatch, 'add_to_cart', { productId: props.productId })
             }
-            sx={{ bgcolor: colors.orange, '&:hover': { bgcolor: colors.orangeDark } }}
+            sx={{
+              ...productListActionButtonSx,
+              flex: 'unset',
+              bgcolor: colors.orange,
+              '&:hover': { bgcolor: colors.orangeDark },
+            }}
           >
             Add to cart
           </Button>
@@ -403,6 +435,14 @@ const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
         </Typography>
       </CardContent>
     </Card>
+  ),
+
+  AuthLoginCard: ({ props }) => (
+    <BabyAuthCard mode="login" title={props.title} message={props.message} />
+  ),
+
+  AuthSignupCard: ({ props }) => (
+    <BabyAuthCard mode="signup" title={props.title} message={props.message} />
   ),
 };
 

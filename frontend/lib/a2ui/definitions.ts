@@ -129,6 +129,24 @@ export const catalogDefinitions = {
       'Single FAQ card. Prefer FaqList when showing multiple FAQs. No children.',
     props: faqShape,
   },
+  AuthLoginCard: {
+    description:
+      'SELF-CONTAINED sign-in form shown in the UI pane when the user must authenticate. ' +
+      'Use for guests attempting cart, checkout, or order actions. No page navigation.',
+    props: z.object({
+      title: z.string().optional(),
+      message: z.string().optional(),
+    }),
+  },
+  AuthSignupCard: {
+    description:
+      'SELF-CONTAINED registration form shown in the UI pane for guest users. ' +
+      'Use when the user needs an account before cart, checkout, or order actions.',
+    props: z.object({
+      title: z.string().optional(),
+      message: z.string().optional(),
+    }),
+  },
 } satisfies CatalogDefinitions;
 
 export type BrillarCatalogDefinitions = typeof catalogDefinitions;

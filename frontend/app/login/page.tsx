@@ -11,7 +11,7 @@ import {
   isAllowedCustomerSupplierEmail,
 } from '@/utils/email';
 import { getRoleHomePath } from '@/utils/authRedirect';
-import AuthPageLayout, { authCardSx } from '@/components/storefront/AuthPageLayout';
+import AuthPageLayout, { authCardSx, authButtonSx, authFieldSx } from '@/components/storefront/AuthPageLayout';
 import LoadingState from '@/components/common/LoadingState';
 
 function LoginForm() {
@@ -65,9 +65,9 @@ function LoginForm() {
             </Typography>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Box component="form" onSubmit={handleSubmit}>
-              <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={{ mb: 2 }} />
-              <TextField fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={{ mb: 3 }} />
-              <Button type="submit" variant="contained" fullWidth size="large" disabled={submitting}>
+              <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required sx={{ mb: 2, ...authFieldSx }} />
+              <TextField fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required sx={{ mb: 3, ...authFieldSx }} />
+              <Button type="submit" variant="contained" fullWidth disabled={submitting} sx={authButtonSx}>
                 {submitting ? 'Signing in...' : 'Sign In'}
               </Button>
             </Box>

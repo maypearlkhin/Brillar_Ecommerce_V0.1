@@ -1,24 +1,37 @@
 'use client';
 
-import { useLayoutEffect, useState } from 'react';
+import { Box } from '@mui/material';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import AiModeLoadingScreen from '@/components/assistant/AiModeLoadingScreen';
+import {
+  AiModeEntryReadyProvider,
+  useAiModeEntryBootComplete,
+} from '@/contexts/AiModeEntryReadyContext';
 import { useAiModeLoading } from '@/contexts/AiModeLoadingContext';
 import {
   clearAiModeLoadingEntry,
-  getAiModeLoadingDeadline,
+  ensureAiModeLoadingDeadline,
 } from '@/lib/ai-mode/entry';
 
-type GatePhase = 'checking' | 'loading' | 'ready';
+function getShouldShowEntryLoader(): boolean {
+  if (typeof window === 'undefined') return false;
 
-export default function AiModeEntryGate({ children }: { children: React.ReactNode }) {
-  const [phase, setPhase] = useState<GatePhase>('checking');
+  const deadline = ensureAiModeLoadingDeadline();
+  return deadline !== null && deadline > Date.now();
+}
+
+function AiModeEntryGateInner({ children }: { children: React.ReactNode }) {
+  const [showEntryLoader, setShowEntryLoader] = useState(getShouldShowEntryLoader);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const { pageReady, markPageReady } = useAiModeEntryBootComplete();
   const { setLoading } = useAiModeLoading();
 
   useLayoutEffect(() => {
-    const deadline = getAiModeLoadingDeadline();
+    const deadline = ensureAiModeLoadingDeadline();
 
     if (!deadline) {
-      setPhase('ready');
+      setShowEntryLoader(false);
+      setMinTimeElapsed(true);
       setLoading(false);
       return;
     }
@@ -27,30 +40,61 @@ export default function AiModeEntryGate({ children }: { children: React.ReactNod
 
     if (remaining <= 0) {
       clearAiModeLoadingEntry();
-      setPhase('ready');
+      setMinTimeElapsed(true);
       setLoading(false);
       return;
     }
 
-    setPhase('loading');
+    setShowEntryLoader(true);
     setLoading(true);
 
     const timer = window.setTimeout(() => {
-      clearAiModeLoadingEntry();
-      setPhase('ready');
-      setLoading(false);
+      setMinTimeElapsed(true);
     }, remaining);
 
     return () => window.clearTimeout(timer);
   }, [setLoading]);
 
-  if (phase === 'loading') {
-    return <AiModeLoadingScreen />;
-  }
+  useEffect(() => {
+    if (!showEntryLoader) return;
+    if (!minTimeElapsed || !pageReady) return;
 
-  if (phase === 'checking') {
-    return null;
-  }
+    clearAiModeLoadingEntry();
+    setShowEntryLoader(false);
+    setLoading(false);
+  }, [showEntryLoader, minTimeElapsed, pageReady, setLoading]);
 
-  return children;
+  const handlePageReady = useCallback(() => {
+    markPageReady();
+  }, [markPageReady]);
+
+  return (
+    <>
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+          width: '100%',
+          ...(showEntryLoader
+            ? {
+                visibility: 'hidden',
+                pointerEvents: 'none',
+              }
+            : {}),
+        }}
+        aria-hidden={showEntryLoader}
+      >
+        <AiModeEntryReadyProvider onReady={handlePageReady}>
+          {children}
+        </AiModeEntryReadyProvider>
+      </Box>
+      {showEntryLoader ? <AiModeLoadingScreen /> : null}
+    </>
+  );
+}
+
+export default function AiModeEntryGate({ children }: { children: React.ReactNode }) {
+  return <AiModeEntryGateInner>{children}</AiModeEntryGateInner>;
 }

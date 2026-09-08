@@ -4,19 +4,19 @@ import { getEnvDefaultModelId } from './models';
 export const COPILOT_DEFAULT_MODEL = getEnvDefaultModelId();
 
 export function getGoogleApiKey(): string | undefined {
-  return process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+  return (process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY)?.trim() || undefined;
 }
 
 export function getOpenAiApiKey(): string | undefined {
-  return process.env.OPENAI_API_KEY;
+  return process.env.OPENAI_API_KEY?.trim() || undefined;
 }
 
 export function getAnthropicApiKey(): string | undefined {
-  return process.env.ANTHROPIC_API_KEY;
+  return process.env.ANTHROPIC_API_KEY?.trim() || undefined;
 }
 
 export function getMinimaxApiKey(): string | undefined {
-  return process.env.MINIMAX_API_KEY;
+  return process.env.MINIMAX_API_KEY?.trim() || undefined;
 }
 
 export function getConfiguredProviderKeys(): string[] {

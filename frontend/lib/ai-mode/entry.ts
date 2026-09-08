@@ -25,3 +25,25 @@ export function clearAiModeLoadingEntry() {
   if (typeof window === 'undefined') return;
   sessionStorage.removeItem(AI_MODE_LOADING_FLAG);
 }
+
+export function isAiModeReloadNavigation(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const nav = performance.getEntriesByType('navigation')[0] as
+    | PerformanceNavigationTiming
+    | undefined;
+
+  return nav?.type === 'reload';
+}
+
+/** Active deadline, or start a new loading window after a full page reload on /ai-mode. */
+export function ensureAiModeLoadingDeadline(): number | null {
+  let deadline = getAiModeLoadingDeadline();
+
+  if (!deadline && isAiModeReloadNavigation()) {
+    markAiModeLoadingEntry();
+    deadline = getAiModeLoadingDeadline();
+  }
+
+  return deadline;
+}

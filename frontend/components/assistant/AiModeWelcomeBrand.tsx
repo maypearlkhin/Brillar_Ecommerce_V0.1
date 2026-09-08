@@ -11,7 +11,7 @@ export default function AiModeWelcomeBrand() {
   return (
     <Typography
       component="h1"
-      className="ai-mode-welcome-brand"
+      data-ai-mode-brand
       sx={{
         mb: 3,
         textAlign: 'center',

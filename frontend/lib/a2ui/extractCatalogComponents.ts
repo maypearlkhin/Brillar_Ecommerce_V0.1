@@ -35,6 +35,12 @@ function collectNamesFromComponents(components: unknown, names: Set<string>) {
 }
 
 export function extractComponentNamesFromActivityContent(content: unknown): string[] {
+  const fromLegacy = extractLegacyComponentNames(content);
+  const fromV9 = findCatalogComponentNamesInContent(content);
+  return [...new Set([...fromLegacy, ...fromV9])];
+}
+
+function extractLegacyComponentNames(content: unknown): string[] {
   if (!content || typeof content !== 'object') return [];
 
   const record = content as Record<string, unknown>;
@@ -55,6 +61,68 @@ export function extractComponentNamesFromActivityContent(content: unknown): stri
   }
 
   return [...names];
+}
+
+/** Walk parsed A2UI activity JSON for catalog component names (v0.9 + nested props). */
+export function findCatalogComponentNamesInContent(content: unknown): string[] {
+  const found = new Set<string>();
+  const catalogNames = Object.keys(catalogDefinitions);
+
+  const visit = (value: unknown) => {
+    if (!value || typeof value !== 'object') return;
+
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+
+    const record = value as Record<string, unknown>;
+
+    for (const name of catalogNames) {
+      if (name in record) found.add(name);
+    }
+
+    if (typeof record.component === 'string' && catalogNames.includes(record.component)) {
+      found.add(record.component);
+    }
+
+    if (record.component && typeof record.component === 'object') {
+      const keys = Object.keys(record.component as object);
+      if (keys.length === 1 && catalogNames.includes(keys[0])) {
+        found.add(keys[0]);
+      }
+    }
+
+    for (const val of Object.values(record)) visit(val);
+  };
+
+  visit(content);
+  return [...found];
+}
+
+export function findTitleInActivityContent(content: unknown): string | null {
+  let title: string | null = null;
+
+  const visit = (value: unknown) => {
+    if (title || !value || typeof value !== 'object') return;
+
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item);
+      return;
+    }
+
+    const record = value as Record<string, unknown>;
+    const rawTitle = record.title;
+    if (typeof rawTitle === 'string' && rawTitle.trim()) {
+      title = rawTitle.trim();
+      return;
+    }
+
+    for (const val of Object.values(record)) visit(val);
+  };
+
+  visit(content);
+  return title;
 }
 
 export function isActivityBuilding(content: unknown): boolean {

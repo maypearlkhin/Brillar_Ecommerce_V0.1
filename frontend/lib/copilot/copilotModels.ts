@@ -5,8 +5,9 @@ import {
   toProviderModelId,
 } from './models';
 import {
-  getConfiguredProviderKeys,
+  getAnthropicApiKey,
   getGoogleApiKey,
+  getMinimaxApiKey,
   getOpenAiApiKey,
 } from './config';
 
@@ -32,83 +33,125 @@ type OpenAiListModelsResponse = {
   data?: OpenAiModelRecord[];
 };
 
+type AnthropicModelRecord = {
+  id?: string;
+  display_name?: string;
+};
+
+type AnthropicListModelsResponse = {
+  data?: AnthropicModelRecord[];
+};
+
 const GOOGLE_MODELS_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 const OPENAI_MODELS_URL = 'https://api.openai.com/v1/models';
+const ANTHROPIC_MODELS_URL = 'https://api.anthropic.com/v1/models';
 
-/** CopilotKit BuiltInAgent models documented at https://docs.copilotkit.ai/model-selection */
-const COPILOT_BUILTIN_MODELS: CopilotModel[] = [
-  { id: 'openai/gpt-5', label: 'GPT-5', shortLabel: 'GPT-5', tags: ['OpenAI'] },
-  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini', shortLabel: 'GPT-5 Mini', tags: ['OpenAI'] },
-  { id: 'openai/gpt-4.1', label: 'GPT-4.1', shortLabel: 'GPT-4.1', tags: ['OpenAI'] },
-  { id: 'openai/gpt-4.1-mini', label: 'GPT-4.1 Mini', shortLabel: 'GPT-4.1 Mini', tags: ['OpenAI'] },
-  { id: 'openai/gpt-4.1-nano', label: 'GPT-4.1 Nano', shortLabel: 'GPT-4.1 Nano', tags: ['OpenAI'] },
-  { id: 'openai/gpt-4o', label: 'GPT-4o', shortLabel: 'GPT-4o', tags: ['OpenAI'] },
-  { id: 'openai/gpt-4o-mini', label: 'GPT-4o Mini', shortLabel: 'GPT-4o Mini', tags: ['OpenAI'] },
-  { id: 'openai/o3', label: 'o3', shortLabel: 'o3', tags: ['OpenAI', 'Reasoning'] },
-  { id: 'openai/o3-mini', label: 'o3 Mini', shortLabel: 'o3 Mini', tags: ['OpenAI', 'Reasoning'] },
-  { id: 'openai/o4-mini', label: 'o4 Mini', shortLabel: 'o4 Mini', tags: ['OpenAI', 'Reasoning'] },
-  {
-    id: 'anthropic/claude-opus-4-8',
-    label: 'Claude Opus 4.8',
-    shortLabel: 'Claude Opus 4.8',
-    tags: ['Anthropic', 'Pro'],
-    description: "Anthropic's most capable model for difficult tasks.",
-  },
-  {
-    id: 'anthropic/claude-sonnet-4-6',
-    label: 'Claude Sonnet 4.6',
-    shortLabel: 'Claude Sonnet 4.6',
-    tags: ['Anthropic'],
-    description: 'Balanced Claude model for everyday coding and analysis.',
-  },
-  {
-    id: 'anthropic/claude-haiku-4-5',
-    label: 'Claude Haiku 4.5',
-    shortLabel: 'Claude Haiku 4.5',
-    tags: ['Anthropic', 'Fast'],
-    description: 'Fast Claude model for quick responses.',
-  },
-  {
-    id: 'anthropic/claude-sonnet-4-5',
-    label: 'Claude Sonnet 4.5',
-    shortLabel: 'Claude Sonnet 4.5',
-    tags: ['Anthropic'],
-  },
-  {
-    id: 'google/gemini-2.5-pro',
-    label: 'Gemini 2.5 Pro',
-    shortLabel: 'Gemini 2.5 Pro',
-    tags: ['Google', 'Pro'],
-  },
-  {
-    id: 'google/gemini-2.5-flash',
-    label: 'Gemini 2.5 Flash',
-    shortLabel: 'Gemini 2.5 Flash',
-    tags: ['Google', 'Fast'],
-  },
-  {
-    id: 'google/gemini-2.5-flash-lite',
-    label: 'Gemini 2.5 Flash Lite',
-    shortLabel: 'Gemini 2.5 Flash Lite',
-    tags: ['Google', 'Fast'],
-  },
-  {
-    id: 'minimax/MiniMax-M3',
-    label: 'MiniMax M3',
-    shortLabel: 'MiniMax M3',
-    tags: ['MiniMax'],
-  },
-  {
-    id: 'minimax/MiniMax-M2.7',
-    label: 'MiniMax M2.7',
-    shortLabel: 'MiniMax M2.7',
-    tags: ['MiniMax'],
-  },
-];
+/** Disable Next.js fetch caching for live provider model lists. */
+const PROVIDER_FETCH_INIT: RequestInit = { cache: 'no-store' };
 
-let cachedModels: CopilotModel[] | null = null;
-let cacheExpiresAt = 0;
-const CACHE_TTL_MS = 5 * 60 * 1000;
+export type ProviderModelSource = 'api' | 'none' | 'error';
+
+export type CopilotModelsFetchResult = {
+  models: CopilotModel[];
+  warnings: string[];
+  sources: {
+    openai: ProviderModelSource;
+    google: ProviderModelSource;
+    anthropic: ProviderModelSource;
+    minimax: ProviderModelSource;
+  };
+};
+
+/** Chat-capable OpenAI model ids from GET /v1/models (excludes embeddings, audio, image, etc.). */
+function isOpenAiChatModel(rawId: string): boolean {
+  const id = rawId.trim().toLowerCase();
+  if (!id) return false;
+
+  const excludedPatterns = [
+    'embed',
+    'embedding',
+    'whisper',
+    'tts-',
+    'dall-e',
+    'davinci',
+    'babbage',
+    'curie',
+    'moderation',
+    'transcribe',
+    'realtime',
+    'audio-',
+    'search-api',
+    'computer-use',
+    'gpt-image',
+    'sora',
+    'codex-mini',
+    'text-moderation',
+    '-ada-',
+    'ada-002',
+    'ada-001',
+  ];
+  if (excludedPatterns.some((pattern) => id.includes(pattern))) return false;
+
+  return (
+    /^gpt-/.test(id) ||
+    /^o[0-9]/.test(id) ||
+    /^chatgpt-/.test(id) ||
+    /^ft:gpt-/.test(id) ||
+    /^ft:o[0-9]/.test(id)
+  );
+}
+
+function formatOpenAiModelLabel(rawId: string): string {
+  const isFineTuned = rawId.startsWith('ft:');
+  const core = isFineTuned ? rawId.slice(3).split(':')[0] ?? rawId : rawId;
+
+  if (/^o[0-9]/i.test(core)) {
+    const label = core.replace(/-/g, ' ').replace(/\bmini\b/i, 'Mini');
+    return isFineTuned ? `${label} (Fine-tuned)` : label;
+  }
+
+  if (core.startsWith('gpt-')) {
+    const parts = core.slice(4).split('-');
+    const label =
+      'GPT-' +
+      parts
+        .map((part) => {
+          if (/^\d/.test(part)) return part;
+          return part.charAt(0).toUpperCase() + part.slice(1);
+        })
+        .join(' ');
+    return isFineTuned ? `${label} (Fine-tuned)` : label;
+  }
+
+  if (core.startsWith('chatgpt-')) {
+    return core
+      .replace(/^chatgpt-/i, 'ChatGPT ')
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+
+  return rawId;
+}
+
+function compareOpenAiModelIds(a: string, b: string): number {
+  const rank = (modelId: string) => {
+    const raw = modelId.replace(/^openai\//, '').toLowerCase();
+    if (raw.startsWith('gpt-5')) return 0;
+    if (raw.startsWith('gpt-4.1')) return 1;
+    if (raw.startsWith('gpt-4o')) return 2;
+    if (/^o[0-9]/.test(raw)) return 3;
+    if (raw.startsWith('gpt-4')) return 4;
+    if (raw.startsWith('gpt-3.5')) return 5;
+    if (raw.startsWith('chatgpt')) return 6;
+    if (raw.startsWith('ft:')) return 8;
+    return 7;
+  };
+
+  const rankDiff = rank(a) - rank(b);
+  if (rankDiff !== 0) return rankDiff;
+  return a.localeCompare(b);
+}
 
 function compareModels(a: CopilotModel, b: CopilotModel): number {
   const providerOrder = ['openai', 'anthropic', 'google', 'minimax'];
@@ -117,6 +160,10 @@ function compareModels(a: CopilotModel, b: CopilotModel): number {
   const providerDiff =
     providerOrder.indexOf(providerA) - providerOrder.indexOf(providerB);
   if (providerDiff !== 0) return providerDiff;
+
+  if (providerA === 'openai' && providerB === 'openai') {
+    return compareOpenAiModelIds(a.id, b.id);
+  }
 
   const rank = (id: string) => {
     if (id.includes('flash-lite')) return 0;
@@ -156,15 +203,56 @@ function mapGoogleModel(model: GoogleModelRecord): CopilotModel | null {
 
 function mapOpenAiModel(model: OpenAiModelRecord): CopilotModel | null {
   const rawId = model.id?.trim();
-  if (!rawId) return null;
+  if (!rawId || !isOpenAiChatModel(rawId)) return null;
 
   const id = toProviderModelId('openai', rawId);
-  const label = formatModelLabel(id);
+  const label = formatOpenAiModelLabel(rawId);
 
   return {
     id,
     label,
     shortLabel: label,
+    description: 'OpenAI chat model available via CopilotKit.',
+    tags: deriveModelTags(id),
+  };
+}
+
+function mapAnthropicModel(model: AnthropicModelRecord): CopilotModel | null {
+  const rawId = model.id?.trim();
+  if (!rawId) return null;
+
+  const id = toProviderModelId('anthropic', rawId);
+  const label =
+    model.display_name?.trim() ||
+    rawId
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+
+  return {
+    id,
+    label,
+    shortLabel: label,
+    description: 'Anthropic Claude model available via CopilotKit.',
+    tags: deriveModelTags(id),
+  };
+}
+
+function mapMinimaxModel(model: OpenAiModelRecord): CopilotModel | null {
+  const rawId = model.id?.trim();
+  if (!rawId) return null;
+
+  const id = toProviderModelId('minimax', rawId);
+  const label = rawId
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+
+  return {
+    id,
+    label,
+    shortLabel: label,
+    description: 'MiniMax model available via CopilotKit.',
     tags: deriveModelTags(id),
   };
 }
@@ -179,7 +267,7 @@ async function fetchGoogleModels(apiKey: string): Promise<CopilotModel[]> {
     url.searchParams.set('pageSize', '100');
     if (pageToken) url.searchParams.set('pageToken', pageToken);
 
-    const response = await fetch(url, { next: { revalidate: 300 } });
+    const response = await fetch(url, PROVIDER_FETCH_INIT);
     if (!response.ok) {
       const body = await response.text();
       throw new Error(`Google models API failed (${response.status}): ${body}`);
@@ -198,13 +286,13 @@ async function fetchGoogleModels(apiKey: string): Promise<CopilotModel[]> {
 
 async function fetchOpenAiModels(apiKey: string): Promise<CopilotModel[]> {
   const response = await fetch(OPENAI_MODELS_URL, {
+    ...PROVIDER_FETCH_INIT,
     headers: { Authorization: `Bearer ${apiKey}` },
-    next: { revalidate: 300 },
   });
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`OpenAI models API failed (${response.status}): ${body}`);
+    throw new Error(`OpenAI models API failed (${response.status}): ${body.slice(0, 300)}`);
   }
 
   const payload = (await response.json()) as OpenAiListModelsResponse;
@@ -216,65 +304,156 @@ async function fetchOpenAiModels(apiKey: string): Promise<CopilotModel[]> {
   return models;
 }
 
-function getBuiltinModelsForConfiguredProviders(): CopilotModel[] {
-  const providers = new Set(getConfiguredProviderKeys());
-  return COPILOT_BUILTIN_MODELS.filter((model) => {
-    const provider = model.id.split('/')[0];
-    return providers.has(provider);
+async function fetchAnthropicModels(apiKey: string): Promise<CopilotModel[]> {
+  const response = await fetch(ANTHROPIC_MODELS_URL, {
+    ...PROVIDER_FETCH_INIT,
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
   });
-}
 
-export async function fetchCopilotModels(): Promise<CopilotModel[]> {
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Anthropic models API failed (${response.status}): ${body.slice(0, 300)}`);
+  }
+
+  const payload = (await response.json()) as AnthropicListModelsResponse;
   const models: CopilotModel[] = [];
-  const failures: string[] = [];
-
-  models.push(...getBuiltinModelsForConfiguredProviders());
-
-  const googleKey = getGoogleApiKey();
-  if (googleKey) {
-    try {
-      models.push(...(await fetchGoogleModels(googleKey)));
-    } catch (error) {
-      failures.push(
-        error instanceof Error ? error.message : 'Failed to fetch Google models.',
-      );
-    }
+  for (const record of payload.data ?? []) {
+    const mapped = mapAnthropicModel(record);
+    if (mapped) models.push(mapped);
   }
-
-  const openAiKey = getOpenAiApiKey();
-  if (openAiKey) {
-    try {
-      models.push(...(await fetchOpenAiModels(openAiKey)));
-    } catch (error) {
-      failures.push(
-        error instanceof Error ? error.message : 'Failed to fetch OpenAI models.',
-      );
-    }
-  }
-
-  const merged = mergeModels(models);
-  if (merged.length > 0) return merged;
-
-  if (failures.length > 0) {
-    throw new Error(failures.join(' '));
-  }
-
-  throw new Error(
-    'No Copilot models available. Configure at least one provider API key (OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY, or MINIMAX_API_KEY).',
-  );
-}
-
-export async function getCopilotModelsCached(): Promise<CopilotModel[]> {
-  const now = Date.now();
-  if (cachedModels && now < cacheExpiresAt) return cachedModels;
-
-  const models = await fetchCopilotModels();
-  cachedModels = models;
-  cacheExpiresAt = now + CACHE_TTL_MS;
   return models;
 }
 
-export function clearCopilotModelsCache(): void {
-  cachedModels = null;
-  cacheExpiresAt = 0;
+async function fetchMinimaxModels(apiKey: string): Promise<CopilotModel[]> {
+  const baseUrl =
+    process.env.MINIMAX_BASE_URL?.trim() || 'https://api.minimaxi.com/v1';
+  const response = await fetch(`${baseUrl.replace(/\/$/, '')}/models`, {
+    ...PROVIDER_FETCH_INIT,
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`MiniMax models API failed (${response.status}): ${body.slice(0, 300)}`);
+  }
+
+  const payload = (await response.json()) as OpenAiListModelsResponse;
+  const models: CopilotModel[] = [];
+  for (const record of payload.data ?? []) {
+    const mapped = mapMinimaxModel(record);
+    if (mapped) models.push(mapped);
+  }
+  return models;
+}
+
+type ProviderModelsResult = {
+  models: CopilotModel[];
+  source: ProviderModelSource;
+  warning?: string;
+};
+
+async function resolveProviderModels(
+  provider: string,
+  apiKey: string | undefined,
+  fetchModels: (key: string) => Promise<CopilotModel[]>,
+): Promise<ProviderModelsResult> {
+  if (!apiKey) {
+    return { models: [], source: 'none' };
+  }
+
+  try {
+    const models = await fetchModels(apiKey);
+    if (models.length === 0) {
+      return {
+        models: [],
+        source: 'error',
+        warning: `${provider} models API returned no usable models.`,
+      };
+    }
+    return { models, source: 'api' };
+  } catch (error) {
+    return {
+      models: [],
+      source: 'error',
+      warning:
+        error instanceof Error
+          ? error.message
+          : `Failed to fetch ${provider} models.`,
+    };
+  }
+}
+
+/** Live fetch from configured provider APIs only — no hardcoded model lists. */
+export async function fetchCopilotModels(): Promise<CopilotModelsFetchResult> {
+  const [openAiResult, googleResult, anthropicResult, minimaxResult] =
+    await Promise.all([
+      resolveProviderModels('OpenAI', getOpenAiApiKey(), fetchOpenAiModels),
+      resolveProviderModels('Google', getGoogleApiKey(), fetchGoogleModels),
+      resolveProviderModels('Anthropic', getAnthropicApiKey(), fetchAnthropicModels),
+      resolveProviderModels('MiniMax', getMinimaxApiKey(), fetchMinimaxModels),
+    ]);
+
+  const warnings = [
+    openAiResult.warning,
+    googleResult.warning,
+    anthropicResult.warning,
+    minimaxResult.warning,
+  ].filter((message): message is string => Boolean(message));
+
+  const sources: CopilotModelsFetchResult['sources'] = {
+    openai: openAiResult.source,
+    google: googleResult.source,
+    anthropic: anthropicResult.source,
+    minimax: minimaxResult.source,
+  };
+
+  const merged = mergeModels([
+    ...openAiResult.models,
+    ...googleResult.models,
+    ...anthropicResult.models,
+    ...minimaxResult.models,
+  ]);
+
+  if (merged.length > 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Copilot models]', {
+        sources,
+        openAiModelCount: merged.filter((model) => model.id.startsWith('openai/')).length,
+        googleModelCount: merged.filter((model) => model.id.startsWith('google/')).length,
+        anthropicModelCount: merged.filter((model) => model.id.startsWith('anthropic/')).length,
+        minimaxModelCount: merged.filter((model) => model.id.startsWith('minimax/')).length,
+        total: merged.length,
+        warnings,
+      });
+    }
+
+    return { models: merged, warnings, sources };
+  }
+
+  if (warnings.length > 0) {
+    throw new Error(warnings.join(' '));
+  }
+
+  throw new Error(
+    'No models available. Configure at least one provider API key (OPENAI_API_KEY, GOOGLE_API_KEY, etc.).',
+  );
+}
+
+function countModelsByProvider(models: CopilotModel[], provider: string): number {
+  const prefix = `${provider}/`;
+  return models.filter((model) => model.id.startsWith(prefix)).length;
+}
+
+export function countCopilotModelsByProvider(
+  models: CopilotModel[],
+): Record<'openai' | 'google' | 'anthropic' | 'minimax', number> {
+  return {
+    openai: countModelsByProvider(models, 'openai'),
+    google: countModelsByProvider(models, 'google'),
+    anthropic: countModelsByProvider(models, 'anthropic'),
+    minimax: countModelsByProvider(models, 'minimax'),
+  };
 }

@@ -10,7 +10,7 @@ import {
   ALLOWED_EMAIL_DOMAINS_MESSAGE,
   isAllowedCustomerSupplierEmail,
 } from '@/utils/email';
-import AuthPageLayout, { authCardSx } from '@/components/storefront/AuthPageLayout';
+import AuthPageLayout, { authCardSx, authButtonSx, authFieldSx } from '@/components/storefront/AuthPageLayout';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -47,11 +47,11 @@ export default function RegisterPage() {
           </Typography>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <Box component="form" onSubmit={handleSubmit}>
-            <TextField fullWidth label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required sx={{ mb: 2 }} />
-            <TextField fullWidth label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required sx={{ mb: 2 }} />
-            <TextField fullWidth label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} sx={{ mb: 2 }} />
-            <TextField fullWidth label="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required slotProps={{ htmlInput: { minLength: 6 } }} sx={{ mb: 3 }} />
-            <Button type="submit" variant="contained" fullWidth size="large" disabled={loading}>
+            <TextField fullWidth label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required sx={{ mb: 2, ...authFieldSx }} />
+            <TextField fullWidth label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required sx={{ mb: 2, ...authFieldSx }} />
+            <TextField fullWidth label="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} sx={{ mb: 2, ...authFieldSx }} />
+            <TextField fullWidth label="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required slotProps={{ htmlInput: { minLength: 6 } }} sx={{ mb: 3, ...authFieldSx }} />
+            <Button type="submit" variant="contained" fullWidth disabled={loading} sx={authButtonSx}>
               {loading ? 'Creating account...' : 'Create Account'}
             </Button>
           </Box>

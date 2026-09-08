@@ -13,6 +13,7 @@ import {
 import {
   customerFetch,
   isAuthRequired,
+  logOpenApi,
   substitutePathParams,
   toToolError,
 } from './customerApiClient';
@@ -116,6 +117,8 @@ function createToolFromOperation(
     description: buildDescription(operation),
     parameters: parametersSchema,
     execute: async (args) => {
+      logOpenApi('Tool invoked', { tool: toolName, args });
+
       try {
         const { apiPath, params, body } = splitExecuteArgs(
           toolName,
@@ -126,15 +129,21 @@ function createToolFromOperation(
           args as Record<string, unknown>,
         );
 
-        return await customerFetch(apiPath, {
+        const result = await customerFetch(apiPath, {
           token: context.token,
           method: httpMethod,
           params,
           body,
           requireAuth,
+          toolName,
         });
+
+        logOpenApi('Tool returned', { tool: toolName, result });
+        return result;
       } catch (error) {
-        return toToolError(error);
+        const toolError = toToolError(error);
+        logOpenApi('Tool error', { tool: toolName, error: toolError });
+        return toolError;
       }
     },
   });

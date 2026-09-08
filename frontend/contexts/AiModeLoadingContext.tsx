@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useMemo, useState } from 'react';
-import { getAiModeLoadingDeadline } from '@/lib/ai-mode/entry';
+import { ensureAiModeLoadingDeadline } from '@/lib/ai-mode/entry';
 
 type AiModeLoadingContextValue = {
   isLoading: boolean;
@@ -15,7 +15,7 @@ const AiModeLoadingContext = createContext<AiModeLoadingContextValue | undefined
 function getInitialAiModeLoading() {
   if (typeof window === 'undefined') return false;
 
-  const deadline = getAiModeLoadingDeadline();
+  const deadline = ensureAiModeLoadingDeadline();
   return deadline !== null && deadline > Date.now();
 }
 

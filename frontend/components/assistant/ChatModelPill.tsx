@@ -198,11 +198,16 @@ export default function ChatModelPill({ variant = 'toolbar' }: ChatModelPillProp
                 py: 0.5,
                 minHeight: 32,
                 flexShrink: 0,
+                mr: 0.125,
                 boxShadow: 'none',
                 '&:hover': {
                   bgcolor: colors.orangePale,
                   color: colors.textPrimary,
                   boxShadow: 'none',
+                },
+                '&[aria-expanded="true"]': {
+                  bgcolor: colors.orangePale,
+                  color: colors.textPrimary,
                 },
                 '& .MuiButton-endIcon': { ml: 0.25, mr: 0 },
               }
@@ -292,11 +297,18 @@ export default function ChatModelPill({ variant = 'toolbar' }: ChatModelPillProp
             <Box
               role="listbox"
               aria-label="AI models"
-              className="ai-mode-model-selector-list"
               sx={{
                 maxHeight: LIST_MAX_HEIGHT,
                 overflowY: 'auto',
                 py: 0.5,
+                scrollbarWidth: 'thin',
+                scrollbarColor: `${colors.orangePaleBorder} transparent`,
+                '&::-webkit-scrollbar': { width: 8 },
+                '&::-webkit-scrollbar-thumb': {
+                  bgcolor: colors.orangePaleBorder,
+                  borderRadius: '999px',
+                },
+                '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
               }}
             >
               {filteredModels.length === 0 ? (
