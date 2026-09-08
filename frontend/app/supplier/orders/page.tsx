@@ -40,6 +40,19 @@ function fulfillmentLabel(status: string) {
   return status === 'delivered' ? 'fulfilled' : status;
 }
 
+const statusColumnSx = {
+  width: '1%',
+  whiteSpace: 'nowrap',
+  pl: 3,
+  pr: 2,
+};
+
+const statusSelectSx = {
+  minWidth: 128,
+  width: 128,
+  borderRadius: '8px',
+};
+
 export default function SupplierOrdersPage() {
   const [orders, setOrders] = useState<SupplierOrder[]>([]);
   const [productImages, setProductImages] = useState<Record<string, string>>({});
@@ -121,7 +134,7 @@ export default function SupplierOrdersPage() {
                 <TableCell>Items</TableCell>
                 <TableCell>Subtotal</TableCell>
                 <TableCell>Date</TableCell>
-                <TableCell>Status</TableCell>
+                <TableCell sx={statusColumnSx}>Status</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -143,13 +156,16 @@ export default function SupplierOrdersPage() {
                       <TableCell>{items.length}</TableCell>
                       <TableCell>{formatPrice(subtotal)}</TableCell>
                       <TableCell>{formatDate(order.createdAt)}</TableCell>
-                      <TableCell>
+                      <TableCell
+                        sx={statusColumnSx}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Select
                           size="small"
                           value={status}
                           onChange={(e) => handleStatusChange(id, e.target.value)}
                           onClick={(e) => e.stopPropagation()}
-                          sx={{ minWidth: 140, borderRadius: '8px' }}
+                          sx={statusSelectSx}
                         >
                           {fulfillmentOptions.map((s) => (
                             <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
@@ -158,50 +174,110 @@ export default function SupplierOrdersPage() {
                       </TableCell>
                     </TableRow>
                     <TableRow key={`${id}-detail`}>
-                      <TableCell colSpan={6} sx={{ py: 0, borderBottom: expandedId === id ? undefined : 'none' }}>
+                      <TableCell colSpan={6} sx={{ py: 0, px: 0, borderBottom: expandedId === id ? undefined : 'none' }}>
                         <Collapse in={expandedId === id}>
-                          <Box sx={{ py: 2, px: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>Your line items</Typography>
-                            {items.map((item, idx) => (
-                              <Box
-                                key={idx}
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  py: 0.75,
-                                  borderBottom: `1px solid ${colors.divider}`,
-                                }}
-                              >
-                                <Typography
-                                  component="button"
-                                  type="button"
-                                  variant="body2"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedItem(item);
-                                  }}
+                          <Box
+                            sx={{
+                              mx: 2,
+                              my: 1.5,
+                              p: 2,
+                              borderRadius: '12px',
+                              bgcolor: colors.orangePale,
+                              border: `1px solid ${colors.orangePaleBorder}`,
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ fontWeight: 700, mb: 1.5, color: colors.charcoal }}
+                            >
+                              Your line items
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                              {items.map((item, idx) => (
+                                <Box
+                                  key={idx}
                                   sx={{
-                                    p: 0,
-                                    border: 'none',
-                                    bgcolor: 'transparent',
-                                    font: 'inherit',
-                                    color: 'primary.main',
-                                    textAlign: 'left',
-                                    cursor: 'pointer',
-                                    textDecoration: 'underline',
-                                    textUnderlineOffset: '2px',
-                                    '&:hover': { color: 'primary.dark' },
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1.5,
+                                    p: 1.25,
+                                    borderRadius: '10px',
+                                    bgcolor: colors.white,
+                                    border: `1px solid ${colors.orangePaleBorder}`,
                                   }}
                                 >
-                                  {item.nameSnapshot} × {item.quantity}
-                                </Typography>
-                                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                  {formatPrice(item.lineTotal)}
-                                </Typography>
-                              </Box>
-                            ))}
-                            <Box sx={{ mt: 1 }}>
+                                  <Box
+                                    component="img"
+                                    src={productImages[item.productId] || PLACEHOLDER_IMAGE}
+                                    alt=""
+                                    sx={{
+                                      width: 48,
+                                      height: 48,
+                                      borderRadius: '8px',
+                                      objectFit: 'cover',
+                                      flexShrink: 0,
+                                      border: `1px solid ${colors.divider}`,
+                                      bgcolor: 'grey.50',
+                                    }}
+                                  />
+                                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography
+                                      component="button"
+                                      type="button"
+                                      variant="body2"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedItem(item);
+                                      }}
+                                      sx={{
+                                        p: 0,
+                                        border: 'none',
+                                        bgcolor: 'transparent',
+                                        font: 'inherit',
+                                        fontWeight: 600,
+                                        color: colors.charcoal,
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        display: 'block',
+                                        mb: 0.25,
+                                        '&:hover': { color: 'primary.main' },
+                                      }}
+                                    >
+                                      {item.nameSnapshot}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      Qty: {item.quantity}
+                                      {item.skuSnapshot ? ` · SKU: ${item.skuSnapshot}` : ''}
+                                    </Typography>
+                                  </Box>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ fontWeight: 700, color: colors.charcoal, flexShrink: 0 }}
+                                  >
+                                    {formatPrice(item.lineTotal)}
+                                  </Typography>
+                                </Box>
+                              ))}
+                            </Box>
+                            <Box
+                              sx={{
+                                mt: 1.5,
+                                pt: 1.5,
+                                borderTop: `1px solid ${colors.orangePaleBorder}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 1,
+                                flexWrap: 'wrap',
+                              }}
+                            >
                               <StatusChip status={fulfillmentLabel(status)} />
+                              <Typography variant="caption" color="text.secondary">
+                                Line items total:{' '}
+                                <Box component="span" sx={{ fontWeight: 700, color: colors.charcoal }}>
+                                  {formatPrice(subtotal)}
+                                </Box>
+                              </Typography>
                             </Box>
                           </Box>
                         </Collapse>

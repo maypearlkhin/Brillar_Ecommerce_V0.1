@@ -15,13 +15,88 @@ import { Product } from '@/types';
 import { adminFieldSx, adminSaveButtonSx } from '@/components/admin/adminDialogStyles';
 import { numberInputSlotProps } from '@/utils/numberInput';
 
-const updateStockColumnSx = { width: 176, pr: 2.5, whiteSpace: 'nowrap' };
+const updateStockColumnSx = {
+  width: '1%',
+  whiteSpace: 'nowrap',
+  pl: 3,
+  pr: 2,
+};
+
+const stockControlHeight = 31;
+
+const stockInputSx = {
+  width: 64,
+  flexShrink: 0,
+  ...adminFieldSx,
+  '& .MuiOutlinedInput-root': {
+    height: stockControlHeight,
+    borderRadius: '10px',
+  },
+  '& .MuiOutlinedInput-notchedOutline': {
+    transition: 'none',
+  },
+  '& .MuiOutlinedInput-input': {
+    py: 0,
+    px: 0.75,
+    fontSize: '0.75rem',
+    textAlign: 'center',
+  },
+};
+
+const stockSaveButtonSx = {
+  ...adminSaveButtonSx,
+  width: 64,
+  minWidth: 64,
+  maxWidth: 64,
+  height: stockControlHeight,
+  flexShrink: 0,
+  fontSize: '0.75rem',
+  px: 0,
+  py: 0,
+  lineHeight: 1,
+  boxShadow: 'none',
+  transition: 'background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease',
+  transform: 'none',
+  '&:hover': {
+    boxShadow: 'none',
+    transform: 'none',
+  },
+  '&:active': {
+    boxShadow: 'none',
+    transform: 'none',
+  },
+  '&.Mui-disabled': {
+    boxShadow: 'none',
+    transform: 'none',
+  },
+};
+
+function isStockDirty(product: Product, stockEdits: Record<string, string>) {
+  const edited = stockEdits[product._id];
+  if (edited === undefined || edited.trim() === '') return false;
+  const qty = Number(edited);
+  if (Number.isNaN(qty) || qty < 0) return false;
+  return qty !== product.stockQuantity;
+}
+
+function computeSummary(products: Product[]): InventorySummary {
+  const threshold = (product: Product) => product.lowStockThreshold ?? 5;
+
+  return {
+    totalSkus: products.length,
+    lowStock: products.filter(
+      (product) => product.stockQuantity > 0 && product.stockQuantity <= threshold(product),
+    ).length,
+    outOfStock: products.filter((product) => product.stockQuantity === 0).length,
+  };
+}
 
 export default function SupplierInventoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [summary, setSummary] = useState<InventorySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -36,11 +111,25 @@ export default function SupplierInventoryPage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleSaveStock = async (id: string) => {
+  const handleSaveStock = async (product: Product) => {
+    const id = product._id;
+    if (!isStockDirty(product, stockEdits) || savingId === id) return;
+
     const qty = Number(stockEdits[id]);
     if (Number.isNaN(qty) || qty < 0) return;
-    await supplierService.updateStock(id, qty);
-    load();
+
+    try {
+      setSavingId(id);
+      const updated = await supplierService.updateStock(id, qty);
+      setProducts((prev) => {
+        const nextProducts = prev.map((item) => (item._id === id ? updated : item));
+        setSummary(computeSummary(nextProducts));
+        return nextProducts;
+      });
+      setStockEdits((prev) => ({ ...prev, [id]: String(updated.stockQuantity) }));
+    } finally {
+      setSavingId(null);
+    }
   };
 
   if (loading) return <LoadingState />;
@@ -64,7 +153,7 @@ export default function SupplierInventoryPage() {
               <TableCell>Available</TableCell>
               <TableCell>Threshold</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell sx={updateStockColumnSx} align="right">Update stock</TableCell>
+              <TableCell sx={updateStockColumnSx}>Update stock</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -79,35 +168,48 @@ export default function SupplierInventoryPage() {
                   </TableCell>
                   <TableCell>{p.lowStockThreshold ?? 5}</TableCell>
                   <TableCell><StatusChip status={p.status} /></TableCell>
-                  <TableCell sx={updateStockColumnSx} align="right">
+                  <TableCell
+                    sx={updateStockColumnSx}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Box
                       sx={{
-                        display: 'inline-flex',
+                        display: 'flex',
                         alignItems: 'center',
                         gap: 1,
-                        verticalAlign: 'middle',
+                        width: 136,
+                        minWidth: 136,
+                        flexShrink: 0,
                       }}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <TextField
                         size="small"
                         type="number"
                         value={stockEdits[p._id] ?? ''}
-                        onChange={(e) => setStockEdits({ ...stockEdits, [p._id]: e.target.value })}
-                        sx={{ width: 80, ...adminFieldSx }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setStockEdits((prev) => ({ ...prev, [p._id]: value }));
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        sx={stockInputSx}
                         slotProps={numberInputSlotProps}
                       />
                       <Button
+                        type="button"
                         size="small"
                         variant="contained"
                         color="secondary"
-                        onClick={() => handleSaveStock(p._id)}
-                        sx={{
-                          ...adminSaveButtonSx,
-                          minWidth: 64,
-                          fontSize: '0.75rem',
-                          px: 1.5,
-                          py: 0.65,
+                        disableRipple
+                        disableElevation
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.currentTarget.blur();
+                          void handleSaveStock(p);
                         }}
+                        disabled={!isStockDirty(p, stockEdits) || savingId === p._id}
+                        aria-busy={savingId === p._id}
+                        sx={stockSaveButtonSx}
                       >
                         Save
                       </Button>
