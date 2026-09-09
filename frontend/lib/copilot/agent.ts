@@ -7,8 +7,8 @@ import { createAllTools } from './tools';
 
 const OPENAI_TOOL_DISCIPLINE = `OpenAI-specific (mandatory):
 - Return at most ONE tool call per assistant response. Parallel / batched tool calls break UI generation.
-- Step 1: call ONLY the data-fetch tool (search_products or get_featured_products).
-- Step 2: after tool results are in context, call ONLY generate_a2ui with mapped ProductList data.
+- Step 1: call ONLY the data-fetch tool (search_products, get_featured_products, get_order_history, get_cart, etc.).
+- Step 2: after tool results are in context, call ONLY generate_a2ui with the matching catalog component (ProductList, OrderList, CartSummary, ...).
 - Never call generate_a2ui in step 1 alongside data tools.`;
 
 function buildShoppingPrompt(modelId: string, sessionLine: string): string {

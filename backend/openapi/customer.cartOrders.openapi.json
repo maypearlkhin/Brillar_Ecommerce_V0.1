@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Brillar E-Commerce Customer — Account, Cart, Checkout & Orders API",
-    "description": "Authenticated customer storefront endpoints. Used by the A2UI shopping assistant (`get_profile`, `get_cart`, `add_to_cart`, `update_cart_item`, `remove_from_cart`, `get_order_history`, `get_order_details`, `buy_again` tools).\n\n**Authentication:** All endpoints except `POST /api/auth/register` and `POST /api/auth/login` require `Authorization: Bearer <JWT>`. Obtain a token from register or login.\n\n**Checkout:** Places an order from the customer's **existing cart**. Populate the cart first via `POST /api/cart`. The assistant directs users to `/checkout` for payment in chat; this endpoint is for the web checkout flow.\n\n**Response envelope:** `{ success, message, data }` on success, or `{ success, message, errors }` on failure.",
+    "description": "Authenticated customer storefront endpoints. Used by the A2UI shopping assistant (`get_profile`, `get_cart`, `add_to_cart`, `update_cart_item`, `remove_from_cart`, `get_order_history`, `get_order_details`, `buy_again` tools). Storefront logout uses the frontend `logout_session` tool, not an OpenAPI tool.\n\n**Authentication:** All endpoints except `POST /api/auth/register` and `POST /api/auth/login` require `Authorization: Bearer <JWT>`. Obtain a token from register or login.\n\n**Checkout:** Places an order from the customer's **existing cart**. Populate the cart first via `POST /api/cart`. The assistant directs users to `/checkout` for payment in chat; this endpoint is for the web checkout flow.\n\n**Response envelope:** `{ success, message, data }` on success, or `{ success, message, errors }` on failure.",
     "version": "1.0.0",
     "contact": {
       "name": "Brillar API Support",
@@ -83,6 +83,32 @@
           },
           "401": {
             "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "description": "End the current customer session. Requires a valid JWT. Storefront logout is handled by the frontend logout_session tool, not this API.",
+        "tags": ["Auth"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LogoutResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -216,7 +242,7 @@
     "/api/cart": {
       "get": {
         "summary": "Get Cart",
-        "description": "Get the current shopping cart for the logged-in customer. Copilot tool: `get_cart`.",
+        "description": "Get the current shopping cart for the logged-in customer. Copilot tool: `get_cart`. Returns the full cart — map EVERY item into CartSummary with no maximum.",
         "tags": ["Cart"],
         "security": [{ "bearerAuth": [] }],
         "responses": {
@@ -455,7 +481,7 @@
     "/api/orders": {
       "get": {
         "summary": "Get Order History",
-        "description": "Paginated order history for the logged-in customer. Copilot tool: `get_order_history`.",
+        "description": "Paginated order history for the logged-in customer. Copilot tool: `get_order_history`. Default page size is 10 — pass a high `limit` (e.g. 100) so ALL orders are returned. Include every order in OrderList; do not truncate.",
         "tags": ["Orders"],
         "security": [{ "bearerAuth": [] }],
         "parameters": [
@@ -650,6 +676,19 @@
           "success": { "type": "boolean", "example": true },
           "message": { "type": "string" },
           "data": { "$ref": "#/components/schemas/AuthData" }
+        }
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Logged out successfully" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "loggedOut": { "type": "boolean", "example": true }
+            }
+          }
         }
       },
       "ProfileResponse": {
@@ -902,7 +941,7 @@
   "tags": [
     {
       "name": "Auth",
-      "description": "Register and login (no JWT required)"
+      "description": "Register and login (no JWT required). Logout requires JWT."
     },
     {
       "name": "Account",

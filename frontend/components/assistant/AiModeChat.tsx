@@ -3,11 +3,12 @@
 import {
   CopilotChat,
   CopilotChatMessageView,
+  useAgent,
   useConfigureSuggestions,
   useFrontendTool,
 } from '@copilotkit/react-core/v2';
 import { Box, GlobalStyles } from '@mui/material';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { z } from 'zod';
 import AiModeChatInput from '@/components/assistant/AiModeChatInput';
 import AiModeConversationLayout from '@/components/assistant/AiModeConversationLayout';
@@ -16,12 +17,21 @@ import AiModeTextMessageView from '@/components/assistant/AiModeTextMessageView'
 import AiModeWelcomeScreen from '@/components/assistant/AiModeWelcomeScreen';
 import AiModePageReadySignal from '@/components/assistant/AiModePageReadySignal';
 import { AiModeAuthUiProvider } from '@/contexts/AiModeAuthUiContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { AI_MODE_SUGGESTIONS } from '@/lib/copilot/suggestions';
 import { colors } from '@/theme/colors';
 
 const CHAT_PADDING_X = '12vw';
 const CHAT_INPUT_MAX_WIDTH = 760;
+const CART_MUTATION_TOOLS = new Set([
+  'add_to_cart',
+  'remove_from_cart',
+  'update_cart_item',
+  'checkout',
+  'buy_again',
+]);
+const AUTH_MUTATION_TOOLS = new Set(['login', 'register', 'logout']);
 
 function CartSyncTool() {
   const { refreshCart } = useCart();
@@ -36,6 +46,61 @@ function CartSyncTool() {
       return { synced: true };
     },
   });
+
+  return null;
+}
+
+function LogoutTool() {
+  const { logout } = useAuth();
+
+  useFrontendTool({
+    name: 'logout_session',
+    description:
+      'Log the customer out of the storefront. Call this when the user asks to log out or sign out. Clears the session and updates the navbar.',
+    parameters: z.object({}),
+    handler: async () => {
+      const hasSession =
+        typeof window !== 'undefined' &&
+        Boolean(localStorage.getItem('token') && localStorage.getItem('user'));
+      if (!hasSession) {
+        return { loggedOut: false, reason: 'already_guest' };
+      }
+      await logout();
+      return { loggedOut: true };
+    },
+  });
+
+  return null;
+}
+
+function AiModeStorefrontSyncBridge() {
+  const { agent } = useAgent();
+  const { refreshCart } = useCart();
+  const { refreshAuthState } = useAuth();
+  const processedMessageIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (agent.isRunning) return;
+
+    const pendingToolNames = agent.messages.flatMap((message) => {
+      if (message.role !== 'assistant') return [];
+      if (processedMessageIdsRef.current.has(message.id)) return [];
+      if (!Array.isArray(message.toolCalls) || message.toolCalls.length === 0) return [];
+
+      processedMessageIdsRef.current.add(message.id);
+      return message.toolCalls
+        .map((call) => call.function?.name)
+        .filter((name): name is string => Boolean(name));
+    });
+
+    if (pendingToolNames.some((name) => AUTH_MUTATION_TOOLS.has(name))) {
+      void refreshAuthState();
+    }
+
+    if (pendingToolNames.some((name) => CART_MUTATION_TOOLS.has(name))) {
+      void refreshCart();
+    }
+  }, [agent.isRunning, agent.messages, refreshAuthState, refreshCart]);
 
   return null;
 }
@@ -188,6 +253,8 @@ export default function AiModeChat() {
         <AiModeAuthUiProvider>
           <AiModePageReadySignal />
           <CartSyncTool />
+          <LogoutTool />
+          <AiModeStorefrontSyncBridge />
           <AiModeSuggestionsConfig />
 
           <CopilotChat

@@ -3,11 +3,21 @@
 import { useAgent, useRenderActivityMessage } from '@copilotkit/react-core/v2';
 import type { ActivityMessage, Message } from '@ag-ui/core';
 import StopRounded from '@mui/icons-material/StopRounded';
-import { Box, Button, Typography } from '@mui/material';
+import { Alert, Box, Button, Snackbar, Typography } from '@mui/material';
 import { useMemo, type ReactNode } from 'react';
 import AiModeGeneratingLoader from '@/components/assistant/AiModeGeneratingLoader';
+import { useAiModeAuthUi } from '@/contexts/AiModeAuthUiContext';
+import { extractComponentNamesFromActivityContent } from '@/lib/a2ui/extractCatalogComponents';
 import { useStopAgentRun } from '@/lib/copilot/useStopAgentRun';
 import { colors } from '@/theme/colors';
+
+const AUTH_COMPONENT_NAMES = new Set(['AuthLoginCard', 'AuthSignupCard']);
+
+type RenderableSurface = {
+  id: string;
+  node: ReactNode;
+  componentNames: string[];
+};
 
 function getLastUserMessageIndex(messages: Message[]): number {
   for (let i = messages.length - 1; i >= 0; i -= 1) {
@@ -40,11 +50,12 @@ function getLatestRenderableSurfaces(
   messages: ActivityMessage[],
   renderActivityMessage: (message: ActivityMessage) => ReactNode,
   options?: { usePrevious?: boolean },
-) {
+) : RenderableSurface[] {
   const surfaces = messages
     .map((message) => ({
       id: message.id,
       node: renderActivityMessage(message),
+      componentNames: extractComponentNamesFromActivityContent(message.content),
     }))
     .filter((entry) => entry.node);
 
@@ -61,6 +72,7 @@ export default function AiModeUiPane() {
   const { agent } = useAgent();
   const { renderActivityMessage } = useRenderActivityMessage();
   const { stopRun, isRunning } = useStopAgentRun();
+  const { authSuccessMessage, clearAuthSuccessMessage, isAuthenticated } = useAiModeAuthUi();
 
   const { currentTurnMessages, previousTurnMessages } = useMemo(() => {
     const lastUserIndex = getLastUserMessageIndex(agent.messages);
@@ -112,6 +124,15 @@ export default function AiModeUiPane() {
         ? previousTurnLatestSurfaces
         : currentLatestSurfaces;
 
+  const shouldHideStaleAuthSurface =
+    isAuthenticated &&
+    displayedSurfaces.length > 0 &&
+    displayedSurfaces.every(
+      (entry) =>
+        entry.componentNames.length > 0 &&
+        entry.componentNames.every((componentName) => AUTH_COMPONENT_NAMES.has(componentName)),
+    );
+
   return (
     <Box
       component="section"
@@ -138,7 +159,7 @@ export default function AiModeUiPane() {
           p: { xs: '1.25rem 1.5rem', md: '1.5rem 2rem' },
         }}
       >
-        {displayedSurfaces.length > 0 ? (
+        {displayedSurfaces.length > 0 && !shouldHideStaleAuthSurface ? (
           displayedSurfaces.map((entry) => (
             <Box key={entry.id} sx={{ width: '100%', maxWidth: 960, mx: 'auto' }}>
               {entry.node}
@@ -217,6 +238,25 @@ export default function AiModeUiPane() {
           </Button>
         </Box>
       ) : null}
+
+      <Snackbar
+        open={Boolean(authSuccessMessage)}
+        autoHideDuration={3000}
+        onClose={(_, reason) => {
+          if (reason === 'clickaway') return;
+          clearAuthSuccessMessage();
+        }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={clearAuthSuccessMessage}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%', alignItems: 'center' }}
+        >
+          {authSuccessMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

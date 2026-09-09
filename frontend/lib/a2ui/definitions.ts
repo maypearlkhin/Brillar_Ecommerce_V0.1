@@ -32,6 +32,16 @@ const orderLineShape = z.object({
   lineTotal: z.number(),
 });
 
+const orderHistoryItemShape = z.object({
+  orderId: z.string(),
+  orderNumber: z.string(),
+  status: z.string(),
+  total: z.number(),
+  createdAt: z.string(),
+  itemSummary: z.string().optional(),
+  itemCount: z.number().optional(),
+});
+
 export const catalogDefinitions = {
   ProductList: {
     description:
@@ -60,7 +70,7 @@ export const catalogDefinitions = {
   },
   CartSummary: {
     description:
-      'SELF-CONTAINED interactive cart view. Each item MUST include productId for button actions. ' +
+      'SELF-CONTAINED interactive cart view. Include EVERY get_cart item — no maximum cap. Each item MUST include productId for button actions. ' +
       'Use ONE CartSummary per surface — no layout primitives or children.',
     props: z.object({
       title: z.string().optional(),
@@ -72,7 +82,8 @@ export const catalogDefinitions = {
   },
   OrderStatusCard: {
     description:
-      'SELF-CONTAINED order status card. Include orderId for view_order action. ' +
+      'SELF-CONTAINED card for ONE newly placed order (after checkout). Include orderId for view_order. ' +
+      'Do NOT use this for order history. Use OrderList when showing multiple orders. ' +
       'Use ONE OrderStatusCard per surface — no children.',
     props: z.object({
       orderId: z.string(),
@@ -81,6 +92,17 @@ export const catalogDefinitions = {
       total: z.number(),
       createdAt: z.string(),
       itemSummary: z.string().optional(),
+    }),
+  },
+  OrderList: {
+    description:
+      'SELF-CONTAINED order history list. Put EVERY order from get_order_history into the orders array — no maximum cap. ' +
+      'Use when the user asks for orders, order history, or my order list. ' +
+      'Use ONE OrderList per surface — do NOT use ProductList, OrderStatusCard children, or layout primitives. ' +
+      'Map get_order_history data.orders: orderId from _id, status from displayStatus or status.',
+    props: z.object({
+      title: z.string().optional(),
+      orders: z.array(orderHistoryItemShape),
     }),
   },
   OrderDetailCard: {

@@ -8,6 +8,8 @@ import { getRoleHomePath } from '@/utils/authRedirect';
 import { sendLoginEvent } from '@/utils/atenxionLogin';
 import { sendLogoutEvent } from '@/utils/atenxionLogout';
 
+const AUTH_STATE_CHANGED_EVENT = 'brillar:auth-state-changed';
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -18,9 +20,15 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
   isAuthenticated: boolean;
+  refreshAuthState: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function emitAuthStateChanged() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(AUTH_STATE_CHANGED_EVENT));
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -28,20 +36,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supplierStatus, setSupplierStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshAuthState = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (storedToken && storedUser) {
+
+    if (!storedToken || !storedUser) {
+      setToken(null);
+      setUser(null);
+      setSupplierStatus(null);
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(storedUser) as User;
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      authService.getProfile().then(setUser).catch(() => {
+      setUser(parsedUser);
+      const profile = await authService.getProfile();
+      setUser(profile);
+      localStorage.setItem('user', JSON.stringify(profile));
+    } catch {
+      if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        setToken(null);
-        setUser(null);
-      });
+      }
+      setToken(null);
+      setUser(null);
+      setSupplierStatus(null);
     }
-    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void refreshAuthState().finally(() => {
+      setLoading(false);
+    });
+  }, [refreshAuthState]);
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      void refreshAuthState();
+    };
+
+    window.addEventListener('storage', syncAuthState);
+    window.addEventListener(AUTH_STATE_CHANGED_EVENT, syncAuthState);
+
+    return () => {
+      window.removeEventListener('storage', syncAuthState);
+      window.removeEventListener(AUTH_STATE_CHANGED_EVENT, syncAuthState);
+    };
   }, []);
 
   const getRedirectPath = (u: User, status?: string | null): string => {
@@ -59,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSupplierStatus(result.supplierStatus || null);
     localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
+    emitAuthStateChanged();
     void sendLoginEvent();
     return { redirect: getRedirectPath(result.user, result.supplierStatus), role: result.user.role };
   };
@@ -69,6 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(result.token);
     localStorage.setItem('token', result.token);
     localStorage.setItem('user', JSON.stringify(result.user));
+    emitAuthStateChanged();
     void sendLoginEvent();
   };
 
@@ -79,11 +124,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSupplierStatus(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    emitAuthStateChanged();
   }, []);
 
   const updateUser = (u: User) => {
     setUser(u);
     localStorage.setItem('user', JSON.stringify(u));
+    emitAuthStateChanged();
   };
 
   return (
@@ -98,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateUser,
         isAuthenticated: !!user && !!token,
+        refreshAuthState,
       }}
     >
       {children}

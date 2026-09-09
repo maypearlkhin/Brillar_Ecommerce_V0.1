@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -31,17 +32,31 @@ type AiModeAuthUiContextValue = {
   loginError: string;
   signupError: string;
   submitting: boolean;
+  isAuthenticated: boolean;
+  authSuccessMessage: string;
+  clearAuthSuccessMessage: () => void;
 };
 
 const AiModeAuthUiContext = createContext<AiModeAuthUiContextValue | undefined>(undefined);
 
 export function AiModeAuthUiProvider({ children }: { children: ReactNode }) {
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const { refreshCart } = useCart();
   const [authMode, setAuthMode] = useState<AiModeAuthMode>('login');
   const [loginError, setLoginError] = useState('');
   const [signupError, setSignupError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [authSuccessMessage, setAuthSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setAuthSuccessMessage('');
+    }
+  }, [isAuthenticated]);
+
+  const clearAuthSuccessMessage = useCallback(() => {
+    setAuthSuccessMessage('');
+  }, []);
 
   const submitLogin = useCallback(
     async (email: string, password: string) => {
@@ -53,8 +68,11 @@ export function AiModeAuthUiProvider({ children }: { children: ReactNode }) {
       try {
         setSubmitting(true);
         setLoginError('');
+        setSignupError('');
+        setAuthSuccessMessage('');
         await login(email, password);
         await refreshCart();
+        setAuthSuccessMessage('Signed in successfully.');
       } catch (err) {
         setLoginError(getErrorMessage(err));
       } finally {
@@ -74,8 +92,11 @@ export function AiModeAuthUiProvider({ children }: { children: ReactNode }) {
       try {
         setSubmitting(true);
         setSignupError('');
+        setLoginError('');
+        setAuthSuccessMessage('');
         await register(data);
         await refreshCart();
+        setAuthSuccessMessage('Account created successfully.');
       } catch (err) {
         setSignupError(getErrorMessage(err));
       } finally {
@@ -94,8 +115,21 @@ export function AiModeAuthUiProvider({ children }: { children: ReactNode }) {
       loginError,
       signupError,
       submitting,
+      isAuthenticated,
+      authSuccessMessage,
+      clearAuthSuccessMessage,
     }),
-    [authMode, submitLogin, submitSignup, loginError, signupError, submitting],
+    [
+      authMode,
+      submitLogin,
+      submitSignup,
+      loginError,
+      signupError,
+      submitting,
+      isAuthenticated,
+      authSuccessMessage,
+      clearAuthSuccessMessage,
+    ],
   );
 
   return (

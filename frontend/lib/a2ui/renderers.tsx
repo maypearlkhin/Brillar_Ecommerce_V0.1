@@ -345,6 +345,72 @@ const catalogRenderers: CatalogRenderers<BrillarCatalogDefinitions> = {
     </Card>
   ),
 
+  OrderList: ({ props, dispatch }) => (
+    <Box>
+      {props.title && (
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+          {props.title}
+        </Typography>
+      )}
+      {props.orders.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No orders yet.
+        </Typography>
+      ) : (
+        <Stack spacing={1.5}>
+          {props.orders.map((order) => (
+            <Card key={order.orderId} sx={cardSx}>
+              <CardContent>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: 2,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                      {order.orderNumber}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Placed {formatDate(order.createdAt)}
+                    </Typography>
+                    {order.itemSummary ? (
+                      <Typography variant="body2" sx={{ mt: 0.75 }}>
+                        {order.itemSummary}
+                      </Typography>
+                    ) : null}
+                    {order.itemCount != null ? (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        {order.itemCount} item{order.itemCount === 1 ? '' : 's'}
+                      </Typography>
+                    ) : null}
+                  </Box>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                    <Chip label={capitalize(order.status)} size="small" color="primary" />
+                    <Typography sx={{ fontWeight: 700, color: colors.orange }}>
+                      {formatPrice(order.total)}
+                    </Typography>
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        dispatchAction(dispatch, 'view_order', { orderId: order.orderId })
+                      }
+                    >
+                      View details
+                    </Button>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          ))}
+        </Stack>
+      )}
+    </Box>
+  ),
+
   OrderDetailCard: ({ props, dispatch }) => (
     <Card sx={cardSx}>
       <CardContent>
