@@ -127,18 +127,54 @@ function applyModelOverride(
   return next;
 }
 
+function applySequentialToolCallOptions(
+  config: ResolvedAgentModelConfig,
+  provider: string,
+): ResolvedAgentModelConfig {
+  if (provider === 'openai') {
+    return {
+      ...config,
+      providerOptions: {
+        ...config.providerOptions,
+        openai: {
+          ...config.providerOptions?.openai,
+          parallelToolCalls: false,
+        },
+      },
+    };
+  }
+
+  if (provider === 'anthropic') {
+    return {
+      ...config,
+      providerOptions: {
+        ...config.providerOptions,
+        anthropic: {
+          ...config.providerOptions?.anthropic,
+          disableParallelToolUse: true,
+        },
+      },
+    };
+  }
+
+  return config;
+}
+
 /**
- * Same base runtime for every model. Optional OpenAI reasoning API flags apply only
- * to OpenAI reasoning models when COPILOT_AGENT_OPENAI_REASONING_* env vars are set.
- * Per-model JSON overrides win last.
+ * Same base runtime for every model. OpenAI/Anthropic sequential tool calling is
+ * always on so generate_a2ui cannot fire in the same step as data-fetch tools.
+ * Optional OpenAI reasoning API flags apply only to OpenAI reasoning models when
+ * COPILOT_AGENT_OPENAI_REASONING_* env vars are set. Per-model JSON overrides win last.
  */
 export function resolveAgentModelConfig(modelId: string): ResolvedAgentModelConfig {
   let config: ResolvedAgentModelConfig = {
     maxSteps: parseIntEnv('COPILOT_AGENT_MAX_STEPS', 14),
-    maxOutputTokens: parseOptionalIntEnv('COPILOT_AGENT_MAX_OUTPUT_TOKENS') ?? 4096,
+    maxOutputTokens: parseOptionalIntEnv('COPILOT_AGENT_MAX_OUTPUT_TOKENS') ?? 16384,
   };
 
   const provider = modelId.split('/')[0]?.toLowerCase() ?? '';
+  config = applySequentialToolCallOptions(config, provider);
+
   if (provider === 'openai' && isOpenAiReasoningModel(modelId)) {
     config = applyOpenAiReasoningEnvOptions(config);
   }

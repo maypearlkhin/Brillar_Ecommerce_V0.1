@@ -3,6 +3,7 @@ import {
   createCopilotRuntimeHandler,
 } from '@copilotkit/runtime/v2';
 import { createShoppingAgent } from '@/lib/copilot/agent';
+import { GENERATE_A2UI_TOOL_NAME } from '@/lib/copilot/a2uiSequencing';
 
 const runtime = new CopilotRuntime({
   agents: ({ request }) => ({
@@ -10,8 +11,8 @@ const runtime = new CopilotRuntime({
   }),
   a2ui: {
     defaultCatalogId: 'brillar-storefront',
-    recovery: { maxAttempts: 2 },
-    injectA2UITool: 'generate_a2ui',
+    recovery: { maxAttempts: 5 },
+    injectA2UITool: GENERATE_A2UI_TOOL_NAME,
   },
 });
 

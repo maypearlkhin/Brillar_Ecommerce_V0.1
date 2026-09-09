@@ -14,7 +14,15 @@ import {
   readStoredModelId,
 } from '@/lib/copilot/models';
 
-const AI_MODE_CATALOG_USAGE_RENDERERS = [{ render: AiModeCustomMessageRenderer }] as const;
+const AI_MODE_CATALOG_USAGE_RENDERERS = [{ render: AiModeCustomMessageRenderer }];
+
+const A2UI_CONFIG = {
+  catalog: brillarCatalog,
+  recovery: {
+    debugExposure: 'hidden' as const,
+    showAfterMs: 5000,
+  },
+};
 
 function CopilotKitInner({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
@@ -33,6 +41,17 @@ function CopilotKitInner({ children }: { children: React.ReactNode }) {
     selectedModelId ||
     readStoredModelId({ defaultModelId: getEnvDefaultModelId() });
 
+  const headers = useMemo(() => {
+    const next: Record<string, string> = {
+      [COPILOT_MODEL_HEADER]: modelHeaderValue,
+    };
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) next.Authorization = `Bearer ${token}`;
+    }
+    return next;
+  }, [modelHeaderValue, isAuthenticated]);
+
   useEffect(() => {
     if (!modelHeaderValue) return;
     console.log('[AI Mode] Model sent to copilotkit:', modelHeaderValue);
@@ -42,26 +61,11 @@ function CopilotKitInner({ children }: { children: React.ReactNode }) {
     <CopilotKit
       runtimeUrl="/api/copilotkit"
       useSingleEndpoint
-      headers={(): Record<string, string> => {
-        const headers: Record<string, string> = {
-          [COPILOT_MODEL_HEADER]: modelHeaderValue,
-        };
-        if (typeof window !== 'undefined') {
-          const token = localStorage.getItem('token');
-          if (token) headers.Authorization = `Bearer ${token}`;
-        }
-        return headers;
-      }}
+      headers={headers}
       showDevConsole={false}
       properties={properties}
-      renderCustomMessages={[...AI_MODE_CATALOG_USAGE_RENDERERS]}
-      a2ui={{
-        catalog: brillarCatalog,
-        recovery: {
-          debugExposure: 'hidden',
-          showAfterMs: 5000,
-        },
-      }}
+      renderCustomMessages={AI_MODE_CATALOG_USAGE_RENDERERS}
+      a2ui={A2UI_CONFIG}
     >
       <AiModeTurnDebugBridge />
       {children}
