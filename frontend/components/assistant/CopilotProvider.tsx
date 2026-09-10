@@ -8,11 +8,7 @@ import AiModeCustomMessageRenderer from '@/components/assistant/AiModeCustomMess
 import AiModeTurnDebugBridge from '@/components/assistant/AiModeTurnDebugBridge';
 import { brillarCatalog } from '@/lib/a2ui/catalog';
 import { CopilotModelsProvider, useCopilotModels } from '@/lib/copilot/modelContext';
-import {
-  COPILOT_MODEL_HEADER,
-  getEnvDefaultModelId,
-  readStoredModelId,
-} from '@/lib/copilot/models';
+import { COPILOT_MODEL_HEADER } from '@/lib/copilot/models';
 
 const AI_MODE_CATALOG_USAGE_RENDERERS = [{ render: AiModeCustomMessageRenderer }] as const;
 
@@ -29,9 +25,7 @@ function CopilotKitInner({ children }: { children: React.ReactNode }) {
     [isAuthenticated, user?.name, user?.role],
   );
 
-  const modelHeaderValue =
-    selectedModelId ||
-    readStoredModelId({ defaultModelId: getEnvDefaultModelId() });
+  const modelHeaderValue = selectedModelId;
 
   useEffect(() => {
     if (!modelHeaderValue) return;
@@ -40,12 +34,13 @@ function CopilotKitInner({ children }: { children: React.ReactNode }) {
 
   return (
     <CopilotKit
-      runtimeUrl="/api/copilotkit"
+      runtimeUrl="/api/copilot"
       useSingleEndpoint
       headers={(): Record<string, string> => {
-        const headers: Record<string, string> = {
-          [COPILOT_MODEL_HEADER]: modelHeaderValue,
-        };
+        const headers: Record<string, string> = {};
+        if (modelHeaderValue) {
+          headers[COPILOT_MODEL_HEADER] = modelHeaderValue;
+        }
         if (typeof window !== 'undefined') {
           const token = localStorage.getItem('token');
           if (token) headers.Authorization = `Bearer ${token}`;

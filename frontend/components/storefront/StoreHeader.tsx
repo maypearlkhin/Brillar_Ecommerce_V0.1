@@ -37,7 +37,7 @@ export default function StoreHeader({ hideSearch = false }: { hideSearch?: boole
   const showAiMode = !isAiMode && !isAuthPage;
 
   const handleLogout = () => {
-    logoutAndNavigate('/');
+    logoutAndNavigate('/login');
   };
 
   const handleAiModeEnter = () => {

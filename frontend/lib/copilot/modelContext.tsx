@@ -10,7 +10,6 @@ import {
 } from 'react';
 import type { CopilotModel } from '@/lib/copilot/models';
 import {
-  COPILOT_MODEL_STORAGE_KEY,
   getEnvDefaultModelId,
   getModelLabel,
   getModelShortLabel,
@@ -34,12 +33,8 @@ const CopilotModelsContext = createContext<CopilotModelsContextValue | null>(nul
 
 export function CopilotModelsProvider({ children }: { children: React.ReactNode }) {
   const [models, setModels] = useState<CopilotModel[]>([]);
-  const [defaultModelId, setDefaultModelId] = useState(
-    () => getEnvDefaultModelId() ?? '',
-  );
-  const [selectedModelId, setSelectedModelIdState] = useState(() =>
-    readStoredModelId({ defaultModelId: getEnvDefaultModelId() }),
-  );
+  const [defaultModelId, setDefaultModelId] = useState('');
+  const [selectedModelId, setSelectedModelIdState] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +46,10 @@ export function CopilotModelsProvider({ children }: { children: React.ReactNode 
       setError(null);
 
       try {
-        const response = await fetch('/api/copilot/models', {
+        const modelsUrl = new URL('/api/copilot/models', window.location.origin);
+        modelsUrl.searchParams.set('_ts', String(Date.now()));
+
+        const response = await fetch(modelsUrl.toString(), {
           cache: 'no-store',
           headers: {
             'Cache-Control': 'no-cache',
@@ -75,12 +73,13 @@ export function CopilotModelsProvider({ children }: { children: React.ReactNode 
         if (cancelled) return;
 
         const fetchedModels = payload.models ?? [];
-        const resolvedDefault = payload.defaultModelId ?? getEnvDefaultModelId() ?? '';
         const availableIds = fetchedModels.map((model) => model.id);
+        const resolvedDefault = resolveModelId(payload.defaultModelId, {
+          availableIds,
+          defaultModelId: getEnvDefaultModelId(),
+        });
         const resolvedSelected = resolveModelId(
-          typeof window === 'undefined'
-            ? null
-            : localStorage.getItem(COPILOT_MODEL_STORAGE_KEY),
+          readStoredModelId(),
           { availableIds, defaultModelId: resolvedDefault },
         );
 
@@ -103,10 +102,11 @@ export function CopilotModelsProvider({ children }: { children: React.ReactNode 
           loadError instanceof Error
             ? loadError.message
             : 'Failed to load Copilot models.';
+        setModels([]);
         setError(message);
-        const envDefault = getEnvDefaultModelId() ?? '';
-        setDefaultModelId(envDefault);
-        setSelectedModelIdState(readStoredModelId({ defaultModelId: envDefault }));
+        setDefaultModelId('');
+        setSelectedModelIdState('');
+        storeModelId('');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -122,10 +122,11 @@ export function CopilotModelsProvider({ children }: { children: React.ReactNode 
     const availableIds = models.map((model) => model.id);
     const resolved = resolveModelId(modelId, {
       availableIds,
-      defaultModelId: defaultModelId || getEnvDefaultModelId(),
+      defaultModelId,
     });
     storeModelId(resolved);
     setSelectedModelIdState(resolved);
+    if (!resolved) return;
     console.log('[AI Mode] Model selected:', {
       id: resolved,
       label: getModelLabel(resolved, models),

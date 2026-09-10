@@ -99,26 +99,25 @@ export function resolveModelId(
     defaultModelId?: string;
   },
 ): string {
-  const envDefault = getEnvDefaultModelId();
   const available = options?.availableIds ?? [];
-  const fallback =
-    options?.defaultModelId ??
-    envDefault ??
-    available[0] ??
-    '';
+  const envDefault = getEnvDefaultModelId();
+  const candidates = [
+    modelId?.trim(),
+    options?.defaultModelId?.trim(),
+    envDefault,
+  ].filter((value): value is string => Boolean(value));
 
-  const candidate = modelId?.trim();
-  if (candidate) {
-    if (available.length === 0 || available.includes(candidate)) return candidate;
-    if (candidate === envDefault) return candidate;
+  if (available.length > 0) {
+    for (const candidate of candidates) {
+      if (available.includes(candidate)) return candidate;
+    }
+    return available[0] ?? '';
   }
 
-  if (envDefault) {
-    if (available.length === 0 || available.includes(envDefault)) return envDefault;
-    return envDefault;
+  for (const candidate of candidates) {
+    if (candidate) return candidate;
   }
-
-  return fallback;
+  return '';
 }
 
 export function getModelLabel(
@@ -150,7 +149,12 @@ export function readStoredModelId(
 
 export function storeModelId(modelId: string): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(COPILOT_MODEL_STORAGE_KEY, modelId.trim());
+  const normalized = modelId.trim();
+  if (!normalized) {
+    localStorage.removeItem(COPILOT_MODEL_STORAGE_KEY);
+    return;
+  }
+  localStorage.setItem(COPILOT_MODEL_STORAGE_KEY, normalized);
 }
 
 export function resolveModelIdForAgent(

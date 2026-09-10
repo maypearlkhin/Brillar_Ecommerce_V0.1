@@ -115,9 +115,11 @@ export default function ChatModelPill({ variant = 'toolbar' }: ChatModelPillProp
   const isToolbar = variant === 'toolbar';
   const displayLabel = loading
     ? 'Loading models...'
-    : isToolbar
-      ? getShortLabel(selectedModelId)
-      : getLabel(selectedModelId);
+    : models.length === 0
+      ? 'No models available'
+      : isToolbar
+        ? getShortLabel(selectedModelId)
+        : getLabel(selectedModelId);
 
   const filteredModels = useMemo(
     () => filterModels(models, search),
@@ -166,7 +168,7 @@ export default function ChatModelPill({ variant = 'toolbar' }: ChatModelPillProp
         aria-label="Select AI model"
         aria-haspopup="listbox"
         aria-expanded={open ? 'true' : 'false'}
-        disabled={loading || (!models.length && Boolean(error))}
+        disabled={loading || models.length === 0}
         onClick={handleOpen}
         endIcon={
           loading ? (
@@ -314,7 +316,7 @@ export default function ChatModelPill({ variant = 'toolbar' }: ChatModelPillProp
               {filteredModels.length === 0 ? (
                 <Box sx={{ px: 1.25, py: 1.25 }}>
                   <Typography sx={{ fontSize: '0.8125rem', color: colors.textSecondary }}>
-                    No models match your search.
+                    {models.length === 0 ? 'No models available.' : 'No models match your search.'}
                   </Typography>
                 </Box>
               ) : (

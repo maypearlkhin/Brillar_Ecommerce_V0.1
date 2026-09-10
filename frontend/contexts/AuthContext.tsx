@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { User } from '@/types';
 import { authService } from '@/services/auth.service';
@@ -35,14 +35,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [supplierStatus, setSupplierStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const authStateVersionRef = useRef(0);
+
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    setToken(null);
+    setSupplierStatus(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+    emitAuthStateChanged();
+  }, []);
 
   const refreshAuthState = useCallback(async () => {
     if (typeof window === 'undefined') return;
+    const requestVersion = ++authStateVersionRef.current;
 
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
     if (!storedToken || !storedUser) {
+      if (requestVersion !== authStateVersionRef.current) return;
       setToken(null);
       setUser(null);
       setSupplierStatus(null);
@@ -51,21 +65,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const parsedUser = JSON.parse(storedUser) as User;
+      if (requestVersion !== authStateVersionRef.current) return;
       setToken(storedToken);
       setUser(parsedUser);
       const profile = await authService.getProfile();
+      if (
+        requestVersion !== authStateVersionRef.current ||
+        localStorage.getItem('token') !== storedToken
+      ) {
+        return;
+      }
       setUser(profile);
       localStorage.setItem('user', JSON.stringify(profile));
     } catch {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
-      setToken(null);
-      setUser(null);
-      setSupplierStatus(null);
+      if (requestVersion !== authStateVersionRef.current) return;
+      clearAuthState();
     }
-  }, []);
+  }, [clearAuthState]);
 
   useEffect(() => {
     void refreshAuthState().finally(() => {
@@ -118,14 +134,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = useCallback(async () => {
-    await sendLogoutEvent();
-    setUser(null);
-    setToken(null);
-    setSupplierStatus(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    emitAuthStateChanged();
-  }, []);
+    authStateVersionRef.current += 1;
+    void sendLogoutEvent();
+    clearAuthState();
+  }, [clearAuthState]);
 
   const updateUser = (u: User) => {
     setUser(u);
